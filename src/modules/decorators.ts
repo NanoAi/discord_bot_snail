@@ -28,10 +28,7 @@ export function SlashCommand(name: string, description: string) {
       .setDescription(metadata.description)
 
     DiscordCommands.getMap().set(metadata.name, command)
-
-    defer.resolve().then(() => {
-      DiscordCommands.prepare()
-    })
+    defer.resolve()
   }
 }
 

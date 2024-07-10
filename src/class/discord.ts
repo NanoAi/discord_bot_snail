@@ -10,16 +10,13 @@ export class DiscordCommands {
     string,
     SlashCommandBuilder | SlashCommandOptionsOnlyBuilder
   >()
-  private static commandsAsJson: any[] = []
-
-  public static prepare() {
-    for (const command of this.commands.values()) {
-      this.commandsAsJson.push(command.toJSON())
-    }
-  }
 
   public static getCommandsAsJson() {
-    return this.commandsAsJson
+    const commandsAsJson: any[] = []
+    for (const command of this.commands.values()) {
+      commandsAsJson.push(command)
+    }
+    return commandsAsJson
   }
 
   public static getMap() {
