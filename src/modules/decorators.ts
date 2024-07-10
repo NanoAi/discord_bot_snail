@@ -22,7 +22,7 @@ export function SlashCommand(name: string, description: string) {
       .setName(metadata.name)
       .setDescription(metadata.description)
 
-    DiscordCommands.getMap().set(metadata.name, command)
+    DiscordCommands.getMap().set(metadata.name, { data: command, exec: target.main })
     defer.resolve()
   }
 }
@@ -77,10 +77,13 @@ export class Mutators {
         const parentMeta = Reflect.getMetadata('command', target.parent)
         const command = DiscordCommands.getMap().get(parentMeta.name)
         if (!command) throw new Error('A command was created but became undefined.')
-        const mutation = command.addBooleanOption((command) =>
+        const mutation = command.data.addBooleanOption((command) =>
           command.setName(name).setDescription(description).setRequired(required),
         )
-        DiscordCommands.getMap().set(parentMeta.name, mutation)
+        DiscordCommands.getMap().set(parentMeta.name, {
+          data: mutation,
+          exec: target,
+        })
       })
     }
   }

@@ -48,6 +48,7 @@ const rest = new REST().setToken(env.token)
     const commandCount = DiscordCommands.getMap().size
     console.log(`Started refreshing ${commandCount} application (/) commands.`)
 
+    // NOTE: This is a logger command.
     console.log(DiscordCommands.getCommandsAsJson())
 
     // The put method is used to fully refresh all commands in the guild with the current set
