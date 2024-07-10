@@ -15,16 +15,14 @@ import ora from 'ora'
 // const spinner = ora('Starting...\n').start()
 // Create a new client instance
 
-const client = DiscordClient.client
-
 // When the client is ready, run this code (only once).
 // The distinction between `client: Client<boolean>` and `readyClient: Client<true>` is important for TypeScript developers.
 // It makes some properties non-nullable.
-client.once(Events.ClientReady, (readyClient) => {
+DiscordClient.once(Events.ClientReady, (readyClient) => {
   // spinner.succeed(`Ready! Logged in as ${readyClient.user.tag}`)
 })
 
-client.once(Events.Error, (error) => {
+DiscordClient.once(Events.Error, (error) => {
   // spinner.fail('Failed to start Discord Application.')
   throw error
 })
@@ -50,6 +48,8 @@ const rest = new REST().setToken(env.token)
     const commandCount = DiscordCommands.getMap().size
     console.log(`Started refreshing ${commandCount} application (/) commands.`)
 
+    console.log(DiscordCommands.getCommandsAsJson())
+
     // The put method is used to fully refresh all commands in the guild with the current set
     await rest.put(Routes.applicationGuildCommands(env.appID, env.testServer), {
       body: DiscordCommands.getCommandsAsJson(),
@@ -61,7 +61,7 @@ const rest = new REST().setToken(env.token)
     console.error(error)
   }
 
-  client.login(process.env.DISCORD_TOKEN)
+  DiscordClient.login(process.env.DISCORD_TOKEN)
 })()
 
 // Log in to Discord with your client's token

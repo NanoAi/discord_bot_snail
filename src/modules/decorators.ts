@@ -9,18 +9,13 @@ const defer = new Deferrer()
 
 export function SlashCommand(name: string, description: string) {
   return function (target: any, context: any) {
-    const subcommands: { root: any; metadata: any }[] = []
     const metadata = { name, description }
 
     Reflect.defineMetadata('command', metadata, target)
 
     const methods = getMethods(target)
     methods.forEach((method) => {
-      for (const k of Reflect.getMetadataKeys(method)) {
-        const meta = Reflect.getMetadata(k, method)
-        Reflect.defineProperty(method, 'parent', { value: target })
-        subcommands.push({ root: method, metadata: meta })
-      }
+      Reflect.defineProperty(method, 'parent', { value: target })
     })
 
     const command = new SlashCommandBuilder()
@@ -29,12 +24,6 @@ export function SlashCommand(name: string, description: string) {
 
     DiscordCommands.getMap().set(metadata.name, command)
     defer.resolve()
-  }
-}
-
-export function DefineCommand(name: string, description: string) {
-  return function (target: Function, context: any) {
-    Reflect.defineMetadata(`_cmd.${name}`, { name, description }, target)
   }
 }
 

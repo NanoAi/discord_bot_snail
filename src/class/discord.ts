@@ -24,6 +24,4 @@ export class DiscordCommands {
   }
 }
 
-export class DiscordClient {
-  static client = new Client({ intents: [GatewayIntentBits.Guilds] })
-}
+export const DiscordClient = new Client({ intents: [GatewayIntentBits.Guilds] })
