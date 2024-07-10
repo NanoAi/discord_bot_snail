@@ -1,0 +1,6 @@
+.stfolder
+.stignore
+.env
+node_modules
+private
+public
