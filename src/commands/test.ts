@@ -1,36 +1,57 @@
-import { SlashCommand, Mutators } from '~/modules/decorators'
-import { DiscordChatInteraction, DiscordClient } from '~/class/discord'
+import type { SlashCommandSubcommandBuilder } from 'discord.js'
+import { CommandFactory, Mutators, Options } from '~/modules/decorators'
+import * as Discord from '~/class/discord'
 
-@SlashCommand('test', 'This is a test command.')
+@CommandFactory('test', 'This is a test command.', [Discord.PFlags.BanMembers])
 export class TestCommand {
-  // This should be defined as the base function to call.
-  public static async main(inter: DiscordChatInteraction) {
-    console.log('hello world, this is "test.ts"')
-    await inter.reply({ content: 'Hello World!', ephemeral: true })
-  }
-
-  // This can be a subcommand definition, maybe as DefineSubCommand.
-  public static other() {
-    console.log('This is a subcommand.')
-  }
-
-  // This actually only needs the mutator to get added.
-  // It gets added to the top level "SlashCommand".
-
-  // FIX: Currently the modifier gets called even if it's not passed.
-  @Mutators.addBooleanOption('can', 'Can five do it?')
-  public static async boolTest(inter: DiscordChatInteraction) {
-    // TODO: Figure out how to retrieve the users response to this option.
-    console.log('This command takes a specific value.')
-    await inter.reply({ content: 'This is a boolean modifier.', ephemeral: true })
+  @Mutators.addBooleanOption('bool', 'Testing a boolean argument.')
+  @Mutators.addStringOption('string', 'Testing a string argument.')
+  @Options.string(settings => settings.setMinLength(3)) // <= WORKING
+  public static async main(inter: Discord.ChatInteraction) {
+    const boolArg = inter.options.getBoolean('bool', false)
+    const strArg = inter.options.getString('string', false)
+    await inter.reply({ content: `Str: ${strArg}\nBool: ${boolArg}`, ephemeral: true })
   }
 }
 
-@SlashCommand('shutdown', 'shutdown the bot.')
+const subCommands = {
+  one: (obj: SlashCommandSubcommandBuilder) => {
+    return obj.addBooleanOption((e) => {
+      return e.setName('the_sadness').setDescription('I can\'t seem to figure it out...')
+    })
+  },
+}
+
+@CommandFactory('subcommands', 'Test subcommands.')
+export class SubCommands {
+  // This will be called every time any of the subcommands below are called.
+  public static main(inter: Discord.ChatInteraction) {
+    console.log(`The subcommands command was called by <${inter.user.username}>!`)
+  }
+
+  @Mutators.addSubCommand('one', '_one')
+  @Options.subCommand(subCommands.one)
+  public static async one(inter: Discord.ChatInteraction) {
+    const strArg = inter.options.getBoolean('the_sadness', false)
+    await inter.reply(`One! ${strArg}`)
+  }
+
+  @Mutators.addSubCommand('two', '_two')
+  public static async two(inter: Discord.ChatInteraction) {
+    await inter.reply('Two!')
+  }
+
+  @Mutators.addSubCommand('three', '_three')
+  public static async three(inter: Discord.ChatInteraction) {
+    await inter.reply('Three!')
+  }
+}
+
+@CommandFactory('shutdown', 'shutdown the bot.')
 export class ShutdownCommand {
   // This should be defined as the base function to call.
-  public static async main(inter: DiscordChatInteraction) {
+  public static async main(inter: Discord.ChatInteraction) {
     await inter.reply({ content: 'Goodnight~', ephemeral: true })
-    DiscordClient.destroy()
+    Discord.Client.destroy()
   }
 }

@@ -1,33 +1,9 @@
-import { ESLint } from 'eslint';
+import antfu from '@antfu/eslint-config'
 
-export default new ESLint({
-  baseConfig: {
-    parser: '@typescript-eslint/parser',
-    parserOptions: {
-      ecmaVersion: 2020,
-      sourceType: 'module',
-    },
-    env: {
-      es6: true,
-      node: true,
-      browser: true,
-    },
-    extends: [
-      'eslint:recommended',
-      'plugin:@typescript-eslint/recommended',
-      'plugin:prettier/recommended',
-    ],
-    plugins: ['@typescript-eslint', 'prettier'],
-    rules: {
-      'prettier/prettier': [
-        'error',
-        {
-          useTabs: false,
-          singleQuote: true,
-          semi: false,
-          tabWidth: 2,
-        },
-      ],
-    },
+export default antfu({
+  typescript: true,
+  rules: {
+    'no-console': 'off',
+    'max-len': ['warn', { code: 125, tabWidth: 2 }],
   },
-});
+})

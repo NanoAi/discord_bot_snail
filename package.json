@@ -1,19 +1,21 @@
 {
   "name": "discordbot-server",
   "version": "1.0.0",
+  "packageManager": "pnpm@9.5.0",
   "description": "",
+  "author": "NanoAi",
+  "license": "ISC",
+  "keywords": [],
   "main": "./dist/index.ts",
   "types": "./dist/index.d.ts",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "start": "nodemon -e ts -w ./src -x pnpm run watch:serve",
     "watch:serve": "tsx src/index.ts",
     "v": "node -v"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "chalk": "^5.3.0",
     "discord.js": "^14.15.3",
@@ -27,6 +29,7 @@
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
+    "@antfu/eslint-config": "^2.22.0",
     "@eslint/eslintrc": "^3.1.0",
     "@eslint/js": "^9.6.0",
     "@types/eslint": "^8.56.10",
@@ -35,9 +38,9 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
     "glob": "^10.4.3",
+    "prettier": "^3.3.2",
     "taze": "^0.14.2",
     "tsx": "^4.16.2",
     "typescript": "^5.5.3"
-  },
-  "packageManager": "pnpm@9.5.0+sha512.140036830124618d624a2187b50d04289d5a087f326c9edfc0ccd733d76c4f52c3a313d4fc148794a2a9d81553016004e6742e8cf850670268a7387fc220c903"
+  }
 }

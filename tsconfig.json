@@ -1,27 +1,27 @@
 {
   "compilerOptions": {
-    "target": "ESNext",                             // Specify ECMAScript target version
-    "module": "ESNext",                             // Specify module code generation
-    "rootDir": "./src",                             // Specify the root directory of input files
-    "outDir": "./dist",                             // Redirect output structure to the directory
-    "strict": true,                                 // Enable all strict type-checking options
-    "esModuleInterop": true,                        // Enables emit interoperability between CommonJS and ES Modules
-    "skipLibCheck": true,                           // Skip type checking of all declaration files
-    "forceConsistentCasingInFileNames": true,       // Disallow inconsistently-cased references to the same file.
-    "baseUrl": "./src",                             // Base directory to resolve non-absolute module names
-    "moduleResolution": "node",                     // Use Node.js module resolution strategy
+    "target": "ESNext", // Disallow inconsistently-cased references to the same file.
+    "baseUrl": "./src", // Specify module code generation
+    "rootDir": "./src", // Specify ECMAScript target version
+    "module": "ESNext", // Base directory to resolve non-absolute module names
+    "moduleResolution": "node", // Use Node.js module resolution strategy
     "paths": {
       "~/*": ["./*"]
     },
-    "allowJs": false,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "allowJs": false, // Redirect output structure to the directory
+    "strict": true, // Specify the root directory of input files
+    "outDir": "./dist", // Enable all strict type-checking options
+    "esModuleInterop": true, // Skip type checking of all declaration files
+    "forceConsistentCasingInFileNames": true, // Enables emit interoperability between CommonJS and ES Modules
+    "skipLibCheck": true
   },
   "include": [
-    "src/**/*.ts",                                  // Include all .ts files in subdirectories under src
-    "types/**/*.d.ts"                                    // Include all .d.ts files under `types`.
+    "src/**/*.ts", // Include all .ts files in subdirectories under src
+    "types/**/*.d.ts" // Include all .d.ts files under `types`.
   ],
   "exclude": [
-    "node_modules",                                 // Exclude node_modules
-    "dist"                                          // Exclude dist directory
+    "node_modules", // Exclude node_modules
+    "dist" // Exclude dist directory
   ]
 }

@@ -7,8 +7,8 @@
   "eslint.useFlatConfig": true,
 
   // Disable the default formatter, use eslint instead
-  "prettier.enable": true,
-  "editor.formatOnSave": true,
+  "prettier.enable": false,
+  "editor.formatOnSave": false,
 
   // Auto fix
   "editor.codeActionsOnSave": {
@@ -33,7 +33,6 @@
   "eslint.validate": [
     "javascript",
     "javascriptreact",
-    "typescript",
     "typescriptreact",
     "vue",
     "html",
@@ -43,6 +42,7 @@
     "yaml"
   ],
   "cSpell.words": [
+    "antfu",
     "fullpath",
     "keychain",
     "subcmd"

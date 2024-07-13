@@ -1,28 +1,23 @@
 import 'dotenv/config'
+import * as process from 'node:process'
 
-import {
-  Client,
-  Events,
-  GatewayIntentBits,
-  REST,
-  Routes,
-  SlashCommandBuilder,
-} from 'discord.js'
-import { DiscordCommands, DiscordClient } from './class/discord'
-import declare from './modules/declare'
+import { REST as DRestClient, Events, Routes } from 'discord.js'
 import ora from 'ora'
+import * as Discord from './class/discord'
+import declare from './modules/declare'
 
+console.clear()
 // const spinner = ora('Starting...\n').start()
 // Create a new client instance
 
 // When the client is ready, run this code (only once).
 // The distinction between `client: Client<boolean>` and `readyClient: Client<true>` is important for TypeScript developers.
 // It makes some properties non-nullable.
-DiscordClient.once(Events.ClientReady, (readyClient) => {
+Discord.Client.once(Events.ClientReady, () => {
   // spinner.succeed(`Ready! Logged in as ${readyClient.user.tag}`)
 })
 
-DiscordClient.once(Events.Error, (error) => {
+Discord.Client.once(Events.Error, (error) => {
   // spinner.fail('Failed to start Discord Application.')
   throw error
 })
@@ -35,34 +30,36 @@ const env = {
 }
 
 for (const [k, v] of Object.entries(env)) {
-  if (!v) throw Error(`Unknown Discord "${k}".`)
+  if (!v)
+    throw new Error(`Unknown Discord "${k}".`)
 }
 
-const rest = new REST().setToken(env.token)
+const rest = new DRestClient().setToken(env.token)
 
 ;(async () => {
   try {
     // spinner.text = 'Loading Commands...'
     await declare('commands/*.ts')
 
-    const commandCount = DiscordCommands.getMap().size
+    const commandCount = Discord.Commands.getMap().size
     console.log(`Started refreshing ${commandCount} application (/) commands.`)
 
     // NOTE: This is a logger command.
-    console.log(DiscordCommands.getCommandsAsJson())
+    console.log(Discord.Commands.getCommandsAsJson())
 
     // The put method is used to fully refresh all commands in the guild with the current set
     await rest.put(Routes.applicationGuildCommands(env.appID, env.testServer), {
-      body: DiscordCommands.getCommandsAsJson(),
+      body: Discord.Commands.getCommandsAsJson(),
     })
 
     console.log(`Successfully reloaded ${commandCount} application (/) commands.`)
-  } catch (error) {
+  }
+  catch (error) {
     // And of course, make sure you catch and log any errors!
     console.error(error)
   }
 
-  DiscordClient.login(process.env.DISCORD_TOKEN)
+  Discord.Client.login(process.env.DISCORD_TOKEN)
 })()
 
 // Log in to Discord with your client's token
