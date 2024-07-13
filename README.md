@@ -9,3 +9,4 @@ APP_ID=your_app_id_here
 TODO:
  - Cleanup messy code.
  - Fix being able to assign variables to sub commands.
+ - Potentially make a custom command builder that works better with decorators.
