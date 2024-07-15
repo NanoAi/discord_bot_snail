@@ -4,7 +4,7 @@ function emptyFunction() {}
 
 export function getMethods(
   from: any,
-  settings?: { filterUnderscore?: boolean; prototype?: boolean; ignore?: string[] },
+  settings?: { filterUnderscore?: boolean, prototype?: boolean, ignore?: string[] },
 ) {
   const output = new Map<string, any>()
 
@@ -16,7 +16,8 @@ export function getMethods(
     }
   }
 
-  if (settings.prototype) from = from.prototype
+  if (settings.prototype)
+    from = from.prototype
 
   const props = Object.getOwnPropertyNames(from).filter((prop) => {
     const baseProps = Object.getOwnPropertyNames(emptyFunction).includes(prop)
@@ -32,7 +33,8 @@ export function getMethods(
 
   for (const k of props) {
     const v = from[k]
-    if (v) output.set(k, v)
+    if (v)
+      output.set(k, v)
   }
 
   return output

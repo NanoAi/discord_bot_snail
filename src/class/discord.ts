@@ -33,6 +33,8 @@ export interface CommandSettings {
 }
 
 export interface Configs {
+  base: SlashCommandOptionsOnlyBuilder
+  options: Map<string, (config: any) => any>
   SlashString: (options: SlashCommandStringOption) => SlashCommandStringOption
   SlashSubCmd: (options: SlashCommandSubcommandBuilder) => SlashCommandSubcommandBuilder
 }
@@ -58,7 +60,6 @@ export class Commands {
     for (const command of this.commands.values()) {
       commandsAsJson.push(command.data.toJSON())
     }
-
     return commandsAsJson
   }
 
@@ -79,20 +80,16 @@ Client.on(Events.InteractionCreate, async (inter) => {
   if (!inter.isChatInputCommand())
     return
 
-  let subCommandId
   const command = Commands.getCommand(inter.commandName)
-
-  try {
-    subCommandId = inter.options.getSubcommand()
-  }
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  catch (ignore) {}
+  const subCommandId = (inter.options as any)._subcommand
 
   if (command) {
     const subcommands = command.subcommands
     if (command.main)
       command.main(inter)
-    if (subCommandId)
-      subcommands.get(subCommandId)!(inter)
+    if (subCommandId) {
+      const call = subcommands.get(subCommandId)
+      call(inter)
+    }
   }
 })

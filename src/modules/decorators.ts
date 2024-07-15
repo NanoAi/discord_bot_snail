@@ -1,10 +1,13 @@
 import 'reflect-metadata'
 import type {
   SlashCommandOptionsOnlyBuilder,
-  SlashCommandStringOption,
   SlashCommandSubcommandsOnlyBuilder,
 } from 'discord.js'
-import { SlashCommandBuilder } from 'discord.js'
+import {
+  SlashCommandBuilder,
+  SlashCommandStringOption,
+  SlashCommandSubcommandBuilder,
+} from 'discord.js'
 
 import getMethods from './method'
 import Deferrer from '~/class/deferrer'
@@ -90,26 +93,47 @@ toJSON
 */
 
 export class Options {
-  public static string(config: Discord.Configs['SlashString']) {
-    return function (target: any, _context: any) {
-      Reflect.defineProperty(target, 'stringOptions', { value: config })
-    }
+  private static main(target: any, name: string, config: any) {
+    const vars: string[] = Reflect.getOwnMetadata('command:vars', target)
+    if (!vars.includes(name))
+      throw new Error(`The variable "${name}" is not defined in function "${target.name}".`)
+
+    target.commandOptions.set(name, config)
   }
 
-  public static subCommand(config: Discord.Configs['SlashSubCmd']) {
+  public static string(config: Discord.Configs['SlashString'], name?: string) {
     return function (target: any, _context: any) {
-      Reflect.defineProperty(target, 'subCommandWrapper', { value: config })
+      Options.main(target, name || target._lastOptionTarget, config)
     }
   }
 }
 
-export class Mutators {
+export class Command {
+  private static subCommand(
+    target: any,
+    mutator: (
+      command: SlashCommandSubcommandBuilder,
+      ...args: any
+    ) => SlashCommandSubcommandBuilder | SlashCommandSubcommandsOnlyBuilder,
+    ignore: boolean = false,
+  ) {
+    const subCommandMeta = Reflect.getMetadata('subcommand', target)
+    if (!subCommandMeta)
+      throw new Error('No metadata found for key "subcommand".')
+
+    if (ignore)
+      return
+
+    target.subCommand = mutator(target.subCommand)
+  }
+
   private static prepare(
     target: any,
     mutator: (
       command: SlashCommandBuilder,
       ...args: any
     ) => SlashCommandOptionsOnlyBuilder | SlashCommandSubcommandsOnlyBuilder,
+    isSubCommandSetup: boolean = false,
   ) {
     defer.then(() => {
       const parentMeta = Reflect.getMetadata('command', target.parent)
@@ -117,36 +141,66 @@ export class Mutators {
       const command = Discord.Commands.getMap().get(parentMeta.name)
       if (!command)
         throw new Error('A command was created but became undefined.')
-      const mutation = mutator(command.data as SlashCommandBuilder)
+
+      if (subCommand)
+        Command.subCommand(target, mutator as any, isSubCommandSetup)
 
       if (subCommand) {
         command.subcommands.set(subCommand, target)
+        Discord.Commands.getMap().set(parentMeta.name, {
+          data: command.data,
+          main: command.main,
+          subcommands: command.subcommands,
+        })
+        if (!isSubCommandSetup)
+          return
       }
 
+      const mutation = mutator(command.data as SlashCommandBuilder)
       Discord.Commands.getMap().set(parentMeta.name, {
-        data: mutation,
+        data: mutation || command.data,
         main: command.main,
         subcommands: command.subcommands,
       })
     })
   }
 
-  // Currently this simply exposes the subcommand so that logic can be applied the old boring way.
+  private static wrapper(target: any, name: string, description: string, settings: Discord.CommandSettings) {
+    return (command: any) => {
+      const cmdOptions: Discord.Configs['options'] = target.commandOptions
+      const wrapper = cmdOptions && cmdOptions.get(name) || undefined
+      let re = command
+        .setName(name)
+        .setDescription(description)
+        .setRequired(settings.required || false)
+      if (wrapper)
+        re = wrapper(re)
+      return re
+    }
+  }
+
+  private static initOptions(name: string, target: any) {
+    const key = 'command:vars'
+    const meta: string[] = Reflect.getOwnMetadata(key, target)
+    target.commandOptions = target.commandOptions || new Map<string, (config: any) => any>()
+    target._lastOptionTarget = name
+
+    if (meta) {
+      meta.push(name)
+      Reflect.defineMetadata(key, meta, target)
+    }
+    else {
+      Reflect.defineMetadata(key, [name], target)
+    }
+  }
+
   public static addSubCommand(name: string, description: string) {
     return function (target: any, _context: any) {
       Reflect.defineMetadata('subcommand', name, target)
-      Mutators.prepare(
-        target,
-        (command) => {
-          return command.addSubcommand((subcommand) => {
-            let re = subcommand.setName(name).setDescription(description)
-            if (target.subCommandWrapper) {
-              re = target.subCommandWrapper(re)
-            }
-            return re
-          })
-        },
-      )
+      target.subCommand = new SlashCommandSubcommandBuilder()
+        .setName(name)
+        .setDescription(description)
+      Command.prepare(target, command => command.addSubcommand(target.subCommand), true)
     }
   }
 
@@ -156,16 +210,10 @@ export class Mutators {
     settings: Discord.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Mutators.prepare(
+      Command.initOptions(name, target)
+      Command.prepare(
         target,
-        (command) => {
-          return command.addBooleanOption(command =>
-            command
-              .setName(name)
-              .setDescription(description)
-              .setRequired(settings.required || false),
-          )
-        },
+        command => command.addBooleanOption(Command.wrapper(target, name, description, settings)),
       )
     }
   }
@@ -176,19 +224,10 @@ export class Mutators {
     settings: Discord.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Mutators.prepare(
+      Command.initOptions(name, target)
+      Command.prepare(
         target,
-        (command) => {
-          return command.addStringOption((command) => {
-            let re = command
-              .setName(name)
-              .setDescription(description)
-              .setRequired(settings.required || false)
-            if (target.stringOptions)
-              re = target.stringOptions(re)
-            return re
-          })
-        },
+        command => command.addStringOption(Command.wrapper(target, name, description, settings)),
       )
     }
   }
