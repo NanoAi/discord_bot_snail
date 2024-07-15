@@ -83,13 +83,21 @@ Client.on(Events.InteractionCreate, async (inter) => {
   const command = Commands.getCommand(inter.commandName)
   const subCommandId = (inter.options as any)._subcommand
 
+  const hoistedOptions = (inter.options as any)._hoistedOptions
+  const options: any = []
+  if (hoistedOptions) {
+    hoistedOptions.forEach((v: any) => {
+      options[v.name] = v.value
+    })
+  }
+
   if (command) {
     const subcommands = command.subcommands
     if (command.main)
       command.main(inter)
     if (subCommandId) {
-      const call = subcommands.get(subCommandId)
-      call(inter)
+      const func: (inter: any, options: any) => any = subcommands.get(subCommandId)
+      func(inter, options)
     }
   }
 })

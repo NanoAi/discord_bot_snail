@@ -181,17 +181,12 @@ export class Command {
 
   private static initOptions(name: string, target: any) {
     const key = 'command:vars'
-    const meta: string[] = Reflect.getOwnMetadata(key, target)
+    const meta: string[] = Reflect.getOwnMetadata(key, target) || []
     target.commandOptions = target.commandOptions || new Map<string, (config: any) => any>()
     target._lastOptionTarget = name
 
-    if (meta) {
-      meta.push(name)
-      Reflect.defineMetadata(key, meta, target)
-    }
-    else {
-      Reflect.defineMetadata(key, [name], target)
-    }
+    meta.push(name)
+    Reflect.defineMetadata(key, meta, target)
   }
 
   public static addSubCommand(name: string, description: string) {

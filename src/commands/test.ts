@@ -22,9 +22,8 @@ export class SubCommands {
 
   @Command.addBooleanOption('bool', 'Testing a boolean argument.')
   @Command.addSubCommand('one', '_one')
-  public static async one(inter: Discord.ChatInteraction) {
-    const strArg = inter.options.getBoolean('bool', false)
-    await inter.reply(`One! ${strArg}`)
+  public static async one(inter: Discord.ChatInteraction, args: any) {
+    await inter.reply(`One! ${args.bool}`)
   }
 
   @Options.string(settings => settings.setMinLength(3))
