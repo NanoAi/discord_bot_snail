@@ -23,15 +23,14 @@ export class SubCommands {
   @Command.addBooleanOption('bool', 'Testing a boolean argument.')
   @Command.addSubCommand('one', '_one')
   public static async one(inter: Discord.ChatInteraction, args: any) {
-    await inter.reply(`One! ${args.bool}`)
+    await inter.reply(`One! ${args.bool()}`)
   }
 
   @Options.string(settings => settings.setMinLength(3))
   @Command.addStringOption('string', 'Testing a string argument.')
   @Command.addSubCommand('two', '_two')
-  public static async two(inter: Discord.ChatInteraction) {
-    const strArg = inter.options.getString('string', false)
-    await inter.reply(`Two! ${strArg}`)
+  public static async two(inter: Discord.ChatInteraction, args: any) {
+    await inter.reply(`Two! ${args.string('meow')}`)
   }
 
   @Command.addSubCommand('three', '_three')

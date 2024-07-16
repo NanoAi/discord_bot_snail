@@ -108,6 +108,21 @@ export class Options {
   }
 }
 
+/*
+function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+  const originalMethod = descriptor.value
+
+  descriptor.value = async function (...args: any[]) {
+      const [inter, argObj] = args
+      if (!(property in argObj)) {
+          throw new Error(`Property '${property}' does not exist on args.`);
+      }
+      return originalMethod.apply(this, args)
+  }
+  return descriptor
+}
+*/
+
 export class Command {
   private static subCommand(
     target: any,

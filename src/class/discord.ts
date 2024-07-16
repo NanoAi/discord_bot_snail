@@ -76,28 +76,43 @@ export class Commands {
   }
 }
 
+function getOptions(func: any, pass: any[]) {
+  const options: any = []
+  const hoisted: any = []
+  const vars = Reflect.getOwnMetadata('command:vars', func)
+
+  pass.forEach((v: any) => {
+    hoisted[v.name] = v.value
+  })
+
+  vars.forEach((v: any) => {
+    options[v] = (fallback: any) => {
+      const re = hoisted[v]
+      if (typeof re !== 'undefined')
+        return re
+      return fallback
+    }
+  })
+
+  return options as { [key: string]: () => any }
+}
+
 Client.on(Events.InteractionCreate, async (inter) => {
   if (!inter.isChatInputCommand())
     return
 
-  const command = Commands.getCommand(inter.commandName)
+  const name = inter.commandName
+  const command = Commands.getCommand(name)
   const subCommandId = (inter.options as any)._subcommand
-
   const hoistedOptions = (inter.options as any)._hoistedOptions
-  const options: any = []
-  if (hoistedOptions) {
-    hoistedOptions.forEach((v: any) => {
-      options[v.name] = v.value
-    })
-  }
 
   if (command) {
     const subcommands = command.subcommands
     if (command.main)
       command.main(inter)
     if (subCommandId) {
-      const func: (inter: any, options: any) => any = subcommands.get(subCommandId)
-      func(inter, options)
+      const func: any = subcommands.get(subCommandId)
+      func(inter, getOptions(func, hoistedOptions))
     }
   }
 })
