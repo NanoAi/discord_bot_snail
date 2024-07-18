@@ -2,6 +2,7 @@ import type {
   ApplicationCommandOptionBase,
   CacheType,
   ChatInputCommandInteraction,
+  ClientOptions,
   Interaction as DInteraction,
   Permissions as DPermissions,
   SlashCommandBuilder as DSlashCommandBuilder,
@@ -18,7 +19,18 @@ import {
   PermissionsBitField,
 } from 'discord.js'
 
-export const Client = new DClient({ intents: [GatewayIntentBits.Guilds] })
+console.log('\n'.repeat(5))
+console.clear()
+
+const intents: ClientOptions['intents'] = [
+  GatewayIntentBits.Guilds,
+  GatewayIntentBits.GuildMessages,
+  GatewayIntentBits.MessageContent,
+  GatewayIntentBits.GuildModeration,
+  GatewayIntentBits.AutoModerationExecution,
+]
+
+export const Client = new DClient({ intents })
 /** Permission Flags. */
 export const PFlags: typeof PermissionFlagsBits = PermissionFlagsBits
 export const PermissionBuilder: typeof PermissionsBitField = PermissionsBitField
@@ -96,6 +108,55 @@ function getOptions(func: any, pass: any[]) {
 
   return options as { [key: string]: () => any }
 }
+
+/*
+function getMessageOptions(func: any, pass: string[number]) {
+  const options: any = []
+  const vars = Reflect.getOwnMetadata('command:vars', func)
+
+  for (const key in vars) {
+    if (Object.prototype.hasOwnProperty.call(vars, key)) {
+      const value = vars[key]
+      console.log(key, value)
+      options[value] = (fallback: any) => {
+        if (typeof pass[Number(key)] !== 'undefined')
+          return pass[Number(key)]
+        return fallback
+      }
+    }
+  }
+
+  return options as { [key: string]: () => any }
+}
+*/
+
+Client.on(Events.MessageCreate, async (message) => {
+  if (message.system || message.author.bot)
+    return
+  const activator = ';'
+  const content = message.content
+  if (activator !== content.charAt(0))
+    return
+
+  const matcher = [...content.matchAll(/^;(\w+)(?:(;| )([\w ]+))?/g)]
+  if (matcher.length === 0)
+    return
+
+  const match: (string | undefined)[] = []
+  matcher[0].forEach((v, k) => {
+    match[k] = v && String(v) || undefined
+  })
+
+  const baseCommand = match[1]
+  let args = (match[3] || '').split(' ')
+  const subCommand = match[2] === ';' && args[0] || undefined
+
+  if (subCommand)
+    args = args.splice(1, 1)
+
+  // console.log(match)
+  message.reply(`Base: ${baseCommand}\nSub: ${subCommand}\nArgs: ${args.join(',')}`)
+})
 
 Client.on(Events.InteractionCreate, async (inter) => {
   if (!inter.isChatInputCommand())

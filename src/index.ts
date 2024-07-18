@@ -6,7 +6,7 @@ import ora from 'ora'
 import * as Discord from './class/discord'
 import declare from './modules/declare'
 
-console.clear()
+// console.clear()
 const spinner = ora('Starting...\n').start()
 // Create a new client instance
 

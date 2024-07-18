@@ -1,6 +1,7 @@
 import { Command, CommandFactory, Options } from '~/modules/decorators'
 import * as Discord from '~/class/discord'
 
+@Options.strict
 @CommandFactory('test', 'This is a test command.', [Discord.PFlags.BanMembers])
 export class TestCommand {
   @Command.addBooleanOption('bool', 'Testing a boolean argument.')
@@ -36,6 +37,12 @@ export class SubCommands {
   @Command.addSubCommand('three', '_three')
   public static async three(inter: Discord.ChatInteraction) {
     await inter.reply('Three!')
+  }
+
+  @Command.addBooleanOption('bool', 'This is just a test.')
+  @Command.addSubCommand('four', '_four')
+  public static async randomName(inter: Discord.ChatInteraction, args: any) {
+    await inter.reply(`Four! ${args.bool()}`)
   }
 }
 

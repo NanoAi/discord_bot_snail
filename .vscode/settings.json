@@ -45,6 +45,7 @@
     "antfu",
     "fullpath",
     "keychain",
+    "linebreak",
     "subcmd"
   ],
   "i18n-ally.localesPaths": [

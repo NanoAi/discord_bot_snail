@@ -43,6 +43,7 @@ export function CommandFactory(
       .setDescription(metadata.description)
       .setDefaultMemberPermissions(perms.valueOf())
 
+    Reflect.defineProperty(command, 'strict', { value: target.strict || false })
     Discord.Commands.getMap().set(metadata.name, {
       data: command,
       main: target.main,
@@ -105,6 +106,10 @@ export class Options {
     return function (target: any, _context: any) {
       Options.main(target, name || target._lastOptionTarget, config)
     }
+  }
+
+  public static strict(target: any, _context: any) {
+    target.strict = true
   }
 }
 
