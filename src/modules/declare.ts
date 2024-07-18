@@ -1,4 +1,4 @@
-import { extname } from 'path'
+import { extname } from 'node:path'
 import { glob } from 'glob'
 
 export default async function declare(pattern: string): Promise<any[]> {
@@ -9,13 +9,14 @@ export default async function declare(pattern: string): Promise<any[]> {
     })
 
     const imports: any = files
-      .filter((path) => extname(path.name) === '.ts')
+      .filter(path => extname(path.name) === '.ts')
       .map(async (path) => {
         return await require(path.fullpath())
       })
 
     return await Promise.all(imports)
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Error importing files:', err)
   }
   throw new Error(`Couldn\'t import files in "${pattern}".`)
