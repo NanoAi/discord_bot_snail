@@ -11,7 +11,7 @@ export default async function declare(pattern: string): Promise<any[]> {
     const imports: any = files
       .filter(path => extname(path.name) === '.ts')
       .map(async (path) => {
-        return await require(path.fullpath())
+        return await import(`file://${path.fullpath()}`)
       })
 
     return await Promise.all(imports)
