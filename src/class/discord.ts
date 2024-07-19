@@ -143,20 +143,28 @@ function getMessageOptions(func: any, pass: string[] = []) {
   return options as { [key: string]: () => any }
 }
 
-function processCommand(getter: any, ci: ChatInteraction, command: CommandStore, opts: any[] = [], subId?: string): boolean {
+function processCommand(
+  getter: any,
+  ci: ChatInteraction,
+  opts: any[] = [],
+  command?: CommandStore,
+  subId?: string,
+): boolean {
   let re = false
 
-  const subcommands = command.subcommands
-  if (command.main) {
-    command.main(ci, getter(command.main, opts))
-    re = true
-  }
+  if (command) {
+    const subcommands = command.subcommands
+    if (command.main) {
+      command.main(ci, getter(command.main, opts))
+      re = true
+    }
 
-  if (subId) {
-    const func: any = subcommands.get(subId)
-    if (func)
-      func(ci, getter(func, opts))
-    re = !!func
+    if (subId) {
+      const func: any = subcommands.get(subId)
+      if (func)
+        func(ci, getter(func, opts))
+      re = !!func
+    }
   }
 
   if (!re) {
@@ -254,8 +262,7 @@ Client.on(Events.MessageCreate, async (message) => {
 
   const command = Commands.getCommand(baseCommand!)
   const ci: ChatInteraction = { message }
-  if (command)
-    processCommand(getMessageOptions, ci, command, args, subCommand)
+  processCommand(getMessageOptions, ci, args, command, subCommand)
 })
 
 Client.on(Events.InteractionCreate, async (interaction) => {
@@ -268,7 +275,5 @@ Client.on(Events.InteractionCreate, async (interaction) => {
 
   const subCommandId = (interaction.options as any)._subcommand
   const hoistedOptions = (interaction.options as any)._hoistedOptions
-
-  if (command)
-    processCommand(getOptions, ci, command, hoistedOptions, subCommandId)
+  processCommand(getOptions, ci, hoistedOptions, command, subCommandId)
 })
