@@ -18,7 +18,7 @@ Discord.Client.once(Events.ClientReady, (readyClient) => {
 })
 
 Discord.Client.once(Events.Error, (error) => {
-  spinner.fail('Failed to start Discord Application.')
+  spinner.fail('Discord Application Closed.')
   throw error
 })
 
