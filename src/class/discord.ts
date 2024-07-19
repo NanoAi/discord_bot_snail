@@ -244,7 +244,7 @@ Client.on(Events.MessageCreate, async (message) => {
   if (activator !== content.charAt(0))
     return
 
-  const matcher = [...content.matchAll(/^;(\w+)(?:(;| )([\w ]+))?/g)]
+  const matcher = [...content.matchAll(/^;(\w+)(?:(;| )([\w'" ]+))?/g)]
   if (matcher.length === 0)
     return
 
@@ -254,14 +254,19 @@ Client.on(Events.MessageCreate, async (message) => {
   })
 
   const baseCommand = match[1]
-  let args = (match[3] || '').split(' ')
-  const subCommand = match[2] === ';' && args[0] || undefined
+  let args = [...(match[3] || '').matchAll(/(['"][^'"]+['"])|\S+/g)]
+  const subCommand = match[2] === ';' && (args && String(args[0])) || undefined
 
   if (subCommand)
     args = args.splice(1, 1)
 
   const command = Commands.getCommand(baseCommand!)
   const ci: ChatInteraction = { message }
+
+  console.log('[DEBUG] Command: ', baseCommand)
+  console.log('[DEBUG] subCommand: ', subCommand)
+  console.log('[DEBUG] Arguments', args)
+
   processCommand(getMessageOptions, ci, args, command, subCommand)
 })
 
