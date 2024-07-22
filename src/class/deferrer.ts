@@ -4,10 +4,10 @@ export default class Deferrer<T> {
   private _reject!: (reason?: any) => any
 
   constructor() {
-    this._promise = new Promise<T>((resolve, reject) => {
-      this._resolve = resolve
-      this._reject = reject
-    })
+    const { promise, resolve, reject } = Promise.withResolvers<T>()
+    this._promise = promise
+    this._resolve = resolve
+    this._reject = reject
   }
 
   public resolve(value?: T | PromiseLike<T>): Promise<T> {
