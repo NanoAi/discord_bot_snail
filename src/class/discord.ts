@@ -200,6 +200,7 @@ export class CommandInteraction {
   private ci: ChatInteraction
   private messagePromise: PromiseWithResolvers<IChatInteraction['message']>
   private interactionPromise: PromiseWithResolvers<IChatInteraction['interaction']>
+  private static noop = () => {}
 
   constructor(ci: ChatInteraction) {
     this.ci = ci
@@ -217,12 +218,12 @@ export class CommandInteraction {
   }
 
   interaction(callback: (interaction: IChatInteraction['interaction']) => void) {
-    this.interactionPromise.promise.then(callback).catch(() => {})
+    this.interactionPromise.promise.then(callback).catch(CommandInteraction.noop)
     return this
   }
 
   message(callback: (message: IChatInteraction['message']) => void) {
-    this.messagePromise.promise.then(callback).catch(() => {})
+    this.messagePromise.promise.then(callback).catch(CommandInteraction.noop)
     return this
   }
 }
