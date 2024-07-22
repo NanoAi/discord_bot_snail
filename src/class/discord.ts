@@ -22,7 +22,7 @@ import {
 } from 'discord.js'
 import { Convert } from '~/modules/convert'
 
-console.log('\n'.repeat(5))
+console.log('\n'.repeat(12))
 console.clear()
 
 const intents: ClientOptions['intents'] = [
@@ -131,10 +131,8 @@ function getMessageOptions(func: any, pass: string[] = []) {
 
   for (const key in vars) {
     const value: SubCommandMeta = vars[key]
-    console.log('[SETTING] ', key, value)
     options[value.name] = (fallback: any) => {
       const re = pass[Number(key)]
-      console.log('[SETTING:PASS] ', `[${key}], `, re)
       if (typeof re !== 'undefined')
         return Convert.ValueToType(re, value.type)
       return fallback
@@ -267,9 +265,9 @@ Client.on(Events.MessageCreate, async (message) => {
   const command = Commands.getCommand(baseCommand!)
   const ci: ChatInteraction = { message }
 
-  console.log('[DEBUG] Command: ', baseCommand)
-  console.log('[DEBUG] subCommand: ', subCommand)
-  console.log('[DEBUG] Arguments', args)
+  // console.log('[DEBUG] Command: ', baseCommand)
+  // console.log('[DEBUG] subCommand: ', subCommand)
+  // console.log('[DEBUG] Arguments', args)
 
   processCommand(getMessageOptions, ci, args[0], command, subCommand)
 })
