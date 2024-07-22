@@ -1,6 +1,5 @@
 import { Command, CommandFactory, Options } from '~/modules/decorators'
 import * as Discord from '~/class/discord'
-import { ToBoolean as Boolean } from '~/modules/convert'
 
 @Options.strict
 @CommandFactory('test', 'This is a test command.', [Discord.PFlags.BanMembers])
@@ -43,7 +42,7 @@ export class SubCommands {
   @Command.addBooleanOption('bool', 'This is just a test.')
   @Command.addSubCommand('four', '_four')
   public static async randomName(ci: Discord.ChatInteraction, args: any) {
-    await Discord.reply(ci, `%username% is now ${Boolean(args.bool(false))}`)
+    await Discord.reply(ci, `%username% is now ${args.bool(false)}`)
   }
 }
 

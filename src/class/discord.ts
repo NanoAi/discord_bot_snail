@@ -20,6 +20,7 @@ import {
   PermissionFlagsBits,
   PermissionsBitField,
 } from 'discord.js'
+import { Convert } from '~/modules/convert'
 
 console.log('\n'.repeat(5))
 console.clear()
@@ -38,9 +39,10 @@ export const PFlags: typeof PermissionFlagsBits = PermissionFlagsBits
 export const PermissionBuilder: typeof PermissionsBitField = PermissionsBitField
 export type CommandData = DSlashCommandBuilder | SlashCommandOptionsOnlyBuilder
 export type CommandOption = ApplicationCommandOptionBase
+export type SubCommandType = string
+export interface SubCommandMeta { name: string, type: SubCommandType }
 export type Permissions = DPermissions | bigint | number | null | undefined
 export type Interaction = DInteraction<CacheType>
-
 interface IChatInteraction {
   interaction: ChatInputCommandInteraction<CacheType>
   message: Message<boolean>
@@ -107,15 +109,15 @@ function getOptions(func: any, pass: any[]) {
   const hoisted: any = []
   const vars = Reflect.getOwnMetadata('command:vars', func) || []
 
-  pass.forEach((v: any) => {
+  pass.forEach((v: { name: string, value: any }) => {
     hoisted[v.name] = v.value
   })
 
-  vars.forEach((v: any) => {
-    options[v] = (fallback: any) => {
-      const re = hoisted[v]
+  vars.forEach((v: SubCommandMeta) => {
+    options[v.name] = (fallback: any) => {
+      const re = hoisted[v.name]
       if (typeof re !== 'undefined')
-        return re
+        return Convert.ValueToType(re, v.type)
       return fallback
     }
   })
@@ -128,15 +130,14 @@ function getMessageOptions(func: any, pass: string[] = []) {
   const vars = Reflect.getOwnMetadata('command:vars', func)
 
   for (const key in vars) {
-    if (Object.prototype.hasOwnProperty.call(vars, key)) {
-      const value = vars[key]
-      console.log(key, value)
-      options[value] = (fallback: any) => {
-        const re = pass[Number(key)]
-        if (typeof re !== 'undefined')
-          return re
-        return fallback
-      }
+    const value: SubCommandMeta = vars[key]
+    console.log('[SETTING] ', key, value)
+    options[value.name] = (fallback: any) => {
+      const re = pass[Number(key)]
+      console.log('[SETTING:PASS] ', `[${key}], `, re)
+      if (typeof re !== 'undefined')
+        return Convert.ValueToType(re, value.type)
+      return fallback
     }
   }
 
@@ -151,6 +152,9 @@ function processCommand(
   subId?: string,
 ): boolean {
   let re = false
+
+  console.log('[DEBUG:PROCESS] [1] ', !!command, subId)
+  console.log('[DEBUG:PROCESS] [2] ', command && !!command.main, subId)
 
   if (command) {
     const subcommands = command.subcommands
@@ -255,7 +259,7 @@ Client.on(Events.MessageCreate, async (message) => {
 
   const baseCommand = match[1]
   let args = [...(match[3] || '').matchAll(/(['"][^'"]+['"])|\S+/g)]
-  const subCommand = match[2] === ';' && (args && String(args[0])) || undefined
+  const subCommand = match[2] === ';' && (args && String(args[0][0])) || undefined
 
   if (subCommand)
     args = args.splice(1, 1)
@@ -267,7 +271,7 @@ Client.on(Events.MessageCreate, async (message) => {
   console.log('[DEBUG] subCommand: ', subCommand)
   console.log('[DEBUG] Arguments', args)
 
-  processCommand(getMessageOptions, ci, args, command, subCommand)
+  processCommand(getMessageOptions, ci, args[0], command, subCommand)
 })
 
 Client.on(Events.InteractionCreate, async (interaction) => {

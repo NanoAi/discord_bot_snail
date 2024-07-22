@@ -94,17 +94,21 @@ toJSON
 */
 
 export class Options {
-  private static main(target: any, name: string, config: any) {
-    const vars: string[] = Reflect.getOwnMetadata('command:vars', target)
-    if (!vars.includes(name))
-      throw new Error(`The variable "${name}" is not defined in function "${target.name}".`)
+  private static main(target: any, meta: Discord.SubCommandMeta, config: any) {
+    const vars: Discord.SubCommandMeta[] = Reflect.getOwnMetadata('command:vars', target)
+    console.log('[DEBUG] VARS: ', vars)
+    console.log('[DEBUG] META: ', meta)
+    console.log('[DEBUG] COMPARE: ', vars.includes(meta))
 
-    target.commandOptions.set(name, config)
+    if (!vars.includes(meta))
+      throw new Error(`The variable "${meta.name}" of type "${meta.type}" is not defined in function "${target.name}".`)
+
+    target.commandOptions.set(meta.name, config)
   }
 
-  public static string(config: Discord.Configs['SlashString'], name?: string) {
+  public static string(config: Discord.Configs['SlashString']) {
     return function (target: any, _context: any) {
-      Options.main(target, name || target._lastOptionTarget, config)
+      Options.main(target, target._lastOptionTarget, config)
     }
   }
 
@@ -199,13 +203,13 @@ export class Command {
     }
   }
 
-  private static initOptions(name: string, target: any) {
+  private static initOptions(name: string, type: Discord.SubCommandType, target: any) {
     const key = 'command:vars'
-    const meta: string[] = Reflect.getOwnMetadata(key, target) || []
+    const meta: Discord.SubCommandMeta[] = Reflect.getOwnMetadata(key, target) || []
     target.commandOptions = target.commandOptions || new Map<string, (config: any) => any>()
-    target._lastOptionTarget = name
+    target._lastOptionTarget = { name, type }
 
-    meta.push(name)
+    meta.push(target._lastOptionTarget)
     Reflect.defineMetadata(key, meta, target)
   }
 
@@ -225,7 +229,7 @@ export class Command {
     settings: Discord.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, target)
+      Command.initOptions(name, 'boolean', target)
       Command.prepare(
         target,
         command => command.addBooleanOption(Command.wrapper(target, name, description, settings)),
@@ -239,7 +243,7 @@ export class Command {
     settings: Discord.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, target)
+      Command.initOptions(name, 'string', target)
       Command.prepare(
         target,
         command => command.addStringOption(Command.wrapper(target, name, description, settings)),
