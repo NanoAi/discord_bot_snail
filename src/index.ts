@@ -45,7 +45,8 @@ const rest = new DRestClient().setToken(env.token)
     spinner.text = `Started refreshing ${commandCount} application (/) commands.`
 
     // The put method is used to fully refresh all commands in the guild with the current set
-    await rest.put(Routes.applicationGuildCommands(env.appID, env.testServer), {
+    // Routes.applicationGuildCommands(env.appID, env.testServer)
+    await rest.put(Routes.applicationCommands(env.appID), {
       body: Discord.Commands.getCommandsAsJson(),
     })
 

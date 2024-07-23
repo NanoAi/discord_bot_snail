@@ -88,6 +88,7 @@ export class Commands {
     for (const command of this.commands.values()) {
       commandsAsJson.push(command.data.toJSON())
     }
+    console.log(commandsAsJson, '\r\n\r\n')
     return commandsAsJson
   }
 
@@ -151,8 +152,8 @@ function processCommand(
 ): boolean {
   let re = false
 
-  console.log('[DEBUG:PROCESS] [1] ', !!command, subId)
-  console.log('[DEBUG:PROCESS] [2] ', command && !!command.main, subId)
+  // console.log('[DEBUG:PROCESS] [1] ', !!command, subId)
+  // console.log('[DEBUG:PROCESS] [2] ', command && !!command.main, subId)
 
   if (command) {
     const subcommands = command.subcommands
@@ -181,6 +182,7 @@ function processCommand(
 
 export async function reply(ci: ChatInteraction, response: string, options?: InteractionReplyOptions) {
   if (ci.interaction) {
+    console.log(response)
     response = response.replaceAll('%username%', ci.interaction.user.username)
     if (options) {
       options.fetchReply = true
@@ -197,33 +199,27 @@ export async function reply(ci: ChatInteraction, response: string, options?: Int
 }
 
 export class CommandInteraction {
+  private struct: any
   private ci: ChatInteraction
-  private messagePromise: PromiseWithResolvers<IChatInteraction['message']>
-  private interactionPromise: PromiseWithResolvers<IChatInteraction['interaction']>
-  private static noop = () => {}
+  private internal: PromiseWithResolvers<IChatInteraction['interaction']>
 
   constructor(ci: ChatInteraction) {
     this.ci = ci
-    this.messagePromise = Promise.withResolvers<IChatInteraction['message']>()
-    this.interactionPromise = Promise.withResolvers<IChatInteraction['interaction']>()
+    this.internal = Promise.withResolvers<IChatInteraction['interaction']>()
 
-    if (this.ci.interaction) {
-      this.messagePromise.reject()
-      this.interactionPromise.resolve(this.ci.interaction!)
-    }
-    else {
-      this.interactionPromise.reject()
-      this.messagePromise.resolve(this.ci.message!)
-    }
+    if (this.ci.interaction)
+      this.internal.resolve(this.ci.interaction!)
+    else
+      this.internal.reject(this.ci.message!)
   }
 
   interaction(callback: (interaction: IChatInteraction['interaction']) => void) {
-    this.interactionPromise.promise.then(callback).catch(CommandInteraction.noop)
+    this.struct = this.internal.promise.then(callback)
     return this
   }
 
   message(callback: (message: IChatInteraction['message']) => void) {
-    this.messagePromise.promise.then(callback).catch(CommandInteraction.noop)
+    this.struct.catch(callback)
     return this
   }
 }

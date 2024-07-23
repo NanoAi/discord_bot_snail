@@ -1,3 +1,4 @@
+import { ChannelType } from 'discord.js'
 import { Command, CommandFactory, Options } from '~/modules/decorators'
 import * as Discord from '~/class/discord'
 
@@ -9,6 +10,16 @@ export class TestCommand {
   @Command.addStringOption('string', 'Testing a string argument.')
   public static async main(ci: Discord.ChatInteraction, args: any) {
     await Discord.reply(ci, `Str: ${args.string()}\nBool: ${args.bool()}`, { ephemeral: true })
+  }
+}
+
+@Options.setContexts([0, 1, 2])
+@Options.setIntegrations([0, 1])
+@CommandFactory('send', 'Send a message.')
+export class SendToServer {
+  @Command.addStringOption('message', 'The message.')
+  public static async main(ci: Discord.ChatInteraction, args: any) {
+    await Discord.reply(ci, args.message('No message provided...'))
   }
 }
 
@@ -52,5 +63,15 @@ export class ShutdownCommand {
   public static async main(ci: Discord.ChatInteraction) {
     await Discord.reply(ci, `Goodnight~ %username%`)
     Discord.Client.destroy()
+  }
+}
+
+@CommandFactory('leave', 'leave the current guild.')
+export class LeaveCommand {
+  // This should be defined as the base function to call.
+  public static async main(ci: Discord.ChatInteraction) {
+    await Discord.reply(ci, `Goodnight~ %username%`)
+    if (ci.interaction)
+      ci.interaction.guild?.leave()
   }
 }

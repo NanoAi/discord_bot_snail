@@ -1,5 +1,7 @@
 import 'reflect-metadata'
 import type {
+  Integration,
+  IntegrationType,
   SlashCommandOptionsOnlyBuilder,
   SlashCommandSubcommandsOnlyBuilder,
 } from 'discord.js'
@@ -44,6 +46,7 @@ export function CommandFactory(
       .setDefaultMemberPermissions(perms.valueOf())
 
     Reflect.defineProperty(command, 'strict', { value: target.strict || false })
+
     Discord.Commands.getMap().set(metadata.name, {
       data: command,
       main: target.main,
@@ -96,14 +99,17 @@ toJSON
 export class Options {
   private static main(target: any, meta: Discord.SubCommandMeta, config: any) {
     const vars: Discord.SubCommandMeta[] = Reflect.getOwnMetadata('command:vars', target)
-    console.log('[DEBUG] VARS: ', vars)
-    console.log('[DEBUG] META: ', meta)
-    console.log('[DEBUG] COMPARE: ', vars.includes(meta))
-
     if (!vars.includes(meta))
       throw new Error(`The variable "${meta.name}" of type "${meta.type}" is not defined in function "${target.name}".`)
-
     target.commandOptions.set(meta.name, config)
+  }
+
+  private static updateCommand(metadata: { name: string, description: string }, command: Discord.CommandStore) {
+    Discord.Commands.getMap().set(metadata.name, {
+      data: command.data,
+      main: command.main,
+      subcommands: command.subcommands,
+    })
   }
 
   public static string(config: Discord.Configs['SlashString']) {
@@ -114,6 +120,34 @@ export class Options {
 
   public static strict(target: any, _context: any) {
     target.strict = true
+  }
+
+  public static setIntegrations(value: (0 | 1)[]) {
+    return function (target: any, _context: any) {
+      const metadata = Reflect.getOwnMetadata('command', target)
+      const command = Discord.Commands.getCommand(metadata.name)
+
+      if (!command) {
+        throw new Error('Command not yet defined in this context.')
+      }
+
+      (command.data as any).integration_types = value
+      Options.updateCommand(metadata, command)
+    }
+  }
+
+  public static setContexts(value: (0 | 1 | 2)[]) {
+    return function (target: any, _context: any) {
+      const metadata = Reflect.getOwnMetadata('command', target)
+      const command = Discord.Commands.getCommand(metadata.name)
+
+      if (!command) {
+        throw new Error('Command not yet defined in this context.')
+      }
+
+      (command.data as any).contexts = value
+      Options.updateCommand(metadata, command)
+    }
   }
 }
 
