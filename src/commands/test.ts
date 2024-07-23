@@ -15,7 +15,7 @@ export class TestCommand {
 
 @Options.setContexts([0, 1, 2])
 @Options.setIntegrations([0, 1])
-@CommandFactory('send', 'Send a message.')
+@CommandFactory('send', 'Send a message.', [Discord.PFlags.SendMessages])
 export class SendToServer {
   @Command.addStringOption('message', 'The message.')
   public static async main(ci: Discord.ChatInteraction, args: any) {
