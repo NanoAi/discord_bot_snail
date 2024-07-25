@@ -17,6 +17,7 @@ import {
   Client as DClient,
   Events,
   GatewayIntentBits,
+  Partials,
   PermissionFlagsBits,
   PermissionsBitField,
 } from 'discord.js'
@@ -29,11 +30,17 @@ const intents: ClientOptions['intents'] = [
   GatewayIntentBits.Guilds,
   GatewayIntentBits.GuildMessages,
   GatewayIntentBits.MessageContent,
+  GatewayIntentBits.DirectMessages,
   GatewayIntentBits.GuildModeration,
   GatewayIntentBits.AutoModerationExecution,
 ]
 
-export const Client = new DClient({ intents })
+const partials = [
+  Partials.Channel,
+  Partials.Message,
+]
+
+export const Client = new DClient({ intents, partials })
 /** Permission Flags. */
 export const PFlags: typeof PermissionFlagsBits = PermissionFlagsBits
 export const PermissionBuilder: typeof PermissionsBitField = PermissionsBitField
@@ -161,7 +168,9 @@ function getMessageOptions(func: any, pass: string[] = []) {
   for (const key in vars) {
     const value: SubCommandMeta = vars[key]
     options[value.name] = (fallback: any) => {
-      const re = pass[Number(key)]
+      let re = pass.length > 0 && pass[Number(key)] || undefined
+      if (typeof re === 'object')
+        re = re[1] && re[1] || re[0]
       if (typeof re !== 'undefined')
         return Convert.ValueToType(re, value.type)
       return fallback
@@ -281,7 +290,7 @@ Client.on(Events.MessageCreate, async (message) => {
   })
 
   const baseCommand = match[1]
-  let args = [...(match[3] || '').matchAll(/(['"][^'"]+['"])|\S+/g)]
+  let args = [...(match[3] || '').matchAll(/['"]([^'"]+)['"]|\S+/g)]
   const subCommand = match[2] === ';' && (args && String(args[0][0])) || undefined
 
   if (subCommand)
@@ -289,12 +298,13 @@ Client.on(Events.MessageCreate, async (message) => {
 
   const command = Commands.getCommand(baseCommand!)
   const ci: ChatInteraction = { message }
+  const finalArgs = args.length > 0 && args || undefined
 
-  // console.log('[DEBUG] Command: ', baseCommand)
-  // console.log('[DEBUG] subCommand: ', subCommand)
-  // console.log('[DEBUG] Arguments', args)
+  console.log('[DEBUG] Command: ', baseCommand)
+  console.log('[DEBUG] subCommand: ', subCommand)
+  console.log('[DEBUG] Arguments', args)
 
-  processCommand(getMessageOptions, ci, args[0], command, subCommand)
+  processCommand(getMessageOptions, ci, finalArgs, command, subCommand)
 })
 
 Client.on(Events.InteractionCreate, async (interaction) => {
