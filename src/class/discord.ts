@@ -140,7 +140,7 @@ export class Commands {
   }
 }
 
-function getOptions(func: any, pass: any[]) {
+function getOptions(func: any, pass: any[], ci: ChatInteractionAssert) {
   const options: any = []
   const hoisted: any = []
   const vars = Reflect.getOwnMetadata('command:vars', func) || []
@@ -152,8 +152,10 @@ function getOptions(func: any, pass: any[]) {
   vars.forEach((v: SubCommandMeta) => {
     options[v.name] = (fallback: any) => {
       const re = hoisted[v.name]
+      // console.log('SubCommand Response: ', re, typeof re)
+      console.log(ci)
       if (typeof re !== 'undefined')
-        return Convert.ValueToType(re, v.type)
+        return Convert.ValueToType(ci, re, v.type)
       return fallback
     }
   })
@@ -161,7 +163,7 @@ function getOptions(func: any, pass: any[]) {
   return options as { [key: string]: () => any }
 }
 
-function getMessageOptions(func: any, pass: string[] = []) {
+function getMessageOptions(func: any, pass: string[] = [], ci: ChatInteractionAssert) {
   const options: any = []
   const vars = Reflect.getOwnMetadata('command:vars', func)
 
@@ -172,7 +174,7 @@ function getMessageOptions(func: any, pass: string[] = []) {
       if (typeof re === 'object')
         re = re[1] && re[1] || re[0]
       if (typeof re !== 'undefined')
-        return Convert.ValueToType(re, value.type)
+        return Convert.ValueToType(ci, re, value.type)
       return fallback
     }
   }
@@ -195,14 +197,14 @@ function processCommand(
   if (command) {
     const subcommands = command.subcommands
     if (command.main) {
-      command.main(ci, getter(command.main, opts))
+      command.main(ci, getter(command.main, opts, ci))
       re = true
     }
 
     if (subId) {
       const func: any = subcommands.get(subId)
       if (func)
-        func(ci, getter(func, opts))
+        func(ci, getter(func, opts, ci))
       re = !!func
     }
   }

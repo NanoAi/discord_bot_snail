@@ -281,7 +281,7 @@ export class Command {
   public static addIntegerOption(
     name: string,
     description: string,
-    settings: Discord.CommandSettings,
+    settings: Discord.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, 'integer', target)
@@ -296,7 +296,7 @@ export class Command {
   public static addNumberOption(
     name: string,
     description: string,
-    settings: Discord.CommandSettings,
+    settings: Discord.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, 'number', target)
@@ -310,7 +310,7 @@ export class Command {
   public static addUserOption(
     name: string,
     description: string,
-    settings: Discord.CommandSettings,
+    settings: Discord.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, 'user', target)
@@ -324,7 +324,7 @@ export class Command {
   public static addChannelOption(
     name: string,
     description: string,
-    settings: Discord.CommandSettings,
+    settings: Discord.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, 'channel', target)
@@ -338,7 +338,7 @@ export class Command {
   public static addRoleOption(
     name: string,
     description: string,
-    settings: Discord.CommandSettings,
+    settings: Discord.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, 'role', target)
@@ -352,7 +352,7 @@ export class Command {
   public static addAttachmentOption(
     name: string,
     description: string,
-    settings: Discord.CommandSettings,
+    settings: Discord.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, 'attachment', target)
@@ -366,7 +366,7 @@ export class Command {
   public static addMentionableOption(
     name: string,
     description: string,
-    settings: Discord.CommandSettings,
+    settings: Discord.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, 'mentionable', target)

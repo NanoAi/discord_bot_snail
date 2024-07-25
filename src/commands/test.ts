@@ -4,11 +4,9 @@ import { IntegrationType, InteractionContextType } from '~/class/discord'
 
 @CommandFactory('test', 'This is a test command.', [Discord.PFlags.BanMembers])
 export class TestCommand {
-  @Command.addBooleanOption('bool', 'Testing a boolean argument.')
-  @Options.string(settings => settings.setMinLength(3))
-  @Command.addStringOption('string', 'Testing a string argument.')
+  @Command.addMentionableOption('mention', 'select a user.')
   public static async main(ci: Discord.ChatInteraction, args: any) {
-    await Discord.reply(ci, `Str: ${args.string()}\nBool: ${args.bool()}`, { ephemeral: true })
+    await Discord.reply(ci, `${args.mention()}`, { ephemeral: true })
   }
 }
 
