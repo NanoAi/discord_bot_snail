@@ -369,7 +369,7 @@ export class Command {
     settings: Discord.CommandSettings,
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, 'attachment', target)
+      Command.initOptions(name, 'mentionable', target)
       Command.prepare(
         target,
         command => command.addMentionableOption(Command.wrapper(target, name, description, settings)),
