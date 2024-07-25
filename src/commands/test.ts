@@ -1,8 +1,7 @@
-import { ChannelType } from 'discord.js'
 import { Command, CommandFactory, Options } from '~/modules/decorators'
 import * as Discord from '~/class/discord'
+import { IntegrationType, InteractionContextType } from '~/class/discord'
 
-@Options.strict
 @CommandFactory('test', 'This is a test command.', [Discord.PFlags.BanMembers])
 export class TestCommand {
   @Command.addBooleanOption('bool', 'Testing a boolean argument.')
@@ -13,8 +12,8 @@ export class TestCommand {
   }
 }
 
-@Options.setContexts([0, 1, 2])
-@Options.setIntegrations([0, 1])
+@Options.setContexts(InteractionContextType.ALL)
+@Options.setIntegrations(IntegrationType.ALL)
 @CommandFactory('send', 'Send a message.', [Discord.PFlags.SendMessages])
 export class SendToServer {
   @Command.addStringOption('message', 'The message.')

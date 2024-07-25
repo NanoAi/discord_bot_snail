@@ -1,13 +1,10 @@
 import 'reflect-metadata'
 import type {
-  Integration,
-  IntegrationType,
   SlashCommandOptionsOnlyBuilder,
   SlashCommandSubcommandsOnlyBuilder,
 } from 'discord.js'
 import {
   SlashCommandBuilder,
-  SlashCommandStringOption,
   SlashCommandSubcommandBuilder,
 } from 'discord.js'
 
@@ -45,8 +42,6 @@ export function CommandFactory(
       .setDescription(metadata.description)
       .setDefaultMemberPermissions(perms.valueOf())
 
-    Reflect.defineProperty(command, 'strict', { value: target.strict || false })
-
     Discord.Commands.getMap().set(metadata.name, {
       data: command,
       main: target.main,
@@ -59,15 +54,15 @@ export function CommandFactory(
 
 /*
 Map(23) {
-  'addBooleanOption' => [Function: addBooleanOption],
+[x] 'addBooleanOption' => [Function: addBooleanOption],
   'addUserOption' => [Function: addUserOption],
   'addChannelOption' => [Function: addChannelOption],
   'addRoleOption' => [Function: addRoleOption],
   'addAttachmentOption' => [Function: addAttachmentOption],
   'addMentionableOption' => [Function: addMentionableOption],
-  'addStringOption' => [Function: addStringOption],
-  'addIntegerOption' => [Function: addIntegerOption],
-  'addNumberOption' => [Function: addNumberOption],
+[x] 'addStringOption' => [Function: addStringOption],
+[x] 'addIntegerOption' => [Function: addIntegerOption],
+[x] 'addNumberOption' => [Function: addNumberOption],
   '_sharedAddOptionMethod' => [Function: _sharedAddOptionMethod],
   'setName' => [Function: setName],
   'setDescription' => [Function: setDescription],
@@ -118,11 +113,8 @@ export class Options {
     }
   }
 
-  public static strict(target: any, _context: any) {
-    target.strict = true
-  }
-
-  public static setIntegrations(value: (0 | 1)[]) {
+  public static setIntegrations(value: Discord.InteractionContextType[]) {
+    console.log(value[0], typeof value[0])
     return function (target: any, _context: any) {
       const metadata = Reflect.getOwnMetadata('command', target)
       const command = Discord.Commands.getCommand(metadata.name)
@@ -136,7 +128,7 @@ export class Options {
     }
   }
 
-  public static setContexts(value: (0 | 1 | 2)[]) {
+  public static setContexts(value: Discord.IntegrationType[]) {
     return function (target: any, _context: any) {
       const metadata = Reflect.getOwnMetadata('command', target)
       const command = Discord.Commands.getCommand(metadata.name)
@@ -281,6 +273,36 @@ export class Command {
       Command.prepare(
         target,
         command => command.addStringOption(Command.wrapper(target, name, description, settings)),
+      )
+    }
+  }
+
+  /** Add an integer (whole number) option. */
+  public static addIntegerOption(
+    name: string,
+    description: string,
+    settings: Discord.CommandSettings,
+  ) {
+    return function (target: any, _context: any) {
+      Command.initOptions(name, 'integer', target)
+      Command.prepare(
+        target,
+        command => command.addIntegerOption(Command.wrapper(target, name, description, settings)),
+      )
+    }
+  }
+
+  /** Add a double (decimal number) option. */
+  public static addNumberOption(
+    name: string,
+    description: string,
+    settings: Discord.CommandSettings,
+  ) {
+    return function (target: any, _context: any) {
+      Command.initOptions(name, 'number', target)
+      Command.prepare(
+        target,
+        command => command.addNumberOption(Command.wrapper(target, name, description, settings)),
       )
     }
   }

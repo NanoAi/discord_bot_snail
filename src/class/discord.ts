@@ -43,7 +43,7 @@ export type SubCommandType = string
 export interface SubCommandMeta { name: string, type: SubCommandType }
 export type Permissions = DPermissions | bigint | number | null | undefined
 export type Interaction = DInteraction<CacheType>
-interface IChatInteraction {
+interface ChatInteractionAssert {
   interaction: ChatInputCommandInteraction<CacheType>
   message: Message<boolean>
 }
@@ -52,8 +52,8 @@ interface IChatInteraction {
  * Interaction OR Message are ALWAYS defined.
  */
 export interface ChatInteraction {
-  interaction?: IChatInteraction['interaction']
-  message?: IChatInteraction['message']
+  interaction?: ChatInteractionAssert['interaction']
+  message?: ChatInteractionAssert['message']
 }
 
 export interface CommandSettings {
@@ -74,6 +74,34 @@ export interface CommandStore {
     | SlashCommandSubcommandsOnlyBuilder
   subcommands: Map<string, any>
   main?: (interaction: ChatInteraction, options: any) => void
+}
+
+/**
+ * Interaction Context Types.
+ * @readonly
+ */
+export class InteractionContextType {
+  /** Interaction can be used within servers */
+  static readonly GUILD = 0
+  /** Interaction can be used within DMs with the app's bot user */
+  static readonly BOT_DM = 1
+  /** Interaction can be used within Group DMs and DMs other than the app's bot user */
+  static readonly PRIVATE_CHANNEL = 2
+  /** Interaction can be used with `GUILD`, `BOT_DM`, and `PRIVATE_CHANNEL` */
+  static readonly ALL = [0, 1, 2]
+}
+
+/**
+ * Application Integration Types.
+ * @readonly
+ */
+export class IntegrationType {
+  /** App is installable to servers */
+  static readonly GUILD_INSTALL = 0
+  /** App is installable to users */
+  static readonly USER_INSTALL = 1
+  /** App is installable to both servers and users */
+  static readonly ALL = [0, 1]
 }
 
 export class Commands {
@@ -201,11 +229,11 @@ export async function reply(ci: ChatInteraction, response: string, options?: Int
 export class CommandInteraction {
   private struct: any
   private ci: ChatInteraction
-  private internal: PromiseWithResolvers<IChatInteraction['interaction']>
+  private internal: PromiseWithResolvers<ChatInteractionAssert['interaction']>
 
   constructor(ci: ChatInteraction) {
     this.ci = ci
-    this.internal = Promise.withResolvers<IChatInteraction['interaction']>()
+    this.internal = Promise.withResolvers<ChatInteractionAssert['interaction']>()
 
     if (this.ci.interaction)
       this.internal.resolve(this.ci.interaction!)
@@ -213,12 +241,12 @@ export class CommandInteraction {
       this.internal.reject(this.ci.message!)
   }
 
-  interaction(callback: (interaction: IChatInteraction['interaction']) => void) {
+  interaction(callback: (interaction: ChatInteractionAssert['interaction']) => void) {
     this.struct = this.internal.promise.then(callback)
     return this
   }
 
-  message(callback: (message: IChatInteraction['message']) => void) {
+  message(callback: (message: ChatInteractionAssert['message']) => void) {
     this.struct.catch(callback)
     return this
   }
