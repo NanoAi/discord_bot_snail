@@ -55,23 +55,23 @@ export function CommandFactory(
 /*
 Map(23) {
 [x] 'addBooleanOption' => [Function: addBooleanOption],
-  'addUserOption' => [Function: addUserOption],
-  'addChannelOption' => [Function: addChannelOption],
-  'addRoleOption' => [Function: addRoleOption],
-  'addAttachmentOption' => [Function: addAttachmentOption],
-  'addMentionableOption' => [Function: addMentionableOption],
+[x] 'addUserOption' => [Function: addUserOption],
+[x] 'addChannelOption' => [Function: addChannelOption],
+[x] 'addRoleOption' => [Function: addRoleOption],
+[x] 'addAttachmentOption' => [Function: addAttachmentOption],
+[x] 'addMentionableOption' => [Function: addMentionableOption],
 [x] 'addStringOption' => [Function: addStringOption],
 [x] 'addIntegerOption' => [Function: addIntegerOption],
 [x] 'addNumberOption' => [Function: addNumberOption],
   '_sharedAddOptionMethod' => [Function: _sharedAddOptionMethod],
-  'setName' => [Function: setName],
-  'setDescription' => [Function: setDescription],
+[x] 'setName' => [Function: setName],
+[x] 'setDescription' => [Function: setDescription],
   'setNameLocalization' => [Function: setNameLocalization],
   'setNameLocalizations' => [Function: setNameLocalizations],
   'setDescriptionLocalization' => [Function: setDescriptionLocalization],
   'setDescriptionLocalizations' => [Function: setDescriptionLocalizations],
   'addSubcommandGroup' => [Function: addSubcommandGroup],
-  'addSubcommand' => [Function: addSubcommand],
+[x] 'addSubcommand' => [Function: addSubcommand],
   'setDefaultPermission' => [Function: setDefaultPermission],
   'setDefaultMemberPermissions' => [Function: setDefaultMemberPermissions],
   'setDMPermission' => [Function: setDMPermission],
@@ -303,6 +303,76 @@ export class Command {
       Command.prepare(
         target,
         command => command.addNumberOption(Command.wrapper(target, name, description, settings)),
+      )
+    }
+  }
+
+  public static addUserOption(
+    name: string,
+    description: string,
+    settings: Discord.CommandSettings,
+  ) {
+    return function (target: any, _context: any) {
+      Command.initOptions(name, 'user', target)
+      Command.prepare(
+        target,
+        command => command.addUserOption(Command.wrapper(target, name, description, settings)),
+      )
+    }
+  }
+
+  public static addChannelOption(
+    name: string,
+    description: string,
+    settings: Discord.CommandSettings,
+  ) {
+    return function (target: any, _context: any) {
+      Command.initOptions(name, 'channel', target)
+      Command.prepare(
+        target,
+        command => command.addChannelOption(Command.wrapper(target, name, description, settings)),
+      )
+    }
+  }
+
+  public static addRoleOption(
+    name: string,
+    description: string,
+    settings: Discord.CommandSettings,
+  ) {
+    return function (target: any, _context: any) {
+      Command.initOptions(name, 'role', target)
+      Command.prepare(
+        target,
+        command => command.addRoleOption(Command.wrapper(target, name, description, settings)),
+      )
+    }
+  }
+
+  public static addAttachmentOption(
+    name: string,
+    description: string,
+    settings: Discord.CommandSettings,
+  ) {
+    return function (target: any, _context: any) {
+      Command.initOptions(name, 'attachment', target)
+      Command.prepare(
+        target,
+        command => command.addAttachmentOption(Command.wrapper(target, name, description, settings)),
+      )
+    }
+  }
+
+  public static addMentionableOption(
+    name: string,
+    description: string,
+    settings: Discord.CommandSettings,
+  ) {
+    return function (target: any, _context: any) {
+      Command.initOptions(name, 'attachment', target)
+      Command.prepare(
+        target,
+        command => command.addMentionableOption(Command.wrapper(target, name, description, settings)),
       )
     }
   }
