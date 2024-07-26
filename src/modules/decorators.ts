@@ -74,8 +74,8 @@ Map(23) {
 [x] 'addSubcommand' => [Function: addSubcommand],
   'setDefaultPermission' => [Function: setDefaultPermission],
   'setDefaultMemberPermissions' => [Function: setDefaultMemberPermissions],
-  'setDMPermission' => [Function: setDMPermission],
-  'setNSFW' => [Function: setNSFW],
+[x] 'setDMPermission' => [Function: setDMPermission],
+[x] 'setNSFW' => [Function: setNSFW],
   'toJSON' => [Function: toJSON]
 }
 
@@ -91,14 +91,7 @@ setRequired
 toJSON
 */
 
-export class Options {
-  private static main(target: any, meta: Discord.SubCommandMeta, config: any) {
-    const vars: Discord.SubCommandMeta[] = Reflect.getOwnMetadata('command:vars', target)
-    if (!vars.includes(meta))
-      throw new Error(`The variable "${meta.name}" of type "${meta.type}" is not defined in function "${target.name}".`)
-    target.commandOptions.set(meta.name, config)
-  }
-
+export class Factory {
   private static updateCommand(metadata: { name: string, description: string }, command: Discord.CommandStore) {
     Discord.Commands.getMap().set(metadata.name, {
       data: command.data,
@@ -107,10 +100,30 @@ export class Options {
     })
   }
 
-  public static string(config: Discord.Configs['SlashString']) {
-    return function (target: any, _context: any) {
-      Options.main(target, target._lastOptionTarget, config)
+  public static NSFW(target: any, _context: any) {
+    const metadata = Reflect.getOwnMetadata('command', target)
+    const command = Discord.Commands.getCommand(metadata.name)
+
+    if (!command) {
+      throw new Error('Command not yet defined in this context.')
     }
+
+    command.data.setNSFW(true)
+    Factory.updateCommand(metadata, command)
+  }
+
+  public static noDM(target: any, _context: any) {
+    const metadata = Reflect.getOwnMetadata('command', target)
+    console.log(metadata)
+
+    const command = Discord.Commands.getCommand(metadata.name)
+
+    if (!command) {
+      throw new Error('Command not yet defined in this context.')
+    }
+
+    command.data.setDMPermission(false)
+    Factory.updateCommand(metadata, command)
   }
 
   public static setIntegrations(value: Discord.InteractionContextType[]) {
@@ -124,7 +137,7 @@ export class Options {
       }
 
       (command.data as any).integration_types = value
-      Options.updateCommand(metadata, command)
+      Factory.updateCommand(metadata, command)
     }
   }
 
@@ -138,7 +151,22 @@ export class Options {
       }
 
       (command.data as any).contexts = value
-      Options.updateCommand(metadata, command)
+      Factory.updateCommand(metadata, command)
+    }
+  }
+}
+
+export class Options {
+  private static main(target: any, meta: Discord.SubCommandMeta, config: any) {
+    const vars: Discord.SubCommandMeta[] = Reflect.getOwnMetadata('command:vars', target)
+    if (!vars.includes(meta))
+      throw new Error(`The variable "${meta.name}" of type "${meta.type}" is not defined in function "${target.name}".`)
+    target.commandOptions.set(meta.name, config)
+  }
+
+  public static string(config: Discord.Configs['SlashString']) {
+    return function (target: any, _context: any) {
+      Options.main(target, target._lastOptionTarget, config)
     }
   }
 }
@@ -299,7 +327,7 @@ export class Command {
     settings: Discord.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, 'number', target)
+      Command.initOptions(name, 'double', target)
       Command.prepare(
         target,
         command => command.addNumberOption(Command.wrapper(target, name, description, settings)),

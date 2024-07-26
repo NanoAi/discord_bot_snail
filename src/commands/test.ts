@@ -1,7 +1,8 @@
-import { Command, CommandFactory, Options } from '~/modules/decorators'
+import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
 import * as Discord from '~/class/discord'
 import { IntegrationType, InteractionContextType } from '~/class/discord'
 
+@Factory.noDM
 @CommandFactory('test', 'This is a test command.', [Discord.PFlags.BanMembers])
 export class TestCommand {
   @Command.addMentionableOption('mention', 'select a user.')
@@ -10,8 +11,8 @@ export class TestCommand {
   }
 }
 
-@Options.setContexts(InteractionContextType.ALL)
-@Options.setIntegrations(IntegrationType.ALL)
+@Factory.setContexts(InteractionContextType.ALL)
+@Factory.setIntegrations(IntegrationType.ALL)
 @CommandFactory('send', 'Send a message.', [Discord.PFlags.SendMessages])
 export class SendToServer {
   @Command.addStringOption('message', 'The message.')
@@ -63,6 +64,7 @@ export class ShutdownCommand {
   }
 }
 
+@Factory.noDM
 @CommandFactory('leave', 'leave the current guild.')
 export class LeaveCommand {
   // This should be defined as the base function to call.

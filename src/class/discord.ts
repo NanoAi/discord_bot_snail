@@ -152,8 +152,7 @@ function getOptions(func: any, pass: any[], ci: ChatInteractionAssert) {
   vars.forEach((v: SubCommandMeta) => {
     options[v.name] = (fallback: any) => {
       const re = hoisted[v.name]
-      // console.log('SubCommand Response: ', re, typeof re)
-      console.log(ci)
+      console.log('Response: ', re, typeof re, '\n---\n', ci)
       if (typeof re !== 'undefined')
         return Convert.ValueToType(ci, re, v.type)
       return fallback
@@ -237,28 +236,34 @@ export async function reply(ci: ChatInteraction, response: string, options?: Int
   }
 }
 
+export function getChatInteraction(ci: ChatInteraction) {
+  if (ci.interaction)
+    return ci.interaction
+  return ci.message!
+}
+
 export class CommandInteraction {
-  private struct: any
+  private lock: boolean = false
   private ci: ChatInteraction
-  private internal: PromiseWithResolvers<ChatInteractionAssert['interaction']>
 
   constructor(ci: ChatInteraction) {
     this.ci = ci
-    this.internal = Promise.withResolvers<ChatInteractionAssert['interaction']>()
-
-    if (this.ci.interaction)
-      this.internal.resolve(this.ci.interaction!)
-    else
-      this.internal.reject(this.ci.message!)
+    return this
   }
 
   interaction(callback: (interaction: ChatInteractionAssert['interaction']) => void) {
-    this.struct = this.internal.promise.then(callback)
+    if (!this.lock && this.ci.interaction) {
+      callback(this.ci.interaction)
+      this.lock = true
+    }
     return this
   }
 
   message(callback: (message: ChatInteractionAssert['message']) => void) {
-    this.struct.catch(callback)
+    if (!this.lock && this.ci.message) {
+      callback(this.ci.message)
+      this.lock = true
+    }
     return this
   }
 }
