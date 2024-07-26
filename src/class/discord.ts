@@ -202,8 +202,12 @@ function processCommand(
 
     if (subId) {
       const func: any = subcommands.get(subId)
-      if (func)
+      if (func) {
         func(ci, getter(func, opts, ci))
+        if (ci.interaction && func.defer) {
+          ci.interaction.deferReply()
+        }
+      }
       re = !!func
     }
   }

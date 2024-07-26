@@ -164,6 +164,10 @@ export class Options {
     target.commandOptions.set(meta.name, config)
   }
 
+  public static defer(target: any, _context: any) {
+    Reflect.defineMetadata('command:defer', true, target)
+  }
+
   public static string(config: Discord.Configs['SlashString']) {
     return function (target: any, _context: any) {
       Options.main(target, target._lastOptionTarget, config)
