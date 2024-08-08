@@ -100,34 +100,36 @@ export class Factory {
     })
   }
 
-  public static NSFW(target: any, _context: any) {
-    const metadata = Reflect.getOwnMetadata('command', target)
-    const command = Discord.Commands.getCommand(metadata.name)
+  public static NSFW() {
+    return function (target: any, _context: any) {
+      const metadata = Reflect.getOwnMetadata('command', target)
+      const command = Discord.Commands.getCommand(metadata.name)
 
-    if (!command) {
-      throw new Error('Command not yet defined in this context.')
+      if (!command) {
+        throw new Error('Command not yet defined in this context.')
+      }
+
+      command.data.setNSFW(true)
+      Factory.updateCommand(metadata, command)
     }
-
-    command.data.setNSFW(true)
-    Factory.updateCommand(metadata, command)
   }
 
-  public static noDM(target: any, _context: any) {
-    const metadata = Reflect.getOwnMetadata('command', target)
-    console.log(metadata)
+  public static noDM() {
+    return function (target: any, _context: any) {
+      const metadata = Reflect.getOwnMetadata('command', target)
 
-    const command = Discord.Commands.getCommand(metadata.name)
+      const command = Discord.Commands.getCommand(metadata.name)
 
-    if (!command) {
-      throw new Error('Command not yet defined in this context.')
+      if (!command) {
+        throw new Error('Command not yet defined in this context.')
+      }
+
+      command.data.setDMPermission(false)
+      Factory.updateCommand(metadata, command)
     }
-
-    command.data.setDMPermission(false)
-    Factory.updateCommand(metadata, command)
   }
 
   public static setIntegrations(value: Discord.InteractionContextType[]) {
-    console.log(value[0], typeof value[0])
     return function (target: any, _context: any) {
       const metadata = Reflect.getOwnMetadata('command', target)
       const command = Discord.Commands.getCommand(metadata.name)
@@ -164,8 +166,10 @@ export class Options {
     target.commandOptions.set(meta.name, config)
   }
 
-  public static defer(target: any, _context: any) {
-    Reflect.defineMetadata('command:defer', true, target)
+  public static defer() {
+    return function (target: any, _context: any) {
+      Reflect.defineProperty(target, '_defer', { value: true })
+    }
   }
 
   public static string(config: Discord.Configs['SlashString']) {
@@ -218,6 +222,11 @@ export class Command {
     isSubCommandSetup: boolean = false,
   ) {
     defer.then(() => {
+      if (!target.parent) {
+        const msg = '"Command" decorators must be defined inside a Command "Factory".\n\t"target.parent" is undefined.\n'
+        throw new Error(msg)
+      }
+
       const parentMeta = Reflect.getMetadata('command', target.parent)
       const subCommand = Reflect.getMetadata('subcommand', target)
       const command = Discord.Commands.getMap().get(parentMeta.name)

@@ -2,7 +2,7 @@ import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
 import * as Discord from '~/class/discord'
 import { IntegrationType, InteractionContextType } from '~/class/discord'
 
-@Factory.noDM
+@Factory.noDM()
 @CommandFactory('test', 'This is a test command.', [Discord.PFlags.BanMembers])
 export class TestCommand {
   @Command.addMentionableOption('mention', 'select a user.')
@@ -48,29 +48,17 @@ export class SubCommands {
     await Discord.acceptInteraction(ci)
   }
 
+  @Options.defer()
+  @Command.addSubCommand('defer', 'Testing defer...')
+  public static async deferTest(ci: Discord.ChatInteraction) {
+    setTimeout(async () => {
+      await Discord.reply(ci, 'meow')
+    }, 1000)
+  }
+
   @Command.addBooleanOption('bool', 'This is just a test.')
   @Command.addSubCommand('four', '_four')
   public static async randomName(ci: Discord.ChatInteraction, args: any) {
     await Discord.reply(ci, `%username% is now ${args.bool(false)}`)
-  }
-}
-
-@CommandFactory('shutdown', 'shutdown the bot.')
-export class ShutdownCommand {
-  // This should be defined as the base function to call.
-  public static async main(ci: Discord.ChatInteraction) {
-    await Discord.reply(ci, `Goodnight~ %username%`)
-    Discord.Client.destroy()
-  }
-}
-
-@Factory.noDM
-@CommandFactory('leave', 'leave the current guild.')
-export class LeaveCommand {
-  // This should be defined as the base function to call.
-  public static async main(ci: Discord.ChatInteraction) {
-    await Discord.reply(ci, `Goodnight~ %username%`)
-    if (ci.interaction)
-      ci.interaction.guild?.leave()
   }
 }

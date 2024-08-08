@@ -9,6 +9,7 @@ export default async function declare(pattern: string): Promise<any[]> {
     })
 
     const imports: any = files
+      .filter(path => path.name !== 'example.ts')
       .filter(path => extname(path.name) === '.ts')
       .map(async (path) => {
         return await import(`file://${path.fullpath()}`)

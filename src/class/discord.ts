@@ -5,6 +5,7 @@ import type {
   ClientOptions,
   Interaction as DInteraction,
   Permissions as DPermissions,
+  REST as DRestClient,
   SlashCommandBuilder as DSlashCommandBuilder,
   InteractionReplyOptions,
   Message,
@@ -15,6 +16,7 @@ import type {
 } from 'discord.js'
 import {
   Client as DClient,
+  Routes as DRoutes,
   Events,
   GatewayIntentBits,
   Partials,
@@ -23,7 +25,8 @@ import {
 } from 'discord.js'
 import { Convert } from '~/modules/convert'
 
-console.log('\n'.repeat(12))
+console.log('\r\n'.repeat(12))
+console.clear()
 console.clear()
 
 const intents: ClientOptions['intents'] = [
@@ -40,6 +43,7 @@ const partials = [
   Partials.Message,
 ]
 
+export const Routes = DRoutes
 export const Client = new DClient({ intents, partials })
 /** Permission Flags. */
 export const PFlags: typeof PermissionFlagsBits = PermissionFlagsBits
@@ -111,6 +115,10 @@ export class IntegrationType {
   static readonly ALL = [0, 1]
 }
 
+export class Global {
+  public static REST: DRestClient
+}
+
 export class Commands {
   private static commands = new Map<string, CommandStore>()
 
@@ -123,7 +131,7 @@ export class Commands {
     for (const command of this.commands.values()) {
       commandsAsJson.push(command.data.toJSON())
     }
-    console.log(commandsAsJson, '\r\n\r\n')
+    // console.log(commandsAsJson, '\r\n\r\n')
     return commandsAsJson
   }
 
@@ -152,7 +160,7 @@ function getOptions(func: any, pass: any[], ci: ChatInteractionAssert) {
   vars.forEach((v: SubCommandMeta) => {
     options[v.name] = (fallback: any) => {
       const re = hoisted[v.name]
-      console.log('Response: ', re, typeof re, '\n---\n', ci)
+      // console.log('Response: ', re, typeof re, '\n---\n', ci)
       if (typeof re !== 'undefined')
         return Convert.ValueToType(ci, re, v.type)
       return fallback
@@ -203,10 +211,10 @@ function processCommand(
     if (subId) {
       const func: any = subcommands.get(subId)
       if (func) {
-        func(ci, getter(func, opts, ci))
-        if (ci.interaction && func.defer) {
+        if (ci.interaction && func._defer) {
           ci.interaction.deferReply()
         }
+        func(ci, getter(func, opts, ci))
       }
       re = !!func
     }
@@ -224,20 +232,37 @@ function processCommand(
 
 export async function reply(ci: ChatInteraction, response: string, options?: InteractionReplyOptions) {
   if (ci.interaction) {
-    console.log(response)
+    if (ci.interaction.replied)
+      return
+
     response = response.replaceAll('%username%', ci.interaction.user.username)
+    const interaction = ci.interaction
+
     if (options) {
       options.fetchReply = true
-      await ci.interaction.reply({ content: response, ...options })
+    }
+
+    const re = { content: response, ...(options || {}) }
+
+    if (interaction.deferred) {
+      await interaction.editReply(re)
     }
     else {
-      await ci.interaction.reply(response)
+      await interaction.reply(re)
     }
   }
   else {
     response = response.replaceAll('%username%', ci.message!.author.username)
     await ci.message!.reply(response)
   }
+}
+
+export function interaction(ci: ChatInteraction) {
+  return ci.interaction
+}
+
+export function message(ci: ChatInteraction) {
+  return ci.message
 }
 
 export function getChatInteraction(ci: ChatInteraction) {
@@ -286,7 +311,9 @@ export async function acceptInteraction(ci: ChatInteraction) {
 Client.on(Events.MessageCreate, async (message) => {
   if (message.system || message.author.bot)
     return
+
   const activator = ';'
+
   const content = message.content
   if (activator !== content.charAt(0))
     return
@@ -302,7 +329,7 @@ Client.on(Events.MessageCreate, async (message) => {
 
   const baseCommand = match[1]
   let args = [...(match[3] || '').matchAll(/['"]([^'"]+)['"]|\S+/g)]
-  const subCommand = match[2] === ';' && (args && String(args[0][0])) || undefined
+  const subCommand = match[2] === activator && (args && String(args[0][0])) || undefined
 
   if (subCommand && subCommand.match(/\w+/g))
     args = args.splice(1, 1)

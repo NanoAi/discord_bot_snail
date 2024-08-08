@@ -7,7 +7,7 @@ import * as Discord from './class/discord'
 import declare from './modules/declare'
 
 // console.clear()
-const spinner = ora('Starting...\n').start()
+const spinner = ora('Starting...').start()
 // Create a new client instance
 
 // When the client is ready, run this code (only once).
@@ -34,7 +34,8 @@ for (const [k, v] of Object.entries(env)) {
     throw new Error(`Unknown Discord "${k}".`)
 }
 
-const rest = new DRestClient().setToken(env.token)
+Discord.Global.REST = new DRestClient().setToken(env.token)
+const rest = Discord.Global.REST
 
 ;(async () => {
   try {
