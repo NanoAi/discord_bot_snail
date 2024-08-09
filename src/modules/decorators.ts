@@ -8,9 +8,9 @@ import {
   SlashCommandSubcommandBuilder,
 } from 'discord.js'
 
-import getMethods from './method'
-import Deferrer from '~/class/deferrer'
-import * as Discord from '~/class/discord'
+import getMethods from './functions/method'
+import Deferrer from './deferrer'
+import * as Discord from './discord'
 
 const defer = new Deferrer()
 

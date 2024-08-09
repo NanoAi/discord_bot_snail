@@ -3,8 +3,8 @@ import * as process from 'node:process'
 
 import { REST as DRestClient, Events, Routes } from 'discord.js'
 import ora from 'ora'
-import * as Discord from './class/discord'
-import declare from './modules/declare'
+import * as Discord from './modules/discord'
+import declare from './modules/functions/declare'
 
 // console.clear()
 const spinner = ora('Starting...').start()
