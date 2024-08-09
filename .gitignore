@@ -2,4 +2,4 @@
 .stignore
 .env
 node_modules
-logs/**/*
+logs/**/*.log

@@ -24,8 +24,8 @@ export function bindLogger() {
   client.once(Events.ClientReady, readyClient => logger.info(`Logged in as ${readyClient.user.tag}`))
 
   client.on(Events.GuildUpdate, (oldGuild, newGuild) => {
-    logger.info(`Updating information for ${oldGuild.name} (${oldGuild.id})`)
-    logger.info(`${oldGuild.name} (${oldGuild.id}) => ${newGuild.name} (${newGuild.id})`)
+    if (oldGuild.name !== newGuild.name || oldGuild.id !== newGuild.id)
+      logger.info(`[${oldGuild.name}](${oldGuild.id}) => [${newGuild.name}](${newGuild.id})`)
   })
 
   client.on(Events.Debug, info => logger.debug(info))
