@@ -51,5 +51,11 @@
   ],
   "i18n-ally.localesPaths": [
     "src/modules/lang"
-  ]
+  ],
+
+  "files.eol": "\n",
+  "editor.tabSize": 2,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true
 }
