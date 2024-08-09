@@ -1,6 +1,5 @@
 import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
 import * as Discord from '~/modules/discord'
-import { IntegrationType, InteractionContextType } from '~/modules/discord'
 
 @CommandFactory('shutdown', 'shutdown the bot.')
 export class ShutdownCommand {
@@ -28,7 +27,7 @@ export class ShutdownCommand {
         .catch(console.error)
     }
 
-    Discord.Client.destroy()
+    Discord.shutdown()
   }
 }
 
@@ -36,12 +35,10 @@ export class ShutdownCommand {
 @CommandFactory('leave', 'leave the current guild.')
 export class LeaveCommand {
   // This should be defined as the base function to call.
+  @Options.assertSlash()
   public static async main(ci: Discord.ChatInteraction) {
-    const inter = Discord.interaction(ci)
-    if (inter) {
-      await Discord.reply(ci, `Goodbye~ %username%`)
-      inter.guild?.leave()
-    }
-    await Discord.reply(ci, `This command doesn't work in this context.`)
+    const inter = ci.interaction!
+    await Discord.reply(ci, `Goodbye~ %username%`)
+    inter.guild?.leave()
   }
 }

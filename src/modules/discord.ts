@@ -23,6 +23,7 @@ import {
   PermissionFlagsBits,
   PermissionsBitField,
 } from 'discord.js'
+import { logger } from './logger'
 import { Convert } from '~/modules/convert'
 
 console.log('\r\n'.repeat(12))
@@ -189,45 +190,65 @@ function getMessageOptions(func: any, pass: string[] = [], ci: ChatInteractionAs
   return options as { [key: string]: () => any }
 }
 
-function processCommand(
-  getter: any,
-  ci: ChatInteraction,
-  opts: any[] = [],
-  command?: CommandStore,
-  subId?: string,
-): boolean {
-  let re = false
+class CommandProcessor {
+  private static call(
+    getter: any,
+    ci: ChatInteraction,
+    opts: any[] = [],
+    command: CommandStore,
+    subcommands: Map<string, any>,
+    subId?: string,
+  ) {
+    let output = false
 
-  // console.log('[DEBUG:PROCESS] [1] ', !!command, subId)
-  // console.log('[DEBUG:PROCESS] [2] ', command && !!command.main, subId)
-
-  if (command) {
-    const subcommands = command.subcommands
     if (command.main) {
+      if (ci.message && (command.main as any)._assert) {
+        return false
+      }
+      if (ci.interaction && (command.main as any)._defer) {
+        ci.interaction.deferReply()
+      }
       command.main(ci, getter(command.main, opts, ci))
-      re = true
+      output = true
     }
 
     if (subId) {
       const func: any = subcommands.get(subId)
       if (func) {
-        if (ci.interaction && func._defer) {
+        if (ci.message && func._assert) {
+          return false
+        }
+        if (ci.interaction && func._defer && !ci.interaction.deferred) {
           ci.interaction.deferReply()
         }
         func(ci, getter(func, opts, ci))
       }
-      re = !!func
+      output = !!func
+    }
+
+    return output
+  }
+
+  public static process(
+    getter: any,
+    ci: ChatInteraction,
+    opts: any[] = [],
+    command?: CommandStore,
+    subId?: string,
+  ) {
+    let output = false
+
+    if (command) {
+      output = CommandProcessor.call(getter, ci, opts, command, command.subcommands, subId)
+    }
+
+    if (!output) {
+      if (ci.interaction)
+        ci.interaction.reply({ content: 'Command not found.', ephemeral: true })
+      else
+        ci.message!.reply('Command not found.').then(msg => setTimeout(() => msg.delete(), 1000))
     }
   }
-
-  if (!re) {
-    if (ci.interaction)
-      ci.interaction.reply({ content: 'Command not found.', ephemeral: true })
-    else
-      ci.message!.reply('Command not found.').then(msg => setTimeout(() => msg.delete(), 1000))
-  }
-
-  return re
 }
 
 export async function reply(ci: ChatInteraction, response: string, options?: InteractionReplyOptions) {
@@ -257,12 +278,10 @@ export async function reply(ci: ChatInteraction, response: string, options?: Int
   }
 }
 
-export function interaction(ci: ChatInteraction) {
-  return ci.interaction
-}
-
-export function message(ci: ChatInteraction) {
-  return ci.message
+export function shutdown() {
+  Client.destroy().then(() => {
+    logger.info('Client has shutdown via admin request.')
+  }).catch(logger.error)
 }
 
 export function getChatInteraction(ci: ChatInteraction) {
@@ -342,7 +361,7 @@ Client.on(Events.MessageCreate, async (message) => {
   // console.log('[DEBUG] subCommand: ', subCommand)
   // console.log('[DEBUG] Arguments', args)
 
-  processCommand(getMessageOptions, ci, finalArgs, command, subCommand)
+  CommandProcessor.process(getMessageOptions, ci, finalArgs, command, subCommand)
 })
 
 Client.on(Events.InteractionCreate, async (interaction) => {
@@ -355,5 +374,5 @@ Client.on(Events.InteractionCreate, async (interaction) => {
 
   const subCommandId = (interaction.options as any)._subcommand
   const hoistedOptions = (interaction.options as any)._hoistedOptions
-  processCommand(getOptions, ci, hoistedOptions, command, subCommandId)
+  CommandProcessor.process(getOptions, ci, hoistedOptions, command, subCommandId)
 })

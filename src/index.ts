@@ -4,6 +4,7 @@ import * as process from 'node:process'
 import { REST as DRestClient, Events, Routes } from 'discord.js'
 import ora from 'ora'
 import * as Discord from './modules/discord'
+import { bindLogger } from './modules/logger'
 import declare from './modules/functions/declare'
 
 // console.clear()
@@ -21,6 +22,8 @@ Discord.Client.once(Events.Error, (error) => {
   spinner.fail('Discord Application Closed.')
   throw error
 })
+
+bindLogger()
 
 const env = {
   token: process.env.DISCORD_TOKEN!,

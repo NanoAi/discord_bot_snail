@@ -52,45 +52,6 @@ export function CommandFactory(
   }
 }
 
-/*
-Map(23) {
-[x] 'addBooleanOption' => [Function: addBooleanOption],
-[x] 'addUserOption' => [Function: addUserOption],
-[x] 'addChannelOption' => [Function: addChannelOption],
-[x] 'addRoleOption' => [Function: addRoleOption],
-[x] 'addAttachmentOption' => [Function: addAttachmentOption],
-[x] 'addMentionableOption' => [Function: addMentionableOption],
-[x] 'addStringOption' => [Function: addStringOption],
-[x] 'addIntegerOption' => [Function: addIntegerOption],
-[x] 'addNumberOption' => [Function: addNumberOption],
-  '_sharedAddOptionMethod' => [Function: _sharedAddOptionMethod],
-[x] 'setName' => [Function: setName],
-[x] 'setDescription' => [Function: setDescription],
-  'setNameLocalization' => [Function: setNameLocalization],
-  'setNameLocalizations' => [Function: setNameLocalizations],
-  'setDescriptionLocalization' => [Function: setDescriptionLocalization],
-  'setDescriptionLocalizations' => [Function: setDescriptionLocalizations],
-  'addSubcommandGroup' => [Function: addSubcommandGroup],
-[x] 'addSubcommand' => [Function: addSubcommand],
-  'setDefaultPermission' => [Function: setDefaultPermission],
-  'setDefaultMemberPermissions' => [Function: setDefaultMemberPermissions],
-[x] 'setDMPermission' => [Function: setDMPermission],
-[x] 'setNSFW' => [Function: setNSFW],
-  'toJSON' => [Function: toJSON]
-}
-
----
-runRequiredValidations
-setDescription
-setDescriptionLocalization
-setDescriptionLocalizations
-setName
-setNameLocalization
-setNameLocalizations
-setRequired
-toJSON
-*/
-
 export class Factory {
   private static updateCommand(metadata: { name: string, description: string }, command: Discord.CommandStore) {
     Discord.Commands.getMap().set(metadata.name, {
@@ -172,27 +133,18 @@ export class Options {
     }
   }
 
+  public static assertSlash() {
+    return function (target: any, _context: any) {
+      Reflect.defineProperty(target, '_assert', { value: true })
+    }
+  }
+
   public static string(config: Discord.Configs['SlashString']) {
     return function (target: any, _context: any) {
       Options.main(target, target._lastOptionTarget, config)
     }
   }
 }
-
-/*
-function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-  const originalMethod = descriptor.value
-
-  descriptor.value = async function (...args: any[]) {
-      const [inter, argObj] = args
-      if (!(property in argObj)) {
-          throw new Error(`Property '${property}' does not exist on args.`);
-      }
-      return originalMethod.apply(this, args)
-  }
-  return descriptor
-}
-*/
 
 export class Command {
   private static subCommand(

@@ -18,29 +18,32 @@
   },
   "dependencies": {
     "chalk": "^5.3.0",
+    "dayjs": "^1.11.12",
     "discord.js": "^14.15.3",
     "dotenv": "^16.4.5",
     "mongodb": "^6.8.0",
-    "mongoose": "^8.5.1",
+    "mongoose": "^8.5.2",
     "morgan": "^1.10.0",
     "nanoid": "^5.0.7",
     "nodemon": "^3.1.4",
     "ora": "^8.0.1",
+    "pino": "7.0.0-rc.9",
+    "pino-pretty": "^11.2.2",
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^2.23.2",
+    "@antfu/eslint-config": "^2.25.0",
     "@eslint/eslintrc": "^3.1.0",
-    "@eslint/js": "^9.7.0",
+    "@eslint/js": "^9.8.0",
     "@types/eslint": "^8.56.11",
     "@types/morgan": "^1.9.9",
-    "eslint": "^9.7.0",
+    "eslint": "^9.8.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "glob": "^10.4.5",
     "prettier": "^3.3.3",
     "taze": "^0.14.3",
-    "tsx": "^4.16.2",
+    "tsx": "^4.17.0",
     "typescript": "^5.5.4"
   }
 }

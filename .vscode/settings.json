@@ -46,6 +46,7 @@
     "fullpath",
     "keychain",
     "linebreak",
+    "pino",
     "subcmd"
   ],
   "i18n-ally.localesPaths": [
