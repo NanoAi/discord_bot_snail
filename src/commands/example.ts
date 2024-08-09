@@ -1,6 +1,6 @@
 import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
-import * as Discord from '~/class/discord'
-import { IntegrationType, InteractionContextType } from '~/class/discord'
+import * as Discord from '~/modules/discord'
+import { IntegrationType, InteractionContextType } from '~/modules/discord'
 
 @Factory.noDM()
 @CommandFactory('test', 'This is a test command.', [Discord.PFlags.BanMembers])

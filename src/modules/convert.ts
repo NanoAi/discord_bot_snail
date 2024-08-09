@@ -1,6 +1,6 @@
 import { Double } from 'mongodb'
-import type { SubCommandType } from '~/class/discord'
-import * as Discord from '~/class/discord'
+import type { SubCommandType } from './discord'
+import * as Discord from './discord'
 
 export class Convert {
   public static ValueToType(ci: Discord.ChatInteraction, value: string, type: SubCommandType) {
