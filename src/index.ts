@@ -2,24 +2,25 @@ import 'dotenv/config'
 import * as process from 'node:process'
 
 import { REST as DRestClient, Events, Routes } from 'discord.js'
-import ora from 'ora'
+import chalk from 'chalk'
 import * as Discord from './modules/discord'
 import { bindLogger } from './modules/logger'
 import declare from './modules/functions/declare'
 
-// console.clear()
-const spinner = ora('Starting...').start()
+console.log('-\nStarting...')
 // Create a new client instance
 
 // When the client is ready, run this code (only once).
 // The distinction between `client: Client<boolean>` and `readyClient: Client<true>` is important for TypeScript developers.
 // It makes some properties non-nullable.
 Discord.Client.once(Events.ClientReady, (readyClient) => {
-  spinner.succeed(`Ready! Logged in as ${readyClient.user.tag}`)
+  console.log(chalk.gray('-'.repeat(process.stdout.columns)))
+  console.log(`${chalk.green('✅ - Ready! Logged in as')} ${chalk.bold.blueBright(readyClient.user.tag)}`)
 })
 
 Discord.Client.once(Events.Error, (error) => {
-  spinner.fail('Discord Application Closed.')
+  console.log(chalk.gray('-'.repeat(process.stdout.columns)))
+  console.log(chalk.bold.bgRed('💀 - Discord Application Closed.'))
   throw error
 })
 
@@ -42,11 +43,11 @@ const rest = Discord.Global.REST
 
 ;(async () => {
   try {
-    spinner.text = 'Loading Commands...'
+    console.log('[0] Loading Commands...')
     await declare('commands/*.ts')
 
     const commandCount = Discord.Commands.getMap().size
-    spinner.text = `Started refreshing ${commandCount} application (/) commands.`
+    console.log(`[1] Started refreshing ${chalk.underline.bold(commandCount)} application (/) commands.`)
 
     // The put method is used to fully refresh all commands in the guild with the current set
     // Routes.applicationGuildCommands(env.appID, env.testServer)
@@ -54,7 +55,11 @@ const rest = Discord.Global.REST
       body: Discord.Commands.getCommandsAsJson(),
     })
 
-    spinner.text = `Successfully reloaded ${commandCount} application (/) commands.`
+    console.log(`[2] Successfully reloaded ${chalk.underline.bold(commandCount)} application (/) commands.`)
+
+    console.log('[3] Loading Events...')
+    await declare('events/*.ts')
+    console.log('[4] Successfully bound all events.')
   }
   catch (error) {
     // And of course, make sure you catch and log any errors!
