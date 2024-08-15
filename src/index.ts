@@ -42,7 +42,7 @@ for (const [k, v] of Object.entries(env)) {
 Discord.Global.REST = new DRestClient().setToken(env.token)
 const rest = Discord.Global.REST
 
-const seqLog = (function (n) {
+const sLog = (function (n) {
   return function (...args: any[]) {
     console.log(`[${n}] ${args.join(', ')}`)
     n += 1
@@ -52,16 +52,16 @@ const seqLog = (function (n) {
 
 ;(async () => {
   try {
-    seqLog('Connecting to Database...')
+    sLog('Connecting to Database...')
     const database = await MongoDBController.connection()
     if (!database || database.readyState !== 1)
       throw new Error('Failed to Connect to Database.')
 
-    seqLog('Loading Commands...')
+    sLog('Loading Commands...')
     await declare('commands/*.ts')
 
     const commandCount = Discord.Commands.getMap().size
-    seqLog(`Started refreshing ${chalk.underline.bold(commandCount)} application (/) commands.`)
+    sLog(`Started refreshing ${chalk.underline.bold(commandCount)} application (/) commands.`)
 
     // The put method is used to fully refresh all commands in the guild with the current set
     // Routes.applicationGuildCommands(env.appID, env.testServer)
@@ -69,20 +69,19 @@ const seqLog = (function (n) {
       body: Discord.Commands.getCommandsAsJson(),
     })
 
-    seqLog(`Successfully reloaded ${chalk.underline.bold(commandCount)} application (/) commands.`)
+    sLog(`Successfully reloaded ${chalk.underline.bold(commandCount)} application (/) commands.`)
 
-    seqLog('Loading Events...')
+    sLog('Loading Events...')
     await declare('events/*.ts')
-    seqLog('Successfully bound all events.')
+    sLog('Successfully bound all events.')
+
+    Discord.Client.login(process.env.DISCORD_TOKEN)
   }
   catch (error) {
     // And of course, make sure you catch and log any errors!
     console.log(chalk.gray('-'.repeat(process.stdout.columns)))
     console.error(error)
-    process.exit(1)
   }
-
-  Discord.Client.login(process.env.DISCORD_TOKEN)
 })()
 
 // Log in to Discord with your client's token

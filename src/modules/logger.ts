@@ -18,7 +18,15 @@ const pinoTransport = pino.transport({
   ],
 })
 
-export const logger = pino({}, pinoTransport)
+const _pino = pino({}, pinoTransport)
+
+function bindError(): pino.LogFn {
+  return _pino.error.bind(_pino)
+}
+
+Reflect.defineProperty(_pino, 'bindError', { value: bindError, writable: false })
+export const logger: pino.Logger & { bindError: pino.LogFn } = _pino as any
+
 export function bindLogger() {
   const client = Discord.Client
   client.once(Events.ClientReady, readyClient => logger.info(`Logged in as ${readyClient.user.tag}`))

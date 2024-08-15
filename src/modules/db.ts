@@ -1,6 +1,6 @@
 import * as process from 'node:process'
 import type { Connection, Document, Model } from 'mongoose'
-import mongoose, { Schema, connection } from 'mongoose'
+import mongoose, { Schema } from 'mongoose'
 import { logger } from './logger'
 
 // Define the UserData interface
@@ -27,18 +27,17 @@ const path = process.env.DATABASE_URL || 'mongodb://127.0.0.1:27017/'
 
 async function connectToServer(uri: string, database: string) {
   const state = mongoose.connection.readyState
-  logger.info(`[DB] Attempting to Connect => ${uri} @ ${database}`)
   if (state === 99 || state === 0) {
-    const mg = await mongoose.connect(uri).then((mg) => {
-      logger.info(`[DB] Connected => ${uri}`)
-      return mg
-    }).catch(error => logger.error(String(error)))
-    if (mg) {
-      logger.info(`[DB] Changing Database => ${database}`)
-      return mg.connection.useDb(database)
+    logger.debug(`[DB] Attempting to Connect => ${uri} / ${database}`)
+    const mg = await mongoose.connect(uri).catch(logger.bindError)
+    if (mg && mg.connection) {
+      const connection = mg.connection.useDb(database)
+      logger.debug(`[DB] Connected => ${uri} / ${database}`)
+      return connection
     }
+    logger.error(`[DB] Could not connect to ${uri} / ${database}`)
   }
-  return mongoose.connection.useDb(database).asPromise()
+  return mongoose.connection.useDb(database)
 }
 
 class MongoDBController {
@@ -53,7 +52,7 @@ class MongoDBController {
   }
 
   private enqueueOperation(operation: () => Promise<void>): void {
-    this.queue = this.queue.then(operation).catch(logger.error)
+    this.queue = this.queue.then(operation).catch(logger.bindError)
   }
 
   public async patch(guild: string): Promise<this> {
@@ -112,7 +111,7 @@ class MongoDBController {
     return await this.queue.then(async () => {
       const users = await this.UserModel.findById(this._guildId).exec()
       return users ? (users as any).get(userId) || null : null
-    }).catch(logger.error)
+    }).catch(logger.bindError)
   }
 }
 

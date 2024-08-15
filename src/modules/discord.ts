@@ -281,7 +281,7 @@ export async function reply(ci: ChatInteraction, response: string, options?: Int
 export function shutdown() {
   Client.destroy().then(() => {
     logger.info('Client has shutdown via admin request.')
-  }).catch(logger.error)
+  }).catch(logger.bindError)
 }
 
 export function getChatInteraction(ci: ChatInteraction) {
