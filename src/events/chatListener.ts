@@ -1,6 +1,6 @@
 import { Events } from 'discord.js'
 import { Client } from '~/modules/discord'
-import MongoDBController from '~/modules/db'
+import UserDBController from '~/modules/controllers/userController'
 import { logger } from '~/modules/logger'
 
 Client.on(Events.MessageCreate, async (message) => {
@@ -12,7 +12,7 @@ Client.on(Events.MessageCreate, async (message) => {
     if (member) {
       const guildId = member.guild.id
       logger.info(`${member.id} joined ${guildId}`)
-      MongoDBController.patch(guildId).then(db => db.upsertUser(member.id))
+      UserDBController.where(guildId, member.id).upsertUser().catch(logger.catchError)
       message.reply('Welcome!')
     }
   }

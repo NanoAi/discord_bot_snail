@@ -19,13 +19,22 @@ const pinoTransport = pino.transport({
 })
 
 const _pino = pino({}, pinoTransport)
+const pinoErrorBound = _pino.error.bind(_pino)
+const pinoFatalBound = _pino.fatal.bind(_pino)
 
-function bindError(): pino.LogFn {
-  return _pino.error.bind(_pino)
+function catchError(obj: object, msg?: string, ...args: any[]): void {
+  console.error(obj, msg, ...args)
+  return pinoErrorBound(String(obj), msg, ...args)
 }
 
-Reflect.defineProperty(_pino, 'bindError', { value: bindError, writable: false })
-export const logger: pino.Logger & { bindError: pino.LogFn } = _pino as any
+function catchFatal(obj: object, msg?: string, ...args: any[]) {
+  console.error(obj, msg, ...args)
+  return pinoFatalBound(String(obj), msg, ...args)
+}
+
+Reflect.defineProperty(_pino, 'catchError', { value: catchError, writable: false })
+Reflect.defineProperty(_pino, 'catchFatal', { value: catchFatal, writable: false })
+export const logger: pino.Logger & { catchError: typeof catchError, catchFatal: typeof catchFatal } = _pino as any
 
 export function bindLogger() {
   const client = Discord.Client

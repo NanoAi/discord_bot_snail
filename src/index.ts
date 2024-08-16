@@ -6,7 +6,7 @@ import chalk from 'chalk'
 import * as Discord from './modules/discord'
 import { bindLogger, logger } from './modules/logger'
 import declare from './modules/functions/declare'
-import MongoDBController from '~/modules/db'
+import prisma from '~/modules/prisma'
 
 console.log('~\nStarting...')
 // Create a new client instance
@@ -53,9 +53,7 @@ const sLog = (function (n) {
 ;(async () => {
   try {
     sLog('Connecting to Database...')
-    const database = await MongoDBController.connection()
-    if (!database || database.readyState !== 1)
-      throw new Error('Failed to Connect to Database.')
+    await prisma.$connect()
 
     sLog('Loading Commands...')
     await declare('commands/*.ts')

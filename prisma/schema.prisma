@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+  guildId     String
+  xp          Int
+  roles       String[] // List of roles
+  lastMessage DateTime
+  warnings    String[]
+
+  @@unique([userId, guildId], name: "uuid")
+  @@map("users") // Map to "users" collection
+}
+
+model Guild {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  guildId   String
+  tickets   Ticket[]
+  bans      String[] // List of banned user IDs
+  mutes     String[] // List of muted user IDs
+  xpSystem  Boolean // Whether XP system is enabled
+
+  @@unique([guildId], name: "uuid")
+  @@map("guilds") // Map to "guilds" collection
+}
+
+model Ticket {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  guildId     String @db.ObjectId
+  ticketTitle String
+  ticketTag   String // Status of the ticket (e.g., open, closed)
+  Guild       Guild  @relation(fields: [guildId], references: [id])
+
+  @@map("tickets") // Map to "tickets" collection
+}
