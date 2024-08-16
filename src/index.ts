@@ -54,6 +54,7 @@ const sLog = (function (n) {
   try {
     sLog('Connecting to Database...')
     await prisma.$connect()
+    await prisma.guild.findFirst()
 
     sLog('Loading Commands...')
     await declare('commands/*.ts')
