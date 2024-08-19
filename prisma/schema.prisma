@@ -35,14 +35,15 @@ model Guild {
 }
 
 model Case {
-  id       String       @id @default(auto()) @map("_id") @db.ObjectId
-  guildId  String       @db.ObjectId
-  caseId   Int          @default(0)
-  tickets  Ticket[]
-  warnings Punishment[] @relation("warns")
-  bans     Punishment[] @relation("bans") // List of banned user IDs
-  mutes    Punishment[] @relation("mutes") // List of muted user IDs
-  guild    Guild        @relation(fields: [guildId], references: [id])
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  guildId     String       @db.ObjectId
+  caseId      Int          @default(0)
+  description String
+  tickets     Ticket[]
+  warnings    Punishment[] @relation("warns")
+  bans        Punishment[] @relation("bans") // List of banned user IDs
+  mutes       Punishment[] @relation("mutes") // List of muted user IDs
+  guild       Guild        @relation(fields: [guildId], references: [id])
 }
 
 model Punishment {
@@ -62,6 +63,7 @@ model Punishment {
 model Ticket {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   guildId     String   @db.ObjectId
+  ticketId    Int
   creatorId   String
   ticketTitle String
   ticketTag   String // Status of the ticket (e.g., open, closed)
