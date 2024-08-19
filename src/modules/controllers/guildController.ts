@@ -1,25 +1,43 @@
 import type { Guild, Ticket } from '@prisma/client'
 import prisma from '../prisma'
 
-// Function to create or update guild when bot joins
-export async function upsertGuild(guildId: string, xpSystem: boolean): Promise<Guild> {
-  return await prisma.guild.upsert({
-    where: { guildId },
-    update: { xpSystem },
-    create: { guildId, xpSystem: false, bans: [], mutes: [], tickets: [] as any },
-  })
+export interface Punishment {
+  issuer: string
+  reason: string
+  expiration: Date
 }
 
-// Function to get guild by guildId
-export async function getGuild(guildId: string): Promise<Guild | null> {
-  return await prisma.guild.findUnique({
-    where: { guildId },
-  })
+class GuildController {
+  private static empty = { create: [] }
+  private guild?: string
+
+  constructor() {}
+
+  where(guild: string) {
+    this.guild = guild
+  }
+
+  async upsertGuild(xpSystem: boolean = false) {
+    const empty = GuildController.empty
+    return await prisma.guild.upsert({
+      where: { guildId: this.guild },
+      update: { xpSystem },
+      create: { guildId: this.guild!, xpSystem: false, bans: empty, mutes: empty, tickets: empty },
+    })
+  }
+
+  async getGuild() {
+    return await prisma.guild.findUnique({
+      where: { guildId: this.guild! },
+    })
+  }
+
+  async addTicket(creatorId: string, ticketTitle: string, ticketTag: string) {
+    return await prisma.ticket.create({
+      data: { guildId: this.guild!, creatorId, ticketTitle, ticketTag },
+    })
+  }
 }
 
-// Function to create a ticket
-export async function createTicket(guildId: string, ticketTitle: string, ticketTag: string): Promise<Ticket> {
-  return await prisma.ticket.create({
-    data: { guildId, ticketTitle, ticketTag },
-  })
-}
+const guildController = new GuildController()
+export default guildController

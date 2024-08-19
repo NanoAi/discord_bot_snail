@@ -24,24 +24,50 @@ model User {
 
 model Guild {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  guildId   String
+  cases     Case[]
+  xpSystem  Boolean // Whether XP system is enabled
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  guildId   String
-  tickets   Ticket[]
-  bans      String[] // List of banned user IDs
-  mutes     String[] // List of muted user IDs
-  xpSystem  Boolean // Whether XP system is enabled
 
   @@unique([guildId], name: "uuid")
   @@map("guilds") // Map to "guilds" collection
 }
 
+model Case {
+  id       String       @id @default(auto()) @map("_id") @db.ObjectId
+  guildId  String       @db.ObjectId
+  caseId   Int          @default(0)
+  tickets  Ticket[]
+  warnings Punishment[] @relation("warns")
+  bans     Punishment[] @relation("bans") // List of banned user IDs
+  mutes    Punishment[] @relation("mutes") // List of muted user IDs
+  guild    Guild        @relation(fields: [guildId], references: [id])
+}
+
+model Punishment {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  guildId    String   @db.ObjectId
+  issuer     String
+  reason     String
+  expiration DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  warnedIn Case @relation(name: "warns", fields: [guildId], references: [id])
+  bannedIn Case @relation(name: "bans", fields: [guildId], references: [id])
+  mutedIn  Case @relation(name: "mutes", fields: [guildId], references: [id])
+}
+
 model Ticket {
-  id          String @id @default(auto()) @map("_id") @db.ObjectId
-  guildId     String @db.ObjectId
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  guildId     String   @db.ObjectId
+  creatorId   String
   ticketTitle String
   ticketTag   String // Status of the ticket (e.g., open, closed)
-  Guild       Guild  @relation(fields: [guildId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  case        Case     @relation(fields: [guildId], references: [id])
 
   @@map("tickets") // Map to "tickets" collection
 }
