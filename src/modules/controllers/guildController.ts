@@ -1,24 +1,37 @@
-import type { Case, Guild, Punishment, Ticket } from '@prisma/client'
+import type { Action, Case, Guild, Ticket } from '@prisma/client'
 import prisma from '../prisma'
 
 class GuildController {
   private guildId?: string
 
-  where(guildId: string) {
+  private assert() {
+    if (!this.guildId)
+      throw new Error('`guildId` not defined.')
+    return this.guildId
+  }
+
+  guild(guildId: string) {
     this.guildId = guildId
+    this.assert()
     return this
   }
 
   // Create or update a Guild
   async upsertGuild(xpSystem: boolean = false): Promise<Guild> {
+    const guildId = this.assert()
     return await prisma.guild.upsert({
-      where: { guildId: this.guildId! },
+      where: { guildId },
       update: { xpSystem },
       create: {
         guildId: this.guildId!,
+        cases: { create: [] },
         xpSystem,
       },
     })
+  }
+
+  async dropGuild() {
+    return await prisma.guild.delete({ where: { guildId: this.guildId! } })
   }
 
   // Find a Guild by guildId
@@ -41,34 +54,33 @@ class GuildController {
 
   // Find a Case by caseId
   async findCase(caseId: number): Promise<Case | null> {
-    return await prisma.case.findFirst({
-      where: { guildId: this.guildId, caseId },
+    return await prisma.case.findUnique({
+      where: { uuid: { guildId: this.guildId!, caseId } },
     })
   }
 
-  // Create a new Punishment (warn, ban, mute)
-  async createPunishment(
-    guildId: string,
+  // Create an action in memory. (warn, ban, mute)
+  async addAction(
+    type: 'warn' | 'ban' | 'mute',
     issuer: string,
     reason: string,
     expiration: Date,
-    type: 'warns' | 'bans' | 'mutes',
-  ): Promise<Punishment> {
-    return await prisma.punishment.create({
+  ): Promise<Action> {
+    return await prisma.action.create({
       data: {
-        guildId,
+        guildId: this.guildId!,
         issuer,
         reason,
         expiration,
       },
       include: {
-        [type]: true,
+        [`${type}s`]: true,
       },
     })
   }
 
   // Create a new Ticket
-  async createTicket(ticketId: number, creatorId: string, ticketTitle: string, ticketTag: string): Promise<Ticket> {
+  async createTicket(ticketId: number, creatorId: string, ticketTitle: string, ticketTag: number): Promise<Ticket> {
     return await prisma.ticket.create({
       data: {
         guildId: this.guildId!,
@@ -88,7 +100,7 @@ class GuildController {
   }
 
   // Update a Ticket's status
-  async updateTicketStatus(ticketId: number, newStatus: string) {
+  async updateTicketStatus(ticketId: number, newStatus: number) {
     return await prisma.ticket.updateMany({
       where: { guildId: this.guildId!, ticketId },
       data: { ticketTag: newStatus },
