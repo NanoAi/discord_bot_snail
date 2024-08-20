@@ -1,26 +1,28 @@
 import type { Action, Case, Guild, Ticket } from '@prisma/client'
-import prisma from '../prisma'
+import { simpleID } from '../utils/nanoid'
+import prisma from '../utils/prisma'
 
 class GuildController {
-  private guildId?: string
+  private guildId: string
+  private caseId?: string
 
-  private assert() {
-    if (!this.guildId)
-      throw new Error('`guildId` not defined.')
-    return this.guildId
+  constructor(guildId: string) {
+    this.guildId = guildId
   }
 
-  guild(guildId: string) {
-    this.guildId = guildId
-    this.assert()
+  static where(guildId: string) {
+    return new GuildController(guildId)
+  }
+
+  case(caseId: string) {
+    this.caseId = caseId
     return this
   }
 
   // Create or update a Guild
   async upsertGuild(xpSystem: boolean = false): Promise<Guild> {
-    const guildId = this.assert()
     return await prisma.guild.upsert({
-      where: { guildId },
+      where: { guildId: this.guildId },
       update: { xpSystem },
       create: {
         guildId: this.guildId!,
@@ -42,18 +44,21 @@ class GuildController {
   }
 
   // Create a new Case
-  async createCase(caseId: number, description: string): Promise<Case> {
-    return await prisma.case.create({
+  async createCase(description: string): Promise<Case> {
+    const caseId = simpleID()
+    const output = await prisma.case.create({
       data: {
         guildId: this.guildId!,
         caseId,
         description,
       },
     })
+    this.caseId = output.caseId
+    return output
   }
 
   // Find a Case by caseId
-  async findCase(caseId: number): Promise<Case | null> {
+  async findCase(caseId: string): Promise<Case | null> {
     return await prisma.case.findUnique({
       where: { uuid: { guildId: this.guildId!, caseId } },
     })
@@ -69,6 +74,7 @@ class GuildController {
     return await prisma.action.create({
       data: {
         guildId: this.guildId!,
+        caseId: this.caseId!,
         issuer,
         reason,
         expiration,
@@ -80,11 +86,11 @@ class GuildController {
   }
 
   // Create a new Ticket
-  async createTicket(ticketId: number, creatorId: string, ticketTitle: string, ticketTag: number): Promise<Ticket> {
+  async createTicket(creatorId: string, ticketTitle: string, ticketTag: number): Promise<Ticket> {
     return await prisma.ticket.create({
       data: {
         guildId: this.guildId!,
-        ticketId,
+        caseId: this.caseId!,
         creatorId,
         ticketTitle,
         ticketTag,
@@ -100,13 +106,12 @@ class GuildController {
   }
 
   // Update a Ticket's status
-  async updateTicketStatus(ticketId: number, newStatus: number) {
+  async updateTicketStatus(newStatus: number) {
     return await prisma.ticket.updateMany({
-      where: { guildId: this.guildId!, ticketId },
+      where: { guildId: this.guildId!, caseId: this.caseId! },
       data: { ticketTag: newStatus },
     })
   }
 }
 
-const guildController = new GuildController()
-export default guildController
+export default GuildController

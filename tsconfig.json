@@ -6,7 +6,9 @@
     "module": "ESNext", // Base directory to resolve non-absolute module names
     "moduleResolution": "node", // Use Node.js module resolution strategy
     "paths": {
-      "~/*": ["./*"]
+      "~/*": ["./*"],
+      "@controllers/*": ["./modules/controllers/*"],
+      "@utils/*": ["./modules/utils/*"]
     },
     "resolveJsonModule": true,
     "allowJs": false, // Redirect output structure to the directory

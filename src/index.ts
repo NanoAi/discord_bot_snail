@@ -3,10 +3,10 @@ import * as process from 'node:process'
 
 import { REST as DRestClient, Events, Routes } from 'discord.js'
 import chalk from 'chalk'
+import prisma from '@utils/prisma'
 import * as Discord from './modules/discord'
-import { bindLogger, logger } from './modules/logger'
-import declare from './modules/functions/declare'
-import prisma from '~/modules/prisma'
+import { bindLogger, logger } from './modules/utils/logger'
+import declare from './modules/utils/declare'
 
 console.log('~\nStarting...')
 // Create a new client instance

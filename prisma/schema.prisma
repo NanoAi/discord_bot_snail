@@ -36,7 +36,7 @@ model Guild {
 model Case {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   guildId     String   @db.ObjectId
-  caseId      Int      @default(0)
+  caseId      String
   status      Int      @default(0)
   resolution  String   @default("")
   description String   @default("")
@@ -54,6 +54,7 @@ model Case {
 model Action {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   guildId    String   @db.ObjectId
+  caseId     String
   issuer     String
   reason     String
   expiration DateTime
@@ -70,7 +71,7 @@ model Action {
 model Ticket {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   guildId     String   @db.ObjectId
-  ticketId    Int
+  caseId      String
   creatorId   String
   ticketTitle String
   ticketTag   Int // Status of the ticket (e.g., open, closed)
@@ -78,5 +79,6 @@ model Ticket {
   updatedAt   DateTime @updatedAt
   case        Case     @relation(fields: [guildId], references: [id])
 
+  @@unique([guildId, caseId], name: "uuid")
   @@map("tickets")
 }

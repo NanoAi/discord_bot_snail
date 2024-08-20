@@ -1,25 +1,23 @@
 import type { User } from '@prisma/client'
-import prisma from '../prisma'
+import prisma from '../utils/prisma'
 
 class UserController {
-  private guild?: string
-  private user?: string
-  private _where?: { uuid: { guildId: string, userId: string } }
-  private static msg: string = 'Both `Guild` and `User` ID\'s must be defined.'
+  private guild: string
+  private user: string
+  private _where: { uuid: { guildId: string, userId: string } }
 
-  constructor() {}
-
-  private get() {
-    if (!this.guild || !this.user || !this._where)
-      throw new Error(UserController.msg)
-    return { where: this._where, guild: this.guild, user: this.user }
-  }
-
-  where(guildId: string, userId: string) {
+  constructor(guildId: string, userId: string) {
     this.guild = guildId
     this.user = userId
     this._where = { uuid: { guildId, userId } }
-    return this
+  }
+
+  private get() {
+    return { where: this._where, guild: this.guild, user: this.user }
+  }
+
+  static where(guildId: string, userId: string) {
+    return new UserController(guildId, userId)
   }
 
   async upsertUser(roles: string[] = [], lastMessage?: Date, warnings: string[] = [], xp: number = 0): Promise<User> {
@@ -96,5 +94,4 @@ class UserController {
   }
 }
 
-const userController = new UserController()
-export default userController
+export default UserController

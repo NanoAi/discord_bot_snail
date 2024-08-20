@@ -23,7 +23,7 @@ import {
   PermissionFlagsBits,
   PermissionsBitField,
 } from 'discord.js'
-import { logger } from './logger'
+import { logger } from './utils/logger'
 import { Convert } from '~/modules/convert'
 
 console.log('\r\n'.repeat(12))
