@@ -9,14 +9,15 @@ datasource db {
 
 model User {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  userId      String
   guildId     String
+  userId      String
   xp          Int
   roles       String[] // List of roles
   lastMessage DateTime
   warnings    String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  guild       Guild    @relation(fields: [guildId], references: [guildId])
 
   @@unique([userId, guildId], name: "uuid")
   @@map("users") // Map to "users" collection
@@ -26,6 +27,7 @@ model Guild {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   guildId   String   @unique
   cases     Case[]
+  users     User[]
   xpSystem  Boolean // Whether XP system is enabled
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -35,7 +37,7 @@ model Guild {
 
 model Case {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  guildId     String   @db.ObjectId
+  guildId     String
   caseId      String
   status      Int      @default(0)
   resolution  String   @default("")
@@ -45,7 +47,7 @@ model Case {
   warnings    Action[] @relation("warns")
   bans        Action[] @relation("bans") // List of banned user IDs
   mutes       Action[] @relation("mutes") // List of muted user IDs
-  guild       Guild    @relation(fields: [guildId], references: [id])
+  guild       Guild    @relation(fields: [guildId], references: [guildId])
 
   @@unique([guildId, caseId], name: "uuid")
   @@map("cases")
@@ -53,7 +55,7 @@ model Case {
 
 model Action {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  guildId    String   @db.ObjectId
+  guildId    String
   caseId     String
   issuer     String
   reason     String
@@ -61,9 +63,9 @@ model Action {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  warnedIn Case @relation(name: "warns", fields: [guildId], references: [id])
-  bannedIn Case @relation(name: "bans", fields: [guildId], references: [id])
-  mutedIn  Case @relation(name: "mutes", fields: [guildId], references: [id])
+  warnedIn Case @relation(name: "warns", fields: [guildId, caseId], references: [guildId, caseId])
+  bannedIn Case @relation(name: "bans", fields: [guildId, caseId], references: [guildId, caseId])
+  mutedIn  Case @relation(name: "mutes", fields: [guildId, caseId], references: [guildId, caseId])
 
   @@map("actions")
 }

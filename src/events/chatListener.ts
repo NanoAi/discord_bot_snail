@@ -18,4 +18,10 @@ Client.on(Events.MessageCreate, async (message) => {
       message.reply('Simulating Client Join.')
     }
   }
+  if (message.content === '?.') {
+    const member = message.member
+    GuildDBController.where(member!.guild.id).findGuild(true).then((out) => {
+      console.log(out)
+    }).catch(logger.catchError)
+  }
 })

@@ -37,9 +37,10 @@ class GuildController {
   }
 
   // Find a Guild by guildId
-  async findGuild(): Promise<Guild | null> {
+  async findGuild(getCases: boolean = false): Promise<Guild | null> {
     return await prisma.guild.findUnique({
       where: { guildId: this.guildId! },
+      include: { cases: getCases },
     })
   }
 
@@ -58,9 +59,16 @@ class GuildController {
   }
 
   // Find a Case by caseId
-  async findCase(caseId: string): Promise<Case | null> {
+  async findCase(): Promise<Case | null> {
     return await prisma.case.findUnique({
-      where: { uuid: { guildId: this.guildId!, caseId } },
+      where: { uuid: { guildId: this.guildId!, caseId: this.caseId! } },
+    })
+  }
+
+  async updateCase(status: number, resolution: string = '') {
+    return await prisma.case.update({
+      where: { uuid: { guildId: this.guildId!, caseId: this.caseId! } },
+      data: { status, resolution },
     })
   }
 
