@@ -8,6 +8,7 @@
     "paths": {
       "~/*": ["./*"],
       "@controllers/*": ["./modules/controllers/*"],
+      "@discord/*": ["./modules/*"],
       "@utils/*": ["./modules/utils/*"]
     },
     "resolveJsonModule": true,

@@ -1,6 +1,7 @@
 import { Double } from 'mongodb'
 import type { SubCommandType } from './discord'
 import * as Discord from './discord'
+import * as DI from '~/modules/interactions'
 
 export class Convert {
   public static ValueToType(ci: Discord.ChatInteraction, value: string, type: SubCommandType) {
@@ -34,7 +35,7 @@ export class Convert {
     if (!ci)
       return undefined
 
-    const inter = Discord.getChatInteraction(ci)
+    const inter = DI.getChatInteraction(ci)
     const guild = inter.inGuild() && inter.guild
     const role = guild && guild.roles.cache.get(value)
     return role || undefined
@@ -44,7 +45,7 @@ export class Convert {
     if (!ci)
       return undefined
 
-    const inter = Discord.getChatInteraction(ci)
+    const inter = DI.getChatInteraction(ci)
     const guild = inter.inGuild() && inter.guild
     const guildId = guild && inter.guildId || undefined
 

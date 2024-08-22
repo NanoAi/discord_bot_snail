@@ -2,7 +2,7 @@ import { Events } from 'discord.js'
 import UserDBController from '@controllers/userController'
 import GuildDBController from '@controllers/guildController'
 import { logger } from '@utils/logger'
-import { Client } from '~/modules/discord'
+import { Client } from '@discord/discord'
 
 Client.on(Events.MessageCreate, async (message) => {
   if (message.system || message.author.bot)

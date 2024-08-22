@@ -55,7 +55,8 @@ export type SubCommandType = string
 export interface SubCommandMeta { name: string, type: SubCommandType }
 export type Permissions = DPermissions | bigint | number | null | undefined
 export type Interaction = DInteraction<CacheType>
-interface ChatInteractionAssert {
+
+export interface ChatInteractionAssert {
   interaction: ChatInputCommandInteraction<CacheType>
   message: Message<boolean>
 }
@@ -251,93 +252,23 @@ class CommandProcessor {
   }
 }
 
-export async function reply(ci: ChatInteraction, response: string, options?: InteractionReplyOptions) {
-  if (ci.interaction) {
-    if (ci.interaction.replied)
-      return
-
-    response = response.replaceAll('%username%', ci.interaction.user.username)
-    const interaction = ci.interaction
-
-    if (options) {
-      options.fetchReply = true
-    }
-
-    const re = { content: response, ...(options || {}) }
-
-    if (interaction.deferred) {
-      await interaction.editReply(re)
-    }
-    else {
-      await interaction.reply(re)
-    }
-  }
-  else {
-    response = response.replaceAll('%username%', ci.message!.author.username)
-    await ci.message!.reply(response)
-  }
-}
-
 export function shutdown() {
   Client.destroy().then(() => {
     logger.info('Client has shutdown via admin request.')
   }).catch(logger.catchError)
 }
 
-export function getChatInteraction(ci: ChatInteraction) {
-  if (ci.interaction)
-    return ci.interaction
-  return ci.message!
-}
-
-export class CommandInteraction {
-  private lock: boolean = false
-  private ci: ChatInteraction
-
-  constructor(ci: ChatInteraction) {
-    this.ci = ci
-    return this
-  }
-
-  interaction(callback: (interaction: ChatInteractionAssert['interaction']) => void) {
-    if (!this.lock && this.ci.interaction) {
-      callback(this.ci.interaction)
-      this.lock = true
-    }
-    return this
-  }
-
-  message(callback: (message: ChatInteractionAssert['message']) => void) {
-    if (!this.lock && this.ci.message) {
-      callback(this.ci.message)
-      this.lock = true
-    }
-    return this
-  }
-}
-
-export async function acceptInteraction(ci: ChatInteraction) {
-  if (ci.interaction) {
-    await ci.interaction.reply({ content: '## 🆗', ephemeral: true })
-    return ci.interaction
-  }
-  else {
-    await ci.message!.react('🆗')
-    return ci.message
-  }
-}
-
 Client.on(Events.MessageCreate, async (message) => {
   if (message.system || message.author.bot)
     return
 
-  const activator = ';'
+  const activator = '?'
 
   const content = message.content
   if (activator !== content.charAt(0))
     return
 
-  const matcher = [...content.matchAll(/^;(\w+)(?:(;| )(.+))?/g)]
+  const matcher = [...content.matchAll(/^\?(\w+)(?:(;| )(.+))?/g)]
   if (matcher.length === 0)
     return
 
@@ -357,9 +288,9 @@ Client.on(Events.MessageCreate, async (message) => {
   const ci: ChatInteraction = { message }
   const finalArgs = args.length > 0 && args || undefined
 
-  // console.log('[DEBUG] Command: ', baseCommand)
-  // console.log('[DEBUG] subCommand: ', subCommand)
-  // console.log('[DEBUG] Arguments', args)
+  console.log('[DEBUG] Command: ', baseCommand)
+  console.log('[DEBUG] subCommand: ', subCommand)
+  console.log('[DEBUG] Arguments', args)
 
   CommandProcessor.process(getMessageOptions, ci, finalArgs, command, subCommand)
 })

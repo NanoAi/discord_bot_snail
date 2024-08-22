@@ -75,7 +75,7 @@ export class Factory {
     }
   }
 
-  public static noDM() {
+  public static setDMPermission(permission: boolean) {
     return function (target: any, _context: any) {
       const metadata = Reflect.getOwnMetadata('command', target)
 
@@ -85,7 +85,7 @@ export class Factory {
         throw new Error('Command not yet defined in this context.')
       }
 
-      command.data.setDMPermission(false)
+      command.data.setDMPermission(permission)
       Factory.updateCommand(metadata, command)
     }
   }
@@ -306,7 +306,7 @@ export class Command {
     settings: Discord.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, 'user', target)
+      Command.initOptions(name, 'string', target)
       Command.prepare(
         target,
         command => command.addUserOption(Command.wrapper(target, name, description, settings)),
