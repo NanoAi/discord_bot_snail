@@ -1,6 +1,6 @@
-import type { GuildMember, User, UserResolvable } from 'discord.js'
+import { Colors, type GuildMember, type User, type UserResolvable } from 'discord.js'
 import * as Discord from '@discord/discord'
-import { DiscordInteraction } from '~/modules/interactions'
+import { Colours, DiscordInteraction } from '@discord/interactions'
 import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
 
 @CommandFactory('shutdown', 'shutdown the bot.')
@@ -47,10 +47,10 @@ export class KickCommand {
       try {
         const member = await guild.members.fetch({ user, force: true })
         // await member.kick(args.reason(undefined))
-        await DiscordInteraction.reply(ci, `${member} was kicked from the guild.`)
+        await DiscordInteraction.reply(ci, `${member} was kicked from the guild.`, Colours.Info, member.user)
       }
       catch {
-        await DiscordInteraction.reply(ci, `Could not find ${user} in the guild.`)
+        await DiscordInteraction.reply(ci, `Could not find ${user} in the guild.`, Colours.Error)
       }
     }
   }

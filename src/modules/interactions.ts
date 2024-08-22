@@ -1,4 +1,4 @@
-import type { InteractionReplyOptions, MessageReplyOptions } from 'discord.js'
+import type { ColorResolvable, InteractionReplyOptions, MessageReplyOptions, User } from 'discord.js'
 import { EmbedBuilder } from 'discord.js'
 import type { ChatInteraction, ChatInteractionAssert } from './discord'
 import * as Discord from './discord'
@@ -9,12 +9,13 @@ export function getChatInteraction(ci: ChatInteraction) {
   return ci.message!
 }
 
-export enum Colours {
-  Info = 0x0099FF,
-  Success = 0x00FF66,
-  Error = 0xFF001A,
-  Warn = 0xFFE600,
-  Misc = 0x00233B,
+export interface Colour { colour: ColorResolvable, icon: string }
+export const Colours = {
+  Info: { colour: 0x0099FF, icon: '📘' },
+  Success: { colour: 0x00FF66, icon: '📗' },
+  Error: { colour: 0xFF001A, icon: '📕' },
+  Warn: { colour: 0xFFE600, icon: '📒' },
+  Misc: { colour: 0x00233B, icon: '🐌' },
 }
 
 export class CommandInteraction {
@@ -70,10 +71,15 @@ export async function acceptInteraction(ci: ChatInteraction) {
   }
 }
 
-export async function reply(ci: ChatInteraction, response: string, options?: InteractionReplyOptions | MessageReplyOptions) {
+export async function reply(ci: ChatInteraction, response: string, style: Colour = Colours.Misc, target?: User) {
   const embed = new EmbedBuilder()
-    .setColor(0x0099FF)
-    .setDescription(`📘 **${response}**`)
+    .setColor(style.colour)
+    .setDescription(`<:snail:1276237038022033418> **${response}**`)
+    .setTimestamp()
+
+  if (target) {
+    embed.setFooter({ text: `ID: ${target.id}` })
+  }
 
   if (ci.interaction) {
     if (ci.interaction.replied)
@@ -81,13 +87,7 @@ export async function reply(ci: ChatInteraction, response: string, options?: Int
 
     response = response.replaceAll('%username%', ci.interaction.user.username)
     const interaction = ci.interaction
-    const _options = options as InteractionReplyOptions
-
-    if (_options) {
-      _options.fetchReply = true
-    }
-
-    const re = { embeds: [embed], ...(_options || {}) }
+    const re = { embeds: [embed], fetchReply: true }
 
     if (interaction.deferred) {
       await interaction.editReply(re)
@@ -98,7 +98,7 @@ export async function reply(ci: ChatInteraction, response: string, options?: Int
   }
   else {
     response = response.replaceAll('%username%', ci.message!.author.username)
-    await ci.message!.reply({ embeds: [embed], ...((options as MessageReplyOptions) || {}) })
+    await ci.message!.reply({ embeds: [embed] })
   }
 }
 
