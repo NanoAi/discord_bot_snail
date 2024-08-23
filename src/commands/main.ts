@@ -47,10 +47,10 @@ export class KickCommand {
       try {
         const member = await guild.members.fetch({ user, force: true })
         // await member.kick(args.reason(undefined))
-        await DiscordInteraction.reply(ci, `${member} was kicked from the guild.`, Colours.Info, member.user)
+        await DiscordInteraction.reply(ci, `${member} was kicked from the guild.`, { s: Colours.Info, u: member.user })
       }
       catch {
-        await DiscordInteraction.reply(ci, `Could not find ${user} in the guild.`, Colours.Error)
+        await DiscordInteraction.reply(ci, `Could not find ${user} in the guild.`, { s: Colours.Error })
       }
     }
   }
