@@ -53,8 +53,7 @@
     "subcmd"
   ],
   "i18n-ally.localesPaths": [
-    "src/modules/lang",
-    "i18n"
+    "lang"
   ],
   "i18n-ally.keystyle": "nested",
   "i18n-ally.dirStructure": "file",

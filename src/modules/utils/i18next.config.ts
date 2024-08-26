@@ -5,9 +5,9 @@ import FsBackend from 'i18next-fs-backend'
 
 const options = {
   // path where resources get loaded from
-  loadPath: './i18n/{{lng}}.json',
+  loadPath: './lang/{{lng}}.json',
   // path to post missing resources
-  addPath: './i18n/{{lng}}.missing.json',
+  addPath: './lang/{{lng}}.missing.json',
   // jsonIndent to use when storing json files
   jsonIndent: 2,
 }
@@ -16,7 +16,7 @@ export default async function langConfig() {
   return await i18next
     .use(FsBackend)
     .init<FsBackendOptions>({
-      lng: 'en',
+      lng: process.env.LANGUAGE,
       backend: options,
       debug: process.env.DEBUG_I18N === '1',
       // other i18next options
