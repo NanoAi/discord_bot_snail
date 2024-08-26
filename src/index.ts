@@ -1,14 +1,17 @@
 import 'dotenv/config'
 import * as process from 'node:process'
 
+import i18next from 'i18next'
 import { REST as DRestClient, Events, Routes } from 'discord.js'
 import chalk from 'chalk'
 import prisma from '@utils/prisma'
+import langConfig from '@utils/i18n.config'
 import * as Discord from './modules/discord'
 import { bindLogger, logger } from './modules/utils/logger'
 import declare from './modules/utils/declare'
 
 console.log('~\nStarting...')
+
 // Create a new client instance
 
 // When the client is ready, run this code (only once).
@@ -52,6 +55,9 @@ const sLog = (function (n) {
 
 ;(async () => {
   try {
+    sLog('Initializing Language Settings...')
+    await langConfig()
+
     sLog('Connecting to Database...')
     await prisma.$connect()
     await prisma.guild.findFirst()

@@ -7,7 +7,7 @@ import { Client } from '@discord/discord'
 Client.on(Events.MessageCreate, async (message) => {
   if (message.system || message.author.bot)
     return
-  console.log(message.content)
+  console.log('[MSG]', message.content)
   if (message.content === '??') {
     const member = message.member
     if (member) {
@@ -21,7 +21,7 @@ Client.on(Events.MessageCreate, async (message) => {
   if (message.content === '?.') {
     const member = message.member
     GuildDBController.where(member!.guild.id).findGuild(true).then((out) => {
-      console.log(out)
+      console.log('[MSG]', out)
     }).catch(logger.catchError)
   }
 })

@@ -9,13 +9,21 @@ export function getChatInteraction(ci: ChatInteraction) {
   return ci.message!
 }
 
-export interface Colour { colour: ColorResolvable, icon: string }
-export const Colours = {
+export interface Style { colour: ColorResolvable, icon: string }
+export const Styles = {
   Info: { colour: 0x0099FF, icon: 'https://cdn.discordapp.com/emojis/1276562523746865182.webp?size=56&quality=lossless' },
   Success: { colour: 0x00FF66, icon: 'https://cdn.discordapp.com/emojis/1276565485735116852.webp?size=56&quality=lossless' },
   Error: { colour: 0xFF001A, icon: 'https://cdn.discordapp.com/emojis/1276565574821871616.webp?size=56&quality=lossless' },
   Warn: { colour: 0xFFE600, icon: 'https://cdn.discordapp.com/emojis/1276566769867423848.webp?size=56&quality=lossless' },
   Misc: { colour: 0x00233B, icon: 'https://cdn.discordapp.com/emojis/1276563326448570500.webp?size=56&quality=lossless' },
+}
+
+/**
+ * enum LabelKeys
+ */
+export enum LabelKeys {
+  ID = 'ID',
+  GUILD = 'GU',
 }
 
 class CommandInteractionCallback {
@@ -101,57 +109,75 @@ export async function acceptInteraction(ci: ChatInteraction) {
 }
 
 interface ReplySettings {
-  style?: Colour
-  user?: User | GuildMember
+  label?: { key: string, value: string }
   ephemeral?: boolean
-  s?: Colour
-  u?: User | GuildMember
-  e?: boolean
+  style: Style
 }
 
-export async function reply(
-  passthrough: ChatInteraction,
-  response: string,
-  settings: ReplySettings = {},
-) {
-  const ci = new CommandInteraction(passthrough)
-  const interaction = ci.getInteraction()
-  const message = ci.getMessage()!
+export class Reply extends CommandInteraction {
+  private settings: ReplySettings = { style: Styles.Misc }
+  private embed: EmbedBuilder
+  constructor(ci: ChatInteraction) {
+    super(ci)
 
-  settings = {
-    style: settings.style || settings.s || Colours.Misc,
-    user: settings.user || settings.u,
-    ephemeral: settings.ephemeral || settings.e,
+    const settings = this.settings
+    const style = settings.style
+
+    this.embed = new EmbedBuilder()
+      .setColor(style.colour)
+      .setTimestamp()
+
+    return this
   }
 
-  const style = settings.style!
-  const embed = new EmbedBuilder()
-    .setColor(style.colour)
-    .setDescription(`**${response}**`)
-    .setTimestamp()
+  style(style: Style) {
+    this.settings.style = style
+    return this
+  }
 
-  if (settings.user)
-    embed.setFooter({ iconURL: style.icon, text: `ID: ${settings.user.id}` })
-  else
-    embed.setFooter({ iconURL: style.icon, text: `GU: ${ci.getBoth().guildId}` })
+  label(key: LabelKeys, value: string) {
+    this.settings.label = { key, value }
+    return this
+  }
 
-  if (interaction) {
-    if (interaction.replied)
-      return
+  ephemeral(beEphemeral: boolean) {
+    this.settings.ephemeral = beEphemeral
+    return this
+  }
 
-    response = response.replaceAll('%username%', interaction.user.username)
-    const re = { embeds: [embed], fetchReply: true, ephemeral: !!settings.ephemeral }
+  async send(response: string, noReplace: boolean = false) {
+    const _i = this.getInteraction()
+    const message = this.getMessage()!
+    const settings = this.settings
+    const embed = this.embed
 
-    if (interaction.deferred) {
-      await interaction.editReply(re)
+    this.embed.setColor(settings.style.colour)
+
+    if (settings.label)
+      this.embed.setFooter({ iconURL: settings.style.icon, text: `${settings.label.key}: ${settings.label.value}` })
+    else
+      this.embed.setFooter({ iconURL: settings.style.icon, text: `GU: ${this.getBoth().guildId}` })
+
+    if (!noReplace) {
+      response = response.replaceAll('%username%', _i && _i.user.username || message.author.username)
+      embed.setDescription(`**${response}**`)
+    }
+
+    if (_i) {
+      if (_i.replied)
+        return
+
+      const re = { embeds: [embed], fetchReply: true, ephemeral: !!settings.ephemeral }
+      if (_i.deferred) {
+        await _i.editReply(re)
+      }
+      else {
+        await _i.reply(re)
+      }
     }
     else {
-      await interaction.reply(re)
+      await message.reply({ embeds: [embed] })
     }
-  }
-  else {
-    response = response.replaceAll('%username%', message.author.username)
-    await message.reply({ embeds: [embed] })
   }
 }
 
