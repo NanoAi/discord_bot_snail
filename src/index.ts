@@ -1,11 +1,10 @@
 import 'dotenv/config'
 import * as process from 'node:process'
 
-import i18next from 'i18next'
 import { REST as DRestClient, Events, Routes } from 'discord.js'
 import chalk from 'chalk'
 import prisma from '@utils/prisma'
-import langConfig from '@utils/i18n.config'
+import langConfig from '@utils/i18next.config'
 import * as Discord from './modules/discord'
 import { bindLogger, logger } from './modules/utils/logger'
 import declare from './modules/utils/declare'
