@@ -48,11 +48,16 @@
     "keychain",
     "linebreak",
     "pino",
+    "preinstall",
+    "softban",
     "subcmd"
   ],
   "i18n-ally.localesPaths": [
-    "src/modules/lang"
+    "src/modules/lang",
+    "i18n"
   ],
+  "i18n-ally.keystyle": "nested",
+  "i18n-ally.dirStructure": "file",
 
   "files.eol": "\n",
   "editor.tabSize": 2,

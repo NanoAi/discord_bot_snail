@@ -1,0 +1,11 @@
+{
+  "user": {
+    "notfound": "Could not find {{user}} in guild."
+  },
+  "command": {
+    "error": {
+      "unknown": "An unknown error has occurred while running the \"{{cmd}}\" command.",
+      "noBan": "I could not ban"
+    }
+  }
+}
