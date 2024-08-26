@@ -1,5 +1,6 @@
 import 'reflect-metadata'
 import type {
+  Events,
   SlashCommandOptionsOnlyBuilder,
   SlashCommandSubcommandsOnlyBuilder,
 } from 'discord.js'
@@ -49,6 +50,18 @@ export function CommandFactory(
     })
 
     defer.resolve()
+  }
+}
+
+export class EventController {
+  public static bind(event: Events) {
+    return function (target: any, _context: any) {
+      getMethods(target.prototype).forEach((proto, k) => {
+        if (!proto || k === 'constructor')
+          return
+        Discord.Client.on(event as string, (message) => { proto(message) })
+      })
+    }
   }
 }
 
