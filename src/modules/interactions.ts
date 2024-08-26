@@ -71,6 +71,19 @@ export class CommandInteraction {
     return guild
   }
 
+  async getGuildMember(user: any) {
+    const guild = this.getGuild()
+    if (!guild)
+      return undefined
+    try {
+      const member = await guild.members.fetch({ user, force: true })
+      return member
+    }
+    catch {
+      return undefined
+    }
+  }
+
   callback() {
     return new CommandInteractionCallback(this.ci)
   }

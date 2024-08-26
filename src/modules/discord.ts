@@ -288,9 +288,9 @@ Client.on(Events.MessageCreate, async (message) => {
   const ci: ChatInteraction = { message }
   const finalArgs = args.length > 0 && args || undefined
 
-  console.log('[DEBUG] Command: ', baseCommand)
-  console.log('[DEBUG] subCommand: ', subCommand)
-  console.log('[DEBUG] Arguments', args)
+  // console.log('[DEBUG] Command: ', baseCommand)
+  // console.log('[DEBUG] subCommand: ', subCommand)
+  // console.log('[DEBUG] Arguments', args)
 
   CommandProcessor.process(getMessageOptions, ci, finalArgs, command, subCommand)
 })
