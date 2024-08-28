@@ -4,28 +4,18 @@ function emptyFunction() {}
 
 export function getMethods(
   from: any,
-  settings?: { filterUnderscore?: boolean, prototype?: boolean, ignore?: string[] },
+  ignore?: string[],
+  filterUnderscore?: boolean,
 ) {
   const output = new Map<string, any>()
-
-  if (!settings) {
-    settings = {
-      filterUnderscore: false,
-      prototype: false,
-      ignore: [],
-    }
-  }
-
-  if (settings.prototype)
-    from = from.prototype
 
   const props = Object.getOwnPropertyNames(from).filter((prop) => {
     const baseProps = Object.getOwnPropertyNames(emptyFunction).includes(prop)
     let pass = true
-    if (settings.ignore) {
-      pass = !settings.ignore.includes(prop)
+    if (ignore) {
+      pass = !ignore.includes(prop)
     }
-    if (settings.filterUnderscore) {
+    if (filterUnderscore) {
       pass = pass && !prop.startsWith('_')
     }
     return pass && !baseProps

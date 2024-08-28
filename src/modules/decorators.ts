@@ -56,8 +56,8 @@ export function CommandFactory(
 export class EventController {
   public static bind(event: Events) {
     return function (target: any, _context: any) {
-      getMethods(target.prototype).forEach((proto, k) => {
-        if (!proto || k === 'constructor')
+      getMethods(target.prototype, ['constructor']).forEach((proto) => {
+        if (!proto || typeof proto === 'function')
           return
         Discord.Client.on(event as string, (message) => { proto(message) })
       })

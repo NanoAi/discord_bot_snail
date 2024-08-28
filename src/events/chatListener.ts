@@ -3,7 +3,6 @@ import { Events } from 'discord.js'
 import UserDBController from '@controllers/userController'
 import GuildDBController from '@controllers/guildController'
 import { logger } from '@utils/logger'
-import { Client } from '@discord/discord'
 import { EventController } from '~/modules/decorators'
 
 // TODO: Add priority.
