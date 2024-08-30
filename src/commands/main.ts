@@ -47,7 +47,7 @@ export class SimulateCommand {
     const re = new DiscordInteraction.Reply(ci)
 
     const guild = re.getGuild()
-    const user = re.getUser()
+    const user = args.user() // TODO: Check if this is actually resolvable to a user.
     const member = await re.getGuildMember(user)
 
     if (!guild || !member) {
