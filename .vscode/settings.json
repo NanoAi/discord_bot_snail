@@ -47,6 +47,7 @@
     "fullpath",
     "keychain",
     "linebreak",
+    "moderatable",
     "pino",
     "preinstall",
     "softban",

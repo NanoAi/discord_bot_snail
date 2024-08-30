@@ -1,6 +1,5 @@
 import 'reflect-metadata'
 import type {
-  Events,
   SlashCommandOptionsOnlyBuilder,
   SlashCommandSubcommandsOnlyBuilder,
 } from 'discord.js'
@@ -12,6 +11,7 @@ import {
 import getMethods from './utils/method'
 import Deferrer from './utils/deferrer'
 import * as Discord from './discord'
+import type { CommandValidator } from './discord'
 
 const defer = new Deferrer()
 
@@ -53,7 +53,7 @@ export function CommandFactory(
   }
 }
 
-export class EventController {
+/* export class EventController {
   public static bind(event: Events) {
     return function (target: any, _context: any) {
       getMethods(target.prototype, ['constructor']).forEach((proto) => {
@@ -63,7 +63,7 @@ export class EventController {
       })
     }
   }
-}
+} */
 
 export class Factory {
   private static updateCommand(metadata: { name: string, description: string }, command: Discord.CommandStore) {
@@ -101,6 +101,25 @@ export class Factory {
       command.data.setDMPermission(permission)
       Factory.updateCommand(metadata, command)
     }
+  }
+
+  public static setDefaultMemberPermissions(permissions: Discord.Permissions) {
+    return function (target: any, _context: any) {
+      const metadata = Reflect.getOwnMetadata('command', target)
+
+      const command = Discord.Commands.getCommand(metadata.name)
+
+      if (!command) {
+        throw new Error('Command not yet defined in this context.')
+      }
+
+      command.data.setDefaultMemberPermissions(permissions)
+      Factory.updateCommand(metadata, command)
+    }
+  }
+
+  public static ownerOnly() {
+
   }
 
   public static setIntegrations(value: Discord.InteractionContextType[]) {
@@ -252,6 +271,12 @@ export class Command {
         .setName(name)
         .setDescription(description)
       Command.prepare(target, command => command.addSubcommand(target.subCommand), true)
+    }
+  }
+
+  public static setValidator(validator: CommandValidator) {
+    return function (target: any, _context: any) {
+      Reflect.defineProperty(target, 'validator', { value: validator })
     }
   }
 

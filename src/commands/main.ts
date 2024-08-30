@@ -5,6 +5,7 @@ import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
 @CommandFactory('shutdown', 'shutdown the bot.')
 export class ShutdownCommand {
   // This should be defined as the base function to call.
+  @Command.setValidator(isOP => isOP)
   @Command.addBooleanOption('clear', 'Clear console commands before shutdown')
   public static async main(ci: Discord.ChatInteraction, args: any) {
     await new DiscordInteraction.Reply(ci).send(`Goodnight~ %username%`)

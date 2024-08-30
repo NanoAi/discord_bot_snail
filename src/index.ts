@@ -82,7 +82,6 @@ const sLog = (function (n) {
     Discord.Client.login(process.env.DISCORD_TOKEN)
   }
   catch (error) {
-    // And of course, make sure you catch and log any errors!
     console.log(chalk.gray('-'.repeat(process.stdout.columns)))
     console.error(error)
   }

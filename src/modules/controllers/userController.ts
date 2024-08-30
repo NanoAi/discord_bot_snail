@@ -41,6 +41,12 @@ class UserController {
     })
   }
 
+  async getLastMessage(): Promise<Date | undefined> {
+    const get = this.get()
+    const user = await prisma.user.findUnique({ where: get.where })
+    return user && user.lastMessage || undefined
+  }
+
   async setRoles(roles: string[]) {
     const get = this.get()
     return await prisma.user.update({

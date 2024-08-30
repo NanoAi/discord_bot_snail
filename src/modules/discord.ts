@@ -1,4 +1,5 @@
 import type {
+  APIInteractionGuildMember,
   ApplicationCommandOptionBase,
   CacheType,
   ChatInputCommandInteraction,
@@ -7,12 +8,14 @@ import type {
   Permissions as DPermissions,
   REST as DRestClient,
   SlashCommandBuilder as DSlashCommandBuilder,
+  GuildMember,
   InteractionReplyOptions,
   Message,
   SlashCommandOptionsOnlyBuilder,
   SlashCommandStringOption,
   SlashCommandSubcommandBuilder,
   SlashCommandSubcommandsOnlyBuilder,
+  User,
 } from 'discord.js'
 import {
   Client as DClient,
@@ -23,6 +26,7 @@ import {
   PermissionFlagsBits,
   PermissionsBitField,
 } from 'discord.js'
+import { operators } from '../../admins.json'
 import { logger } from './utils/logger'
 import { Convert } from '~/modules/convert'
 
@@ -32,16 +36,22 @@ console.clear()
 
 const intents: ClientOptions['intents'] = [
   GatewayIntentBits.Guilds,
+  GatewayIntentBits.GuildMembers,
   GatewayIntentBits.GuildMessages,
+  GatewayIntentBits.GuildModeration,
+  GatewayIntentBits.GuildIntegrations,
+  GatewayIntentBits.GuildMessageReactions,
   GatewayIntentBits.MessageContent,
   GatewayIntentBits.DirectMessages,
-  GatewayIntentBits.GuildModeration,
   GatewayIntentBits.AutoModerationExecution,
 ]
 
 const partials = [
   Partials.Channel,
   Partials.Message,
+  Partials.Reaction,
+  Partials.GuildMember,
+  Partials.GuildScheduledEvent,
 ]
 
 export const Routes = DRoutes
@@ -55,6 +65,8 @@ export type SubCommandType = string
 export interface SubCommandMeta { name: string, type: SubCommandType }
 export type Permissions = DPermissions | bigint | number | null | undefined
 export type Interaction = DInteraction<CacheType>
+export type CommandMember = GuildMember | APIInteractionGuildMember | null
+export type CommandValidator = (isOP: boolean, user: User, member: CommandMember) => boolean
 
 export interface ChatInteractionAssert {
   interaction: ChatInputCommandInteraction<CacheType>
@@ -191,6 +203,16 @@ function getMessageOptions(func: any, pass: string[] = [], ci: ChatInteractionAs
   return options as { [key: string]: () => any }
 }
 
+function commandValidate(ci: ChatInteraction, func: any) {
+  const validator: CommandValidator = func.validator
+  if (validator) {
+    const user = ci.interaction && ci.interaction.user || ci.message!.author
+    const member = ci.interaction && ci.interaction.member || ci.message!.member
+    return validator(operators.includes(user.id), user, member)
+  }
+  return true
+}
+
 class CommandProcessor {
   private static call(
     getter: any,
@@ -209,7 +231,10 @@ class CommandProcessor {
       if (ci.interaction && (command.main as any)._defer) {
         ci.interaction.deferReply()
       }
-      command.main(ci, getter(command.main, opts, ci))
+      if (commandValidate(ci, command.main))
+        command.main(ci, getter(command.main, opts, ci))
+      else
+        return false
       output = true
     }
 
@@ -222,7 +247,10 @@ class CommandProcessor {
         if (ci.interaction && func._defer && !ci.interaction.deferred) {
           ci.interaction.deferReply()
         }
-        func(ci, getter(func, opts, ci))
+        if (commandValidate(ci, func))
+          func(ci, getter(func, opts, ci))
+        else
+          return false
       }
       output = !!func
     }

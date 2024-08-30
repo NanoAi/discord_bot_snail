@@ -6,7 +6,9 @@ import { Client } from '@discord/discord'
 
 Client.on(Events.GuildMemberAdd, async (member) => {
   // Do something on member join.
-  UserDBController.where(member.guild.id, member.id).upsertUser()
+  const guildId = member.guild.id
+  GuildDBController.where(guildId).upsertGuild(true).catch(logger.catchError)
+  UserDBController.where(guildId, member.id).upsertUser().catch(logger.catchError)
 })
 
 Client.on(Events.GuildCreate, async (guild) => {
