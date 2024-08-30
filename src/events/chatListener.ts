@@ -11,6 +11,11 @@ const allowedURLS = [
   'youtube.com',
   'twitch.tv',
   'example.com',
+  'twitter.com',
+  'x.com',
+  'fxtwitter.com',
+  'fixupx.com',
+  'twittpr.com',
 ]
 
 Discord.Client.on(Events.MessageCreate, async (message) => {
@@ -46,6 +51,11 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
         }
       }
     }
+    if (message.content.length < 6)
+      return
+    await UserDBController.where(guildId, member.id).setLastMessage(new Date())
+  }
+  else {
     await UserDBController.where(guildId, member.id).setLastMessage(new Date())
   }
 })
