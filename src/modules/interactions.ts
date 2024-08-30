@@ -1,4 +1,4 @@
-import type { ColorResolvable, GuildMember, InteractionReplyOptions, MessageReplyOptions, User } from 'discord.js'
+import type { BitFieldResolvable, ColorResolvable, InteractionResponse, Message, MessageFlags } from 'discord.js'
 import { EmbedBuilder } from 'discord.js'
 import type { ChatInteraction, ChatInteractionAssert } from './discord'
 import * as Discord from './discord'
@@ -9,6 +9,7 @@ export function getChatInteraction(ci: ChatInteraction) {
   return ci.message!
 }
 
+export type MessageSend = Promise<Message<boolean> | InteractionResponse<boolean> | undefined>
 export interface Style { colour: ColorResolvable, icon: string }
 export const Styles = {
   Info: { colour: 0x0099FF, icon: 'https://cdn.discordapp.com/emojis/1276562523746865182.webp?size=56&quality=lossless' },
@@ -17,6 +18,15 @@ export const Styles = {
   Warn: { colour: 0xFFE600, icon: 'https://cdn.discordapp.com/emojis/1276566769867423848.webp?size=56&quality=lossless' },
   Misc: { colour: 0x00233B, icon: 'https://cdn.discordapp.com/emojis/1276563326448570500.webp?size=56&quality=lossless' },
 }
+
+const defaultOptions: {
+  noReplace?: boolean
+  flags?:
+  BitFieldResolvable<
+      'SuppressEmbeds' | 'SuppressNotifications',
+      MessageFlags.SuppressEmbeds | MessageFlags.SuppressNotifications
+  >
+} = { noReplace: false, flags: undefined }
 
 /**
  * enum LabelKeys
@@ -79,9 +89,14 @@ export class CommandInteraction {
     return guild
   }
 
+  getUser() {
+    const ci = this.ci
+    return (ci.interaction && ci.interaction.user) || (ci.message && ci.message.author) || undefined
+  }
+
   async getGuildMember(user: any) {
     const guild = this.getGuild()
-    if (!guild)
+    if (!guild || !user)
       return undefined
     try {
       const member = await guild.members.fetch({ user, force: true })
@@ -145,7 +160,7 @@ export class Reply extends CommandInteraction {
     return this
   }
 
-  async send(response: string, noReplace: boolean = false) {
+  async send(response: string, options = defaultOptions): MessageSend {
     const _i = this.getInteraction()
     const message = this.getMessage()!
     const settings = this.settings
@@ -158,7 +173,7 @@ export class Reply extends CommandInteraction {
     else
       this.embed.setFooter({ iconURL: settings.style.icon, text: `GU: ${this.getBoth().guildId}` })
 
-    if (!noReplace) {
+    if (!options.noReplace) {
       response = response.replaceAll('%username%', _i && _i.user.username || message.author.username)
       embed.setDescription(`**${response}**`)
     }
@@ -169,14 +184,14 @@ export class Reply extends CommandInteraction {
 
       const re = { embeds: [embed], fetchReply: true, ephemeral: !!settings.ephemeral }
       if (_i.deferred) {
-        await _i.editReply(re)
+        return await _i.editReply(re)
       }
       else {
-        await _i.reply(re)
+        return await _i.reply(re)
       }
     }
     else {
-      await message.reply({ embeds: [embed] })
+      return await message.reply({ embeds: [embed], flags: options.flags! })
     }
   }
 }

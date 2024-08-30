@@ -1,6 +1,10 @@
 import * as Discord from '@discord/discord'
 import { DiscordInteraction } from '@discord/interactions'
+import { MessageFlags } from 'discord.js'
+import { GuildDBController } from '~/modules/controllers/guildController'
+import { UserDBController } from '~/modules/controllers/userController'
 import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
+import { logger } from '~/modules/utils/logger'
 
 @CommandFactory('shutdown', 'shutdown the bot.')
 export class ShutdownCommand {
@@ -30,6 +34,48 @@ export class ShutdownCommand {
     }
 
     Discord.shutdown()
+  }
+}
+
+@Factory.setDMPermission(false)
+@CommandFactory('simulate', 'Simulates events for the database.')
+export class SimulateCommand {
+  @Command.setValidator(isOP => isOP)
+  @Command.addMentionableOption('user', 'The user to target.')
+  @Command.addSubCommand('user', 'Simulate a user joining the server.')
+  public static async user(ci: Discord.ChatInteraction, args: any) {
+    const re = new DiscordInteraction.Reply(ci)
+
+    const guild = re.getGuild()
+    const user = re.getUser()
+    const member = await re.getGuildMember(user)
+
+    if (!guild || !member) {
+      await re.ephemeral(true)
+        .send(`Could not find ${args.user()} in guild.`, { flags: MessageFlags.SuppressNotifications })
+      return
+    }
+
+    await re.ephemeral(true)
+      .send(`Simulating user join for ${args.user()}`, { flags: MessageFlags.SuppressNotifications })
+
+    GuildDBController.where(guild.id).upsertGuild(true).catch(logger.catchError)
+    UserDBController.where(guild.id, member.id).upsertUser().catch(logger.catchError)
+  }
+
+  @Command.addSubCommand('guild', 'Simulate the bot joining the current guild.')
+  public static async guild(ci: Discord.ChatInteraction) {
+    const re = new DiscordInteraction.Reply(ci)
+    const guild = re.getGuild()
+
+    if (!guild) {
+      await re.ephemeral(true)
+        .send(`Could not simulate a join to this guild.`)
+      return
+    }
+
+    GuildDBController.where(guild.id).upsertGuild()
+    await re.ephemeral(true).send(`Simulating guild join.`)
   }
 }
 

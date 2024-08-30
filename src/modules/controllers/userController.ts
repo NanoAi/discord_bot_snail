@@ -20,31 +20,31 @@ class UserController {
     return new UserController(guildId, userId)
   }
 
-  async upsertUser(roles: string[] = [], lastMessage?: Date, warnings: string[] = [], xp: number = 0): Promise<User> {
+  async upsertUser(roles: string[] = [], lastMessageDate?: Date, warnings: string[] = [], xp: number = 0): Promise<User> {
     const get = this.get()
 
-    if (!lastMessage)
-      lastMessage = new Date(0)
+    if (!lastMessageDate)
+      lastMessageDate = new Date(0)
 
     return await prisma.user.upsert({
       where: get.where,
-      update: { roles, lastMessage, warnings, xp },
-      create: { userId: get.user, guildId: get.guild, roles, lastMessage, warnings, xp },
+      update: { roles, lastMessageDate, warnings, xp },
+      create: { userId: get.user, guildId: get.guild, roles, lastMessageDate, lastMessage: '', warnings, xp },
     })
   }
 
-  async setLastMessage(lastMessage: Date): Promise<User> {
+  async setLastMessage(lastMessageDate: Date, lastMessage: string = ''): Promise<User> {
     const get = this.get()
     return await prisma.user.update({
       where: get.where,
-      data: { lastMessage },
+      data: { lastMessageDate, lastMessage },
     })
   }
 
-  async getLastMessage(): Promise<Date | undefined> {
+  async getLastMessage(): Promise<{ date: Date, message: string } | undefined> {
     const get = this.get()
     const user = await prisma.user.findUnique({ where: get.where })
-    return user && user.lastMessage || undefined
+    return user && { date: user.lastMessageDate, message: user.lastMessage } || undefined
   }
 
   async setRoles(roles: string[]) {
@@ -101,3 +101,4 @@ class UserController {
 }
 
 export default UserController
+export const UserDBController = UserController

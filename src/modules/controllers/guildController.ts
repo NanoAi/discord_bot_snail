@@ -123,3 +123,4 @@ class GuildController {
 }
 
 export default GuildController
+export const GuildDBController = GuildController

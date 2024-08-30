@@ -25,13 +25,14 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
 
   const guildId = member.guild.id
   const dbUser = await UserDBController.where(guildId, member.id).getUser()
+  const snippet = String(message.content).trim().substring(0, 256).toLowerCase()
 
   if (!dbUser) {
     logger.error(`The associated member (${member.id}) doesn\'t exist in guild (${guildId}).`)
     return
   }
 
-  if (dbUser.createdAt > dbUser.lastMessage) {
+  if (dbUser.createdAt > dbUser.lastMessageDate) {
     const date = new Date()
     const messageMembers = message.mentions.members || new Collection()
     if (member.moderatable) {
@@ -39,7 +40,7 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
       if (message.mentions.everyone || messageMembers.size > 3) {
         if (message.deletable)
           await message.delete()
-        member.disableCommunicationUntil(dayjs(date).add(48, 'h').toDate(), 'Mention spam in initial Message.')
+        member.disableCommunicationUntil(dayjs(date).add(48, 'h').toDate(), 'Mention spam in initial message.')
       }
       else {
         if ((urls && urls.length > 0) && (urls[0].length > 1 && urls[0][1])) {
@@ -53,9 +54,9 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
     }
     if (message.content.length < 6)
       return
-    await UserDBController.where(guildId, member.id).setLastMessage(new Date())
+    await UserDBController.where(guildId, member.id).setLastMessage(new Date(), snippet)
   }
   else {
-    await UserDBController.where(guildId, member.id).setLastMessage(new Date())
+    await UserDBController.where(guildId, member.id).setLastMessage(new Date(), snippet)
   }
 })

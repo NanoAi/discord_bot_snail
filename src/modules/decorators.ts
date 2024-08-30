@@ -21,6 +21,7 @@ export function CommandFactory(
   permissions?: Discord.Permissions[],
 ) {
   return function (target: any, _context: any) {
+    name = name.toLowerCase() // Discord command names must be lowercase.
     const metadata = { name, description }
 
     Reflect.defineMetadata('command', metadata, target)
