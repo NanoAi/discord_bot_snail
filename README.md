@@ -12,6 +12,6 @@ PUBLIC_KEY=<your value here>
 TEST_SERVER=<your value here>
 APP_ID=<your value here>
 
-# MongoDB Server URL
-DATABASE_URL=<your value here>
+# PostgreSQL Server URL (Replace with your value.)
+DATABASE_URL=postgres://username:password@127.0.0.1:5432/db
 ```
