@@ -1,87 +1,61 @@
-generator client {
-  provider = "prisma-client-js"
+generator drizzle {
+  provider = "drizzle-prisma-generator"
+  output   = "../src/db/drizzle.schema.ts"
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  guildId     String
-  userId      String
-  xp          Int
-  roles       String[] // List of roles
-  lastMessageDate DateTime
-  lastMessage String
-  warnings    String[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  guild       Guild    @relation(fields: [guildId], references: [guildId])
-
-  @@unique([userId, guildId], name: "uuid")
-  @@map("users") // Map to "users" collection
+model Guild {
+  id       Int    @id @default(autoincrement())
+  name     String
+  settings Json   // Store guild settings here
+  users    User[] // Relation to Users
+  cases    Case[] // Relation to Cases
 }
 
-model Guild {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  guildId   String   @unique
-  cases     Case[]
-  users     User[]
-  xpSystem  Boolean // Whether XP system is enabled
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model User {
+  id          Int       @id @default(autoincrement())
+  guildId     Int
+  username    String
+  xp          Int       @default(0)
+  roles       Json // Store roles in JSON format
+  lastMessage DateTime?
+  warnings    Int       @default(0)
 
-  @@map("guilds")
+  guild Guild  @relation(fields: [guildId], references: [id])
+  Case  Case[]
 }
 
 model Case {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  guildId     String
-  caseId      String
-  status      Int      @default(0)
-  resolution  String   @default("")
-  description String   @default("")
-  users       String[]
-  tickets     Ticket[]
-  warnings    Action[] @relation("warns")
-  bans        Action[] @relation("bans") // List of banned user IDs
-  mutes       Action[] @relation("mutes") // List of muted user IDs
-  guild       Guild    @relation(fields: [guildId], references: [guildId])
+  id          Int      @id @default(autoincrement())
+  guildId     Int
+  userId      Int
+  description String
+  actions     Action[] // Relation to Actions
+  tickets     Ticket[] // Relation to Tickets
 
-  @@unique([guildId, caseId], name: "uuid")
-  @@map("cases")
+  guild Guild @relation(fields: [guildId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
 }
 
 model Action {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  guildId    String
-  caseId     String
-  issuer     String
-  reason     String
-  expiration DateTime
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id         Int      @id @default(autoincrement())
+  caseId     Int
+  actionType String // e.g., "ban", "warn", "mute"
+  timestamp  DateTime @default(now())
 
-  warnedIn Case @relation(name: "warns", fields: [guildId, caseId], references: [guildId, caseId])
-  bannedIn Case @relation(name: "bans", fields: [guildId, caseId], references: [guildId, caseId])
-  mutedIn  Case @relation(name: "mutes", fields: [guildId, caseId], references: [guildId, caseId])
-
-  @@map("actions")
+  case Case @relation(fields: [caseId], references: [id])
 }
 
 model Ticket {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  guildId     String   @db.ObjectId
-  caseId      String
-  creatorId   String
-  ticketTitle String
-  ticketTag   Int // Status of the ticket (e.g., open, closed)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  case        Case     @relation(fields: [guildId], references: [id])
+  id        Int      @id @default(autoincrement())
+  caseId    Int
+  issue     String
+  status    String // e.g., "open", "closed"
+  createdAt DateTime @default(now())
 
-  @@unique([guildId, caseId], name: "uuid")
-  @@map("tickets")
+  case Case @relation(fields: [caseId], references: [id])
 }

@@ -27,6 +27,9 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
   const dbUser = await UserDBController.where(guildId, member.id).getUser()
   const snippet = String(message.content).trim().substring(0, 256).toLowerCase()
 
+  logger.info(`DBUser: ${dbUser}`)
+  console.log(dbUser)
+
   if (!dbUser) {
     logger.error(`The associated member (${member.id}) doesn\'t exist in guild (${guildId}).`)
     return
