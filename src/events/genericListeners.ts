@@ -1,22 +1,21 @@
 import { Events } from 'discord.js'
-import UserDBController from '@controllers/userController'
-import GuildDBController from '@controllers/guildController'
+import { UserDBController } from '@controllers/user'
+import { GuildDBController } from '@controllers/guild'
 import { logger } from '@utils/logger'
-import { Client } from '@discord/discord'
+import { Client } from '~/modules/discord'
 
 Client.on(Events.GuildMemberAdd, async (member) => {
   // Do something on member join.
-  const guildId = member.guild.id
-  GuildDBController.where(guildId).upsertGuild(true).catch(logger.catchError)
-  UserDBController.where(guildId, member.id).upsertUser().catch(logger.catchError)
+  GuildDBController.instance(member.guild).upsertGuild().catch(logger.catchError)
+  UserDBController.instance(member).upsertUser().catch(logger.catchError)
 })
 
 Client.on(Events.GuildCreate, async (guild) => {
   logger.info(`[JOIN] ${guild.id}.`)
-  GuildDBController.where(guild.id).upsertGuild()
+  GuildDBController.instance(guild).upsertGuild()
 })
 
 Client.on(Events.GuildDelete, async (guild) => {
   logger.info(`[LEAVE] ${guild.id}.`)
-  GuildDBController.where(guild.id).dropGuild()
+  GuildDBController.instance(guild).dropGuild()
 })

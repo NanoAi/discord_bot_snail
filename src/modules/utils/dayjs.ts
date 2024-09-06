@@ -9,6 +9,10 @@ function dayjs(date?: dj.ConfigType) {
   return dj(global.date)
 }
 
+export function nullDate() {
+  return new Date('1969-12-31T19:00:00-05:00')
+}
+
 export default dayjs
 export const dayjs_internal = dj
 export const date = global.date

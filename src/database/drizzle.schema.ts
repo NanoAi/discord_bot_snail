@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm'
 import { foreignKey, integer, jsonb, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core'
+import { nullDate } from '~/modules/utils/dayjs'
 
 export const Guild = pgTable('Guild', {
   id: text('id').notNull().primaryKey(),
@@ -13,8 +14,9 @@ export const User = pgTable('User', {
   username: text('username').notNull(),
   xp: integer('xp').notNull(),
   roles: jsonb('roles').notNull(),
-  lastMessage: timestamp('lastMessage', { precision: 3 }),
+  lastMessageDate: timestamp('lastMessageDate', { precision: 3 }).notNull().default(nullDate()),
   warnings: integer('warnings').notNull(),
+  createdAt: timestamp('createdAt', { precision: 3 }).notNull().defaultNow(),
 }, User => ({
   User_guild_fkey: foreignKey({
     name: 'User_guild_fkey',

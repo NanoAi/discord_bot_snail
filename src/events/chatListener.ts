@@ -1,5 +1,5 @@
 import { Collection, Events } from 'discord.js'
-import UserDBController from '@controllers/userController'
+import { UserDBController } from '@controllers/user'
 import { logger } from '@utils/logger'
 import * as Discord from '~/modules/discord'
 import dayjs from '~/modules/utils/dayjs'
@@ -23,15 +23,16 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
   if (message.system || message.author.bot || !member)
     return
 
-  const guildId = member.guild.id
-  const dbUser = await UserDBController.where(guildId, member.id).getUser()
-  const snippet = String(message.content).trim().substring(0, 256).toLowerCase()
+  // const guild = member.guild
+  const dbInstance = new UserDBController(member)
+  const dbUser = await dbInstance.getUser(false)
+  // const snippet = String(message.content).trim().substring(0, 256).toLowerCase()
 
   logger.info(`DBUser: ${dbUser}`)
   console.log(dbUser)
 
   if (!dbUser) {
-    logger.error(`The associated member (${member.id}) doesn\'t exist in guild (${guildId}).`)
+    logger.error(`The associated member (${member.id}) doesn\'t exist in guild (${member.guild.id}).`)
     return
   }
 
@@ -57,9 +58,9 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
     }
     if (message.content.length < 6)
       return
-    await UserDBController.where(guildId, member.id).setLastMessage(new Date(), snippet)
+    await dbInstance.updateUser({ lastMessageDate: new Date() })
   }
   else {
-    await UserDBController.where(guildId, member.id).setLastMessage(new Date(), snippet)
+    await dbInstance.updateUser({ lastMessageDate: new Date() })
   }
 })

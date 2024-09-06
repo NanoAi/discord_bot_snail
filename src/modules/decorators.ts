@@ -11,14 +11,14 @@ import {
 import getMethods from './utils/method'
 import Deferrer from './utils/deferrer'
 import * as Discord from './discord'
-import type { CommandValidator } from './discord'
+import type * as DT from '~/types/discord'
 
 const defer = new Deferrer()
 
 export function CommandFactory(
   name: string,
   description: string,
-  permissions?: Discord.Permissions[],
+  permissions?: DT.Permissions[],
 ) {
   return function (target: any, _context: any) {
     name = name.toLowerCase() // Discord command names must be lowercase.
@@ -47,7 +47,7 @@ export function CommandFactory(
     Discord.Commands.getMap().set(metadata.name, {
       data: command,
       main: target.main,
-      subcommands: new Map<string, Discord.CommandStore['main']>(),
+      subcommands: new Map<string, DT.CommandStore['main']>(),
     })
 
     defer.resolve()
@@ -60,14 +60,14 @@ export function CommandFactory(
       getMethods(target.prototype, ['constructor']).forEach((proto) => {
         if (!proto || typeof proto === 'function')
           return
-        Discord.Client.on(event as string, (message) => { proto(message) })
+        DT.Client.on(event as string, (message) => { proto(message) })
       })
     }
   }
 } */
 
 export class Factory {
-  private static updateCommand(metadata: { name: string, description: string }, command: Discord.CommandStore) {
+  private static updateCommand(metadata: { name: string, description: string }, command: DT.CommandStore) {
     Discord.Commands.getMap().set(metadata.name, {
       data: command.data,
       main: command.main,
@@ -104,7 +104,7 @@ export class Factory {
     }
   }
 
-  public static setDefaultMemberPermissions(permissions: Discord.Permissions) {
+  public static setDefaultMemberPermissions(permissions: DT.Permissions) {
     return function (target: any, _context: any) {
       const metadata = Reflect.getOwnMetadata('command', target)
 
@@ -153,8 +153,8 @@ export class Factory {
 }
 
 export class Options {
-  private static main(target: any, meta: Discord.SubCommandMeta, config: any) {
-    const vars: Discord.SubCommandMeta[] = Reflect.getOwnMetadata('command:vars', target)
+  private static main(target: any, meta: DT.SubCommandMeta, config: any) {
+    const vars: DT.SubCommandMeta[] = Reflect.getOwnMetadata('command:vars', target)
     if (!vars.includes(meta))
       throw new Error(`The variable "${meta.name}" of type "${meta.type}" is not defined in function "${target.name}".`)
     target.commandOptions.set(meta.name, config)
@@ -172,7 +172,7 @@ export class Options {
     }
   }
 
-  public static string(config: Discord.Configs['SlashString']) {
+  public static string(config: DT.Configs['SlashString']) {
     return function (target: any, _context: any) {
       Options.main(target, target._lastOptionTarget, config)
     }
@@ -241,9 +241,9 @@ export class Command {
     })
   }
 
-  private static wrapper(target: any, name: string, description: string, settings: Discord.CommandSettings) {
+  private static wrapper(target: any, name: string, description: string, settings: DT.CommandSettings) {
     return (command: any) => {
-      const cmdOptions: Discord.Configs['options'] = target.commandOptions
+      const cmdOptions: DT.Configs['options'] = target.commandOptions
       const wrapper = cmdOptions && cmdOptions.get(name) || undefined
       let re = command
         .setName(name)
@@ -255,9 +255,9 @@ export class Command {
     }
   }
 
-  private static initOptions(name: string, type: Discord.SubCommandType, target: any) {
+  private static initOptions(name: string, type: DT.SubCommandType, target: any) {
     const key = 'command:vars'
-    const meta: Discord.SubCommandMeta[] = Reflect.getOwnMetadata(key, target) || []
+    const meta: DT.SubCommandMeta[] = Reflect.getOwnMetadata(key, target) || []
     target.commandOptions = target.commandOptions || new Map<string, (config: any) => any>()
     target._lastOptionTarget = { name, type }
 
@@ -275,7 +275,7 @@ export class Command {
     }
   }
 
-  public static setValidator(validator: CommandValidator) {
+  public static setValidator(validator: DT.CommandValidator) {
     return function (target: any, _context: any) {
       Reflect.defineProperty(target, 'validator', { value: validator })
     }
@@ -284,7 +284,7 @@ export class Command {
   public static addBooleanOption(
     name: string,
     description: string,
-    settings: Discord.CommandSettings = {},
+    settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, 'boolean', target)
@@ -298,7 +298,7 @@ export class Command {
   public static addStringOption(
     name: string,
     description: string,
-    settings: Discord.CommandSettings = {},
+    settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, 'string', target)
@@ -313,7 +313,7 @@ export class Command {
   public static addIntegerOption(
     name: string,
     description: string,
-    settings: Discord.CommandSettings = {},
+    settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, 'integer', target)
@@ -328,7 +328,7 @@ export class Command {
   public static addNumberOption(
     name: string,
     description: string,
-    settings: Discord.CommandSettings = {},
+    settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, 'double', target)
@@ -342,7 +342,7 @@ export class Command {
   public static addUserOption(
     name: string,
     description: string,
-    settings: Discord.CommandSettings = {},
+    settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, 'string', target)
@@ -356,7 +356,7 @@ export class Command {
   public static addChannelOption(
     name: string,
     description: string,
-    settings: Discord.CommandSettings = {},
+    settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, 'channel', target)
@@ -370,7 +370,7 @@ export class Command {
   public static addRoleOption(
     name: string,
     description: string,
-    settings: Discord.CommandSettings = {},
+    settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, 'role', target)
@@ -384,7 +384,7 @@ export class Command {
   public static addAttachmentOption(
     name: string,
     description: string,
-    settings: Discord.CommandSettings = {},
+    settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, 'attachment', target)
@@ -398,7 +398,7 @@ export class Command {
   public static addMentionableOption(
     name: string,
     description: string,
-    settings: Discord.CommandSettings = {},
+    settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, 'mentionable', target)

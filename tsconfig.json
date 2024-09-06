@@ -8,9 +8,10 @@
     "paths": {
       "~/*": ["./*"],
       "@controllers/*": ["./controllers/*"],
-      "@discord/*": ["./modules/*"],
+      "@modules/*": ["./modules/*"],
+      "@types/*": ["./types/*"],
       "@utils/*": ["./modules/utils/*"],
-      "@schema": ["./db/drizzle.schema.ts"]
+      "@schema": ["./database/drizzle.schema.ts"]
     },
     "resolveJsonModule": true,
     "allowJs": false, // Redirect output structure to the directory

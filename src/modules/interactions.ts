@@ -1,7 +1,6 @@
 import type { BitFieldResolvable, ColorResolvable, InteractionResponse, Message, MessageFlags } from 'discord.js'
 import { EmbedBuilder } from 'discord.js'
-import type { ChatInteraction, ChatInteractionAssert } from './discord'
-import * as Discord from './discord'
+import type { ChatInteraction, ChatInteractionAssert } from '~/types/discord'
 
 export function getChatInteraction(ci: ChatInteraction) {
   if (ci.interaction)

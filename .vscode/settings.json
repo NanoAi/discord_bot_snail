@@ -63,5 +63,9 @@
   "editor.tabSize": 2,
   "files.insertFinalNewline": true,
   "files.trimFinalNewlines": true,
-  "files.trimTrailingWhitespace": true
+  "files.trimTrailingWhitespace": true,
+
+  "vsicons.associations.files": [
+    { "icon": "typescriptdef", "extensions": [".types.ts"], "format": "svg" }
+  ]
 }

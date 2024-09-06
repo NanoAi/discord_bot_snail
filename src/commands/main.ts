@@ -1,17 +1,18 @@
-import * as Discord from '@discord/discord'
-import { DiscordInteraction } from '@discord/interactions'
 import { MessageFlags } from 'discord.js'
-import { GuildDBController } from '@controllers/guildController'
-import { UserDBController } from '@controllers/userController'
+import { GuildDBController } from '@controllers/guild'
+import { UserDBController } from '@controllers/user'
+import { DiscordInteraction } from '~/modules/interactions'
+import * as Discord from '~/modules/discord'
 import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
 import { logger } from '~/modules/utils/logger'
+import type { DT } from '~/types/discord'
 
 @CommandFactory('shutdown', 'shutdown the bot.')
 export class ShutdownCommand {
   // This should be defined as the base function to call.
   @Command.setValidator(isOP => isOP)
   @Command.addBooleanOption('clear', 'Clear console commands before shutdown')
-  public static async main(ci: Discord.ChatInteraction, args: any) {
+  public static async main(ci: DT.ChatInteraction, args: any) {
     await new DiscordInteraction.Reply(ci).send(`Goodnight~ %username%`)
 
     const _G = Discord.Global
@@ -43,7 +44,7 @@ export class SimulateCommand {
   @Command.setValidator(isOP => isOP)
   @Command.addMentionableOption('user', 'The user to target.')
   @Command.addSubCommand('user', 'Simulate a user joining the server.')
-  public static async user(ci: Discord.ChatInteraction, args: any) {
+  public static async user(ci: DT.ChatInteraction, args: any) {
     const re = new DiscordInteraction.Reply(ci)
 
     const guild = re.getGuild()
@@ -59,12 +60,12 @@ export class SimulateCommand {
     await re.ephemeral(true)
       .send(`Simulating user join for ${args.user()}`, { flags: MessageFlags.SuppressNotifications })
 
-    GuildDBController.where(guild.id).upsertGuild(true).catch(logger.catchError)
-    ;(new UserDBController(member)).upsertUser().catch(logger.catchError)
+    GuildDBController.instance(guild).upsertGuild().catch(logger.catchError)
+    UserDBController.instance(member).upsertUser().catch(logger.catchError)
   }
 
   @Command.addSubCommand('guild', 'Simulate the bot joining the current guild.')
-  public static async guild(ci: Discord.ChatInteraction) {
+  public static async guild(ci: DT.ChatInteraction) {
     const re = new DiscordInteraction.Reply(ci)
     const guild = re.getGuild()
 
@@ -74,7 +75,7 @@ export class SimulateCommand {
       return
     }
 
-    GuildDBController.where(guild.id).upsertGuild()
+    GuildDBController.instance(guild).upsertGuild()
     await re.ephemeral(true).send(`Simulating guild join.`)
   }
 }
@@ -84,7 +85,7 @@ export class SimulateCommand {
 export class LeaveCommand {
   // This should be defined as the base function to call.
   @Options.assertSlash()
-  public static async main(ci: Discord.ChatInteraction) {
+  public static async main(ci: DT.ChatInteraction) {
     const reply = new DiscordInteraction.Reply(ci)
     await reply.send(`Goodbye~ %username%`)
     reply.getGuild()!.leave()

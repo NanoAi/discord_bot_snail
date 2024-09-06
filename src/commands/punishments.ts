@@ -1,7 +1,7 @@
 import type { GuildMember, User } from 'discord.js'
 import { t as $t } from 'i18next'
-import type * as Discord from '@discord/discord'
-import { DiscordInteraction, LabelKeys as LK, Styles } from '@discord/interactions'
+import type * as Discord from '~/modules/discord'
+import { DiscordInteraction, LabelKeys as LK, Styles } from '~/modules/interactions'
 import { Command, CommandFactory, Factory } from '~/modules/decorators'
 
 @Factory.setDMPermission(false)

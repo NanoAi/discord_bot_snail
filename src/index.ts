@@ -3,7 +3,7 @@ import * as process from 'node:process'
 
 import { REST as DRestClient, Events, Routes } from 'discord.js'
 import chalk from 'chalk'
-import prisma from '@utils/prisma'
+import { Drizzle } from '@utils/drizzle'
 import langConfig from '@utils/i18next.config'
 import * as Discord from './modules/discord'
 import { bindLogger, logger } from './modules/utils/logger'
@@ -58,8 +58,7 @@ const sLog = (function (n) {
     await langConfig()
 
     sLog('Connecting to Database...')
-    await prisma.$connect()
-    await prisma.guild.findFirst()
+    await Drizzle.version()
 
     sLog('Loading Commands...')
     await declare('commands/*.ts')
