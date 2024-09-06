@@ -1,6 +1,6 @@
 generator drizzle {
   provider = "drizzle-prisma-generator"
-  output   = "../src/db/drizzle.schema.ts"
+  output   = "../src/database/drizzle.schema.ts"
 }
 
 datasource db {
@@ -9,16 +9,16 @@ datasource db {
 }
 
 model Guild {
-  id       Int    @id @default(autoincrement())
+  id       String @id
   name     String
-  settings Json   // Store guild settings here
+  settings Json // Store guild settings here
   users    User[] // Relation to Users
   cases    Case[] // Relation to Cases
 }
 
 model User {
-  id          Int       @id @default(autoincrement())
-  guildId     Int
+  id          String    @id
+  guildId     String
   username    String
   xp          Int       @default(0)
   roles       Json // Store roles in JSON format
@@ -31,8 +31,8 @@ model User {
 
 model Case {
   id          Int      @id @default(autoincrement())
-  guildId     Int
-  userId      Int
+  guildId     String
+  userId      String
   description String
   actions     Action[] // Relation to Actions
   tickets     Ticket[] // Relation to Tickets

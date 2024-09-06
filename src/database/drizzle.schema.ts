@@ -2,14 +2,14 @@ import { relations } from 'drizzle-orm'
 import { foreignKey, integer, jsonb, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core'
 
 export const Guild = pgTable('Guild', {
-  id: serial('id').notNull().primaryKey(),
+  id: text('id').notNull().primaryKey(),
   name: text('name').notNull(),
   settings: jsonb('settings').notNull(),
 })
 
 export const User = pgTable('User', {
-  id: serial('id').notNull().primaryKey(),
-  guildId: integer('guildId').notNull(),
+  id: text('id').notNull().primaryKey(),
+  guildId: text('guildId').notNull(),
   username: text('username').notNull(),
   xp: integer('xp').notNull(),
   roles: jsonb('roles').notNull(),
@@ -27,8 +27,8 @@ export const User = pgTable('User', {
 
 export const Case = pgTable('Case', {
   id: serial('id').notNull().primaryKey(),
-  guildId: integer('guildId').notNull(),
-  userId: integer('userId').notNull(),
+  guildId: text('guildId').notNull(),
+  userId: text('userId').notNull(),
   description: text('description').notNull(),
 }, Case => ({
   Case_guild_fkey: foreignKey({

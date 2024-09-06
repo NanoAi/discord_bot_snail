@@ -1,4 +1,3 @@
-import { Double } from 'mongodb'
 import type { SubCommandType } from './discord'
 import * as Discord from './discord'
 import * as DI from '~/modules/interactions'
@@ -15,7 +14,7 @@ export class Convert {
       case 'integer':
         return Number(value)
       case 'double':
-        return new Double(Number(value))
+        return Number(value)
       case 'user':
         return this.User(value)
       case 'role':

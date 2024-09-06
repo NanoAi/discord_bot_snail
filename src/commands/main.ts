@@ -1,8 +1,8 @@
 import * as Discord from '@discord/discord'
 import { DiscordInteraction } from '@discord/interactions'
 import { MessageFlags } from 'discord.js'
-import { GuildDBController } from '~/modules/controllers/guildController'
-import { UserDBController } from '~/modules/controllers/userController'
+import { GuildDBController } from '@controllers/guildController'
+import { UserDBController } from '@controllers/userController'
 import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
 import { logger } from '~/modules/utils/logger'
 
@@ -59,8 +59,9 @@ export class SimulateCommand {
     await re.ephemeral(true)
       .send(`Simulating user join for ${args.user()}`, { flags: MessageFlags.SuppressNotifications })
 
+    const template = UserDBController.getTemplate(member)
     GuildDBController.where(guild.id).upsertGuild(true).catch(logger.catchError)
-    UserDBController.where(guild.id, member.id).upsertUser().catch(logger.catchError)
+    UserDBController.upsertUser(template).catch(logger.catchError)
   }
 
   @Command.addSubCommand('guild', 'Simulate the bot joining the current guild.')

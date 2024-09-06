@@ -7,7 +7,7 @@
     "moduleResolution": "node", // Use Node.js module resolution strategy
     "paths": {
       "~/*": ["./*"],
-      "@controllers/*": ["./modules/controllers/*"],
+      "@controllers/*": ["./controllers/*"],
       "@discord/*": ["./modules/*"],
       "@utils/*": ["./modules/utils/*"],
       "@schema": ["./db/drizzle.schema.ts"]
