@@ -59,9 +59,8 @@ export class SimulateCommand {
     await re.ephemeral(true)
       .send(`Simulating user join for ${args.user()}`, { flags: MessageFlags.SuppressNotifications })
 
-    const template = UserDBController.getTemplate(member)
     GuildDBController.where(guild.id).upsertGuild(true).catch(logger.catchError)
-    UserDBController.upsertUser(template).catch(logger.catchError)
+    ;(new UserDBController(member)).upsertUser().catch(logger.catchError)
   }
 
   @Command.addSubCommand('guild', 'Simulate the bot joining the current guild.')
