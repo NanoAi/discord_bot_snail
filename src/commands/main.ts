@@ -1,3 +1,4 @@
+import type { User } from 'discord.js'
 import { MessageFlags } from 'discord.js'
 import { GuildDBController } from '@controllers/guild'
 import { UserDBController } from '@controllers/user'
@@ -12,7 +13,7 @@ export class ShutdownCommand {
   // This should be defined as the base function to call.
   @Command.setValidator(isOP => isOP)
   @Command.addBooleanOption('clear', 'Clear console commands before shutdown')
-  public static async main(ci: DT.ChatInteraction, args: any) {
+  public static async main(ci: DT.ChatInteraction, args: DT.Args<[['clear', boolean]]>) {
     await new DiscordInteraction.Reply(ci).send(`Goodnight~ %username%`)
 
     const _G = Discord.Global
@@ -44,11 +45,11 @@ export class SimulateCommand {
   @Command.setValidator(isOP => isOP)
   @Command.addMentionableOption('user', 'The user to target.')
   @Command.addSubCommand('user', 'Simulate a user joining the server.')
-  public static async user(ci: DT.ChatInteraction, args: any) {
+  public static async user(ci: DT.ChatInteraction, args: DT.Args<[['user', User]]>) {
     const re = new DiscordInteraction.Reply(ci)
 
     const guild = re.getGuild()
-    const user = args.user() // TODO: Check if this is actually resolvable to a user.
+    const user: User = args.user() // TODO: Check if this is actually resolvable to a user.
     const member = await re.getGuildMember(user)
 
     if (!guild || !member) {

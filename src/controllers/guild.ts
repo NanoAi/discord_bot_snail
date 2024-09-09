@@ -34,8 +34,9 @@ export class GuildDBController {
 
   async upsertGuild() {
     const { id, name, settings } = this.data
+    console.log(id, name, settings)
     await db.insert(Guild).values({
-      id,
+      id: String(id),
       name,
       settings,
     }).onConflictDoUpdate({

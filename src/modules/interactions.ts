@@ -129,8 +129,8 @@ interface ReplySettings {
 }
 
 export class Reply extends CommandInteraction {
-  private settings: ReplySettings = { style: Styles.Misc }
-  private embed: EmbedBuilder
+  public settings: ReplySettings = { style: Styles.Misc }
+  public embed: EmbedBuilder
   constructor(ci: ChatInteraction) {
     super(ci)
 
@@ -192,6 +192,19 @@ export class Reply extends CommandInteraction {
     else {
       return await message.reply({ embeds: [embed], flags: options.flags! })
     }
+  }
+}
+
+// TODO: Finish Implementing Direct Message.
+export class DirectMessage extends Reply {
+  constructor(ci: ChatInteraction) {
+    super(ci)
+    if (this.settings) // A direct message may not be ephemeral.
+      this.settings.ephemeral = false
+  }
+
+  ephemeral(): this {
+    return this
   }
 }
 

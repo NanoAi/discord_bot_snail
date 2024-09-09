@@ -3,6 +3,7 @@ import { t as $t } from 'i18next'
 import type * as Discord from '~/modules/discord'
 import { DiscordInteraction, LabelKeys as LK, Styles } from '~/modules/interactions'
 import { Command, CommandFactory, Factory } from '~/modules/decorators'
+import type { Args, DT } from '~/types/discord'
 
 @Factory.setDMPermission(false)
 @CommandFactory('softban', 'Ban then immediately unban a user.')
@@ -10,7 +11,7 @@ export class SoftBanCommand {
   @Command.addStringOption('reason', 'The reason for kicking the user.')
   @Command.addBooleanOption('kick', 'Tell the user they where kicked instead of banned.')
   @Command.addUserOption('user', 'The user to kick from the guild.')
-  public static async main(ci: Discord.ChatInteraction, args: any) {
+  public static async main(ci: DT.ChatInteraction, args: Args<[['user', User], ['kick', boolean], ['reason', string]]>) {
     const reply = new DiscordInteraction.Reply(ci)
     const guild = reply.getGuild()!
     const user: User = args.user(undefined)
@@ -43,7 +44,7 @@ export class SoftBanCommand {
 export class KickCommand {
   @Command.addStringOption('reason', 'The reason for kicking the user.')
   @Command.addUserOption('user', 'The user to kick from the guild.')
-  public static async main(ci: Discord.ChatInteraction, args: any) {
+  public static async main(ci: DT.ChatInteraction, args: Args<[['user', User], ['reason', string]]>) {
     const reply = new DiscordInteraction.Reply(ci)
     const user: User = args.user(undefined)
     const member: GuildMember | undefined = await reply.getGuildMember(user)
@@ -75,7 +76,7 @@ export class BanCommand {
   @Command.addStringOption('reason', 'The reason for banning the user.')
   @Command.addIntegerOption('duration', 'How long to ban the user for in days.')
   @Command.addUserOption('user', 'The user to ban from the server.')
-  public static async main(ci: Discord.ChatInteraction, args: any) {
+  public static async main(ci: DT.ChatInteraction, args: Args<[['user', User], ['duration', number], ['reason', string]]>) {
     const reply = new DiscordInteraction.Reply(ci)
     const user: User = args.user(undefined)
     const member: GuildMember | undefined = await reply.getGuildMember(user)

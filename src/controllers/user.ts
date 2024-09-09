@@ -16,7 +16,7 @@ export class UserDBController {
       guildId: assign.guildId || member.guild.id,
       id: assign.id || member.id,
       lastMessageDate: assign.lastMessageDate || nullDate(),
-      roles: assign.roles || undefined,
+      roles: assign.roles || member.roles.cache || {},
       username: assign.username || member.user.username,
       warnings: assign.warnings || 0,
       xp: assign.xp || 0,
@@ -29,6 +29,7 @@ export class UserDBController {
 
   // Get a user by ID
   async getUser(useInstance: boolean, id: string = '') {
+    console.log(useInstance, id)
     const userId = useInstance && this.data.id || id
     const result = await db.select().from(User).where(eq(User.id, userId)).execute()
     return result[0] || null
