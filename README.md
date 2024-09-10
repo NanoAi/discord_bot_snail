@@ -18,6 +18,7 @@ DATABASE_URL=postgres://username:password@127.0.0.1:5432/db
 
 A quick install script for NodeJS using `scoop` ( https://scoop.sh/ ).
 ```
+scoop bucket add main
 scoop install main/fnm
 fnm env --use-on-cd | Out-String | Invoke-Expression
 fnm use --install-if-missing 22
