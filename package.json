@@ -1,13 +1,16 @@
 {
   "name": "discordbot-server",
-  "version": "1.0.0",
-  "packageManager": "pnpm@9.5.0",
+  "version": "0.1.0",
+  "packageManager": "pnpm@9.10.0",
   "description": "",
   "author": "NanoAi",
   "license": "ISC",
   "keywords": [],
   "main": "./dist/index.ts",
   "types": "./dist/index.d.ts",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
