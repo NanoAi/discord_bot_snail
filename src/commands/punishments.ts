@@ -1,6 +1,5 @@
 import type { GuildMember, User } from 'discord.js'
 import { t as $t } from 'i18next'
-import type * as Discord from '~/modules/discord'
 import { DiscordInteraction, LabelKeys as LK, Styles } from '~/modules/interactions'
 import { Command, CommandFactory, Factory } from '~/modules/decorators'
 import type { Args, DT } from '~/types/discord'
@@ -27,7 +26,16 @@ export class SoftBanCommand {
       return
     }
 
-    // TODO: Send a message to the member here.
+    try {
+      const dm = new DiscordInteraction.DirectMessage(ci)
+      await dm.label(LK.ID, member.user.id).style(Styles.Error).to(member.user)
+        .send($t(`you.${args.kick() ? 'kicked' : 'banned'}`))
+    }
+    catch {
+      await reply.label(LK.ID, member.user.id).style(Styles.Error).send($t('command.error.noDM', { user: user.username }))
+      return
+    }
+
     try {
       await member.ban({ reason: args.reason(undefined), deleteMessageSeconds: 604800 })
       await reply.label(LK.ID, member.user.id).style(Styles.Error).send(`${member} was banned.`)
@@ -59,7 +67,16 @@ export class KickCommand {
       return
     }
 
-    // TODO: Send a message to the member here.
+    try {
+      const dm = new DiscordInteraction.DirectMessage(ci)
+      await dm.label(LK.ID, member.user.id).style(Styles.Error).to(member.user)
+        .send($t('you.kicked'))
+    }
+    catch {
+      await reply.label(LK.ID, member.user.id).style(Styles.Error).send($t('command.error.noDM', { user: user.username }))
+      return
+    }
+
     try {
       await member.kick(args.reason(undefined))
       await reply.label(LK.ID, member.user.id).style(Styles.Success).send(`${member} was kicked.`)
@@ -91,7 +108,16 @@ export class BanCommand {
       return
     }
 
-    // TODO: Send a message to the member here.
+    try {
+      const dm = new DiscordInteraction.DirectMessage(ci)
+      await dm.label(LK.ID, member.user.id).style(Styles.Error).to(member.user)
+        .send($t('you.banned'))
+    }
+    catch {
+      await reply.label(LK.ID, member.user.id).style(Styles.Error).send($t('command.error.noDM', { user: user.username }))
+      return
+    }
+
     try {
       await member.ban({ reason: args.reason(undefined), deleteMessageSeconds: 604800 })
       await reply.label(LK.ID, member.user.id).style(Styles.Error).send(`${member} was banned.`)

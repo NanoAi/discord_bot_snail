@@ -1,11 +1,17 @@
 {
+  "you": {
+    "kicked": "You have been kicked.",
+    "banned": "You have been banned."
+  },
   "user": {
-    "notfound": "Could not find {{user}} in guild."
+    "notfound": "Could not find {{user}} in guild.",
+    "has_been": "{{user}} has been {{action}}."
   },
   "command": {
     "error": {
       "unknown": "An unknown error has occurred while running the \"{{cmd}}\" command.",
-      "noBan": "I could not ban"
+      "noBan": "I could not ban {{user}}.",
+      "noDM": "I could not DM {{user}}."
     }
   }
 }

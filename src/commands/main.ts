@@ -1,8 +1,9 @@
-import type { User } from 'discord.js'
+import type { Guild, GuildMember, User } from 'discord.js'
+import { t as $t, use } from 'i18next'
 import { MessageFlags } from 'discord.js'
 import { GuildDBController } from '@controllers/guild'
 import { UserDBController } from '@controllers/user'
-import { DiscordInteraction } from '~/modules/interactions'
+import { DiscordInteraction, LabelKeys as LK, Styles } from '~/modules/interactions'
 import * as Discord from '~/modules/discord'
 import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
 import { logger } from '~/modules/utils/logger'
@@ -40,6 +41,29 @@ export class ShutdownCommand {
 }
 
 @Factory.setDMPermission(false)
+@CommandFactory('dm', 'Send a Direct Message to a server member.')
+export class SendDM {
+  @Command.setValidator(isOP => isOP)
+  @Command.addStringOption('message', 'The message to send.')
+  @Command.addMentionableOption('user', 'The user to target.')
+  public static async main(ci: DT.ChatInteraction, args: DT.Args<[['user', User], ['message', string]]>) {
+    const reply = new DiscordInteraction.Reply(ci)
+    const guild: Guild = reply.getGuild()!
+    const user: User = args.user()
+
+    try {
+      const dm = new DiscordInteraction.DirectMessage(ci)
+      await dm.label(LK.GUILD, guild.id).style(Styles.Info).to(user).send(args.message())
+      await reply.ephemeral(true).send(`Sent a DM to ${user}`)
+    }
+    catch {
+      await reply.label(LK.ID, user.id).style(Styles.Error)
+        .send($t('command.error.noDM', { user: user.username }))
+    }
+  }
+}
+
+@Factory.setDMPermission(false)
 @CommandFactory('simulate', 'Simulates events for the database.')
 export class SimulateCommand {
   @Command.setValidator(isOP => isOP)
@@ -49,7 +73,7 @@ export class SimulateCommand {
     const re = new DiscordInteraction.Reply(ci)
 
     const guild = re.getGuild()
-    const user: User = args.user() // TODO: Check if this is actually resolvable to a user.
+    const user: User = args.user()
     const member = await re.getGuildMember(user)
 
     if (!guild || !member) {

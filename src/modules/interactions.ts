@@ -1,5 +1,5 @@
-import type { BitFieldResolvable, ColorResolvable, InteractionResponse, Message, MessageFlags } from 'discord.js'
-import { EmbedBuilder } from 'discord.js'
+import type { BitFieldResolvable, ColorResolvable, InteractionResponse, Message, MessageFlags, User } from 'discord.js'
+import { EmbedBuilder, GuildMember } from 'discord.js'
 import type { ChatInteraction, ChatInteractionAssert } from '~/types/discord'
 
 export function getChatInteraction(ci: ChatInteraction) {
@@ -131,6 +131,7 @@ interface ReplySettings {
 export class Reply extends CommandInteraction {
   public settings: ReplySettings = { style: Styles.Misc }
   public embed: EmbedBuilder
+
   constructor(ci: ChatInteraction) {
     super(ci)
 
@@ -186,17 +187,18 @@ export class Reply extends CommandInteraction {
         return await _i.editReply(re)
       }
       else {
-        return await _i.reply(re)
+        return await _i.reply({ embeds: [embed], ephemeral: !!settings.ephemeral })
       }
     }
     else {
-      return await message.reply({ embeds: [embed], flags: options.flags! })
+      return await message.reply({ embeds: [embed], flags: options.flags })
     }
   }
 }
 
-// TODO: Finish Implementing Direct Message.
 export class DirectMessage extends Reply {
+  private user?: User
+
   constructor(ci: ChatInteraction) {
     super(ci)
     if (this.settings) // A direct message may not be ephemeral.
@@ -205,6 +207,33 @@ export class DirectMessage extends Reply {
 
   ephemeral(): this {
     return this
+  }
+
+  to(user: User | GuildMember): this {
+    this.user = (user instanceof GuildMember) ? user.user : user
+    return this
+  }
+
+  async send(message: string, options = defaultOptions): MessageSend {
+    const settings = this.settings
+    const embed = this.embed
+
+    if (!this.user)
+      throw new Error('Attempted to send message before a user was defined.')
+
+    this.embed.setColor(settings.style.colour)
+
+    if (settings.label)
+      this.embed.setFooter({ iconURL: settings.style.icon, text: `${settings.label.key}: ${settings.label.value}` })
+    else
+      this.embed.setFooter({ iconURL: settings.style.icon, text: `GU: ${this.getBoth().guildId}` })
+
+    if (!options.noReplace) {
+      message = message.replaceAll('%username%', this.user.username)
+      embed.setDescription(`**${message}**`)
+    }
+
+    return await this.user.send({ embeds: [embed], flags: options.flags })
   }
 }
 
