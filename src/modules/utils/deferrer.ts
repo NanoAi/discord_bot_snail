@@ -1,21 +1,3 @@
-import { logger } from '@utils/logger'
-
-if (typeof Promise.withResolvers === 'undefined') {
-  Promise.withResolvers = function () {
-    let resolve, reject
-    const promise = new Promise((res, rej) => {
-      resolve = res
-      reject = rej
-    })
-    return { promise, resolve, reject } as any
-  }
-  logger.warn(`
-    Promise.withResolvers was not found in this version of NodeJS.
-    Promise.withResolvers is available since version 22 of NodeJs.
-    [[ Using Polyfill ]]
-  `)
-}
-
 export default class Deferrer<T> {
   private _promise!: Promise<T>
   private _resolve!: (value?: any | PromiseLike<any>) => void
