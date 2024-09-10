@@ -33,7 +33,6 @@ export class SoftBanCommand {
     }
     catch {
       await reply.label(LK.ID, member.user.id).style(Styles.Error).send($t('command.error.noDM', { user: user.username }))
-      return
     }
 
     try {
@@ -74,7 +73,6 @@ export class KickCommand {
     }
     catch {
       await reply.label(LK.ID, member.user.id).style(Styles.Error).send($t('command.error.noDM', { user: user.username }))
-      return
     }
 
     try {
@@ -115,7 +113,6 @@ export class BanCommand {
     }
     catch {
       await reply.label(LK.ID, member.user.id).style(Styles.Error).send($t('command.error.noDM', { user: user.username }))
-      return
     }
 
     try {

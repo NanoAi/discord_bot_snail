@@ -90,7 +90,7 @@ export class Commands {
     for (const command of this.commands.values()) {
       commandsAsJson.push(command.data.toJSON())
     }
-    // console.log(commandsAsJson, '\r\n\r\n')
+    // console.log('[DEBUG]\n', commandsAsJson, '\r\n\r\n')
     return commandsAsJson
   }
 
@@ -107,41 +107,47 @@ export class Commands {
   }
 }
 
-function getOptions(func: any, pass: any[], ci: ChatInteractionAssert) {
+async function getOptions(func: any, pass: any[], ci: ChatInteractionAssert) {
   const options: any = []
   const hoisted: any = []
   const vars = Reflect.getOwnMetadata('command:vars', func) || []
 
-  pass.forEach((v: { name: string, value: any }) => {
-    hoisted[v.name] = v.value
-  })
+  for (const value of pass) {
+    hoisted[value.name] = value.value
+  }
 
-  vars.forEach((v: SubCommandMeta) => {
-    options[v.name] = (fallback: any) => {
-      const re = hoisted[v.name]
-      // console.log('Response: ', re, typeof re, '\n---\n', ci)
-      if (typeof re !== 'undefined')
-        return Convert.ValueToType(ci, re, v.type)
-      return fallback
+  for (const value of vars) {
+    let output: any
+    const re = hoisted[value.name]
+
+    if (typeof re !== 'undefined')
+      output = await Convert.ValueToType(ci, re, value.type)
+
+    options[value.name] = (fallback: any) => {
+      return output || fallback
     }
-  })
+  }
 
   return options as { [key: string]: () => any }
 }
 
-function getMessageOptions(func: any, pass: string[] = [], ci: ChatInteractionAssert) {
+async function getMessageOptions(func: any, pass: string[] = [], ci: ChatInteractionAssert) {
   const options: any = []
   const vars = Reflect.getOwnMetadata('command:vars', func)
 
   for (const key in vars) {
+    let output: any
     const value: SubCommandMeta = vars[key]
+
+    let re: any = pass.length > 0 && pass[Number(key)] || undefined
+    if (typeof re === 'object')
+      re = re[1] && re[1] || re[0]
+    if (typeof re !== 'undefined') {
+      output = (await Convert.ValueToType(ci, re, value.type))
+    }
+
     options[value.name] = (fallback: any) => {
-      let re = pass.length > 0 && pass[Number(key)] || undefined
-      if (typeof re === 'object')
-        re = re[1] && re[1] || re[0]
-      if (typeof re !== 'undefined')
-        return Convert.ValueToType(ci, re, value.type)
-      return fallback
+      return output || fallback
     }
   }
 
@@ -159,7 +165,7 @@ function commandValidate(ci: ChatInteraction, func: any) {
 }
 
 class CommandProcessor {
-  private static call(
+  private static async call(
     getter: any,
     ci: ChatInteraction,
     opts: any[] = [],
@@ -177,7 +183,7 @@ class CommandProcessor {
         ci.interaction.deferReply()
       }
       if (commandValidate(ci, command.main))
-        command.main(ci, getter(command.main, opts, ci))
+        command.main(ci, await getter(command.main, opts, ci))
       else
         return false
       output = true
@@ -193,7 +199,7 @@ class CommandProcessor {
           ci.interaction.deferReply()
         }
         if (commandValidate(ci, func))
-          func(ci, getter(func, opts, ci))
+          func(ci, await getter(func, opts, ci))
         else
           return false
       }
@@ -203,7 +209,7 @@ class CommandProcessor {
     return output
   }
 
-  public static process(
+  public static async process(
     getter: any,
     ci: ChatInteraction,
     opts: any[] = [],
@@ -213,14 +219,14 @@ class CommandProcessor {
     let output = false
 
     if (command) {
-      output = CommandProcessor.call(getter, ci, opts, command, command.subcommands, subId)
+      output = await CommandProcessor.call(getter, ci, opts, command, command.subcommands, subId)
     }
 
     if (!output) {
       if (ci.interaction)
-        ci.interaction.reply({ content: 'Command not found.', ephemeral: true })
+        await ci.interaction.reply({ content: 'Command not found.', ephemeral: true })
       else
-        ci.message!.reply('Command not found.').then(msg => setTimeout(() => msg.delete(), 1000))
+        await ci.message!.reply('Command not found.').then(msg => setTimeout(() => msg.delete(), 1000))
     }
   }
 }

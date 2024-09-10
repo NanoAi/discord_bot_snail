@@ -1,9 +1,9 @@
-import type { SubCommandType } from './discord'
 import * as Discord from './discord'
+import type { DT } from '~/types/discord'
 import * as DI from '~/modules/interactions'
 
 export class Convert {
-  public static ValueToType(ci: Discord.ChatInteraction, value: string, type: SubCommandType) {
+  public static async ValueToType(ci: DT.ChatInteraction, value: string, type: DT.SubCommandType) {
     switch (type) {
       case 'boolean':
         return this.Boolean(value)
@@ -20,7 +20,7 @@ export class Convert {
       case 'role':
         return this.Role(ci, value)
       case 'mentionable':
-        return this.Mentionable(ci, value)
+        return await this.Mentionable(ci, value)
       default:
         break
     }
@@ -30,17 +30,17 @@ export class Convert {
     return Discord.Client.users.cache.get(value)
   }
 
-  public static Role(ci: Discord.ChatInteraction, value: string) {
+  public static Role(ci: DT.ChatInteraction, value: string) {
     if (!ci)
       return undefined
 
     const inter = DI.getChatInteraction(ci)
     const guild = inter.inGuild() && inter.guild
-    const role = guild && guild.roles.cache.get(value)
+    const role = guild && (guild.roles.cache.get(value) || guild.roles.fetch(value, { force: true }))
     return role || undefined
   }
 
-  public static Mentionable(ci: Discord.ChatInteraction, value: string) {
+  public static async Mentionable(ci: DT.ChatInteraction, value: string) {
     if (!ci)
       return undefined
 
@@ -52,9 +52,15 @@ export class Convert {
       return '@everyone'
 
     const role = guild && guild.roles.cache.get(value)
-    const user = Discord.Client.users.cache.get(value)
+    const userCache = guild && guild.members.cache.get(value)
+    const cachedUser = (userCache && userCache.user) || Discord.Client.users.cache.get(value)
 
-    return role || user!
+    if (guild && !cachedUser) {
+      const fetchMember = await guild.members.fetch({ user: value, force: true })
+      return role || fetchMember.user
+    }
+
+    return role || cachedUser
   }
 
   public static Boolean(value: string) {

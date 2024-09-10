@@ -8,6 +8,7 @@ import type {
   SlashCommandBuilder as DSlashCommandBuilder,
   GuildMember,
   Message,
+  SlashCommandNumberOption,
   SlashCommandOptionsOnlyBuilder,
   SlashCommandStringOption,
   SlashCommandSubcommandBuilder,
@@ -59,8 +60,11 @@ export interface Configs {
   base: SlashCommandOptionsOnlyBuilder
   options: Map<string, (config: any) => any>
   SlashString: (options: SlashCommandStringOption) => SlashCommandStringOption
+  SlashNumber: (options: SlashCommandNumberOption) => SlashCommandNumberOption
   SlashSubCmd: (options: SlashCommandSubcommandBuilder) => SlashCommandSubcommandBuilder
 }
+
+export type SlashConfig<T extends CommandOption> = ((options: T) => any)
 
 export interface CommandStore {
   data:

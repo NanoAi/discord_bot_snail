@@ -12,10 +12,11 @@ export const User = pgTable('User', {
   guildId: text('guildId').notNull(),
   username: text('username').notNull(),
   xp: integer('xp').notNull(),
-  roles: jsonb('roles').notNull(),
-  lastMessageDate: timestamp('lastMessageDate', { precision: 3 }).notNull().default(new Date('1969-12-31T19:00:00-05:00')),
   warnings: integer('warnings').notNull(),
+  lastMessageDate: timestamp('lastMessageDate', { precision: 3 }).notNull(),
+  lastKudosDate: timestamp('lastKudosDate', { precision: 3 }).notNull().defaultNow(),
   createdAt: timestamp('createdAt', { precision: 3 }).notNull().defaultNow(),
+  roles: jsonb('roles').notNull(),
 }, User => ({
   User_guild_fkey: foreignKey({
     name: 'User_guild_fkey',

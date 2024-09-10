@@ -34,7 +34,7 @@ export class GuildDBController {
 
   async upsertGuild() {
     const { id, name, settings } = this.data
-    console.log(id, name, settings)
+    // console.log('[DEBUG]', id, name, settings)
     await db.insert(Guild).values({
       id: String(id),
       name,

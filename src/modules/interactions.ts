@@ -93,7 +93,7 @@ export class CommandInteraction {
     return (ci.interaction && ci.interaction.user) || (ci.message && ci.message.author) || undefined
   }
 
-  async getGuildMember(user: any) {
+  async getGuildMember(user: any = this.getUser()) {
     const guild = this.getGuild()
     if (!guild || !user)
       return undefined

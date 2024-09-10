@@ -16,6 +16,7 @@ const allowedURLS = [
   'fxtwitter.com',
   'fixupx.com',
   'twittpr.com',
+  'cdn.discordapp.com',
 ]
 
 Discord.Client.on(Events.MessageCreate, async (message) => {
@@ -23,13 +24,9 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
   if (message.system || message.author.bot || !member)
     return
 
-  // const guild = member.guild
+  const now = new Date()
   const dbInstance = new UserDBController(member)
-  const dbUser = await dbInstance.getUser(false)
-  // const snippet = String(message.content).trim().substring(0, 256).toLowerCase()
-
-  logger.info(`DBUser: ${dbUser}`)
-  console.log(dbUser)
+  const dbUser = await dbInstance.getUser()
 
   if (!dbUser) {
     logger.error(`The associated member (${member.id}) doesn\'t exist in guild (${member.guild.id}).`)
@@ -58,9 +55,12 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
     }
     if (message.content.length < 6)
       return
-    await dbInstance.updateUser({ lastMessageDate: new Date() })
+    await dbInstance.updateUser({ lastMessageDate: now })
   }
   else {
-    await dbInstance.updateUser({ lastMessageDate: new Date() })
+    let days = dayjs(now).diff(dbUser.lastMessageDate, 'day')
+    days = days > 5 ? 5 : days
+    const xp = (days > 1) ? (dbUser.xp + 24) + (24 - Math.floor(24 / days)) : dbUser.xp
+    await dbInstance.updateUser({ lastMessageDate: now, xp })
   }
 })

@@ -1,5 +1,6 @@
 import 'reflect-metadata'
 import type {
+  SlashCommandNumberOption,
   SlashCommandOptionsOnlyBuilder,
   SlashCommandSubcommandsOnlyBuilder,
 } from 'discord.js'
@@ -173,6 +174,12 @@ export class Options {
   }
 
   public static string(config: DT.Configs['SlashString']) {
+    return function (target: any, _context: any) {
+      Options.main(target, target._lastOptionTarget, config)
+    }
+  }
+
+  public static number(config: DT.SlashConfig<SlashCommandNumberOption>) {
     return function (target: any, _context: any) {
       Options.main(target, target._lastOptionTarget, config)
     }

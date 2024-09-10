@@ -76,19 +76,20 @@ export class SimulateCommand {
     const user: User = args.user()
     const member = await re.getGuildMember(user)
 
-    if (!guild || !member) {
+    if (!user || !guild || !member) {
       await re.ephemeral(true)
-        .send(`Could not find ${args.user()} in guild.`, { flags: MessageFlags.SuppressNotifications })
+        .send(`Could not find ${user} in guild.`, { flags: MessageFlags.SuppressNotifications })
       return
     }
 
     await re.ephemeral(true)
-      .send(`Simulating user join for ${args.user()}`, { flags: MessageFlags.SuppressNotifications })
+      .send(`Simulating user join for ${user}`, { flags: MessageFlags.SuppressNotifications })
 
     GuildDBController.instance(guild).upsertGuild().catch(logger.catchError)
     UserDBController.instance(member).upsertUser().catch(logger.catchError)
   }
 
+  @Command.setValidator(isOP => isOP)
   @Command.addSubCommand('guild', 'Simulate the bot joining the current guild.')
   public static async guild(ci: DT.ChatInteraction) {
     const re = new DiscordInteraction.Reply(ci)

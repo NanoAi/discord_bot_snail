@@ -28,10 +28,8 @@ export class UserDBController {
   }
 
   // Get a user by ID
-  async getUser(useInstance: boolean, id: string = '') {
-    console.log(useInstance, id)
-    const userId = useInstance && this.data.id || id
-    const result = await db.select().from(User).where(eq(User.id, userId)).execute()
+  async getUser() {
+    const result = await db.select().from(User).where(eq(User.id, this.data.id)).execute()
     return result[0] || null
   }
 
@@ -59,13 +57,13 @@ export class UserDBController {
 
   // Update a user's XP and roles
   async updateUser(update: UserDB['update']) {
-    await db.update(User).set({ ...update }).where(eq(User.id, this.data.guildId)).execute()
-    return await this.getUser(true)
+    return await db.update(User).set({ ...update })
+      .where(and(eq(User.guildId, this.data.guildId), eq(User.id, this.data.id)))
   }
 
   // Delete a user by ID
   async deleteUser(id: string) {
-    await db.delete(User).where(eq(User.id, id)).execute()
+    await db.delete(User).where(eq(User.id, id))
   }
 
   async getCasesByUser(guildId: string, userId: string) {
