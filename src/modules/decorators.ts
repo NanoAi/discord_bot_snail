@@ -272,22 +272,6 @@ export class Command {
     Reflect.defineMetadata(key, meta, target)
   }
 
-  public static setPermissions(permissions?: DT.Permissions[]) {
-    const perms = new Discord.PermissionBuilder()
-    if (permissions) {
-      for (const permission of permissions) {
-        if (permission)
-          perms.add(permission as any)
-      }
-    }
-    return function (target: any, _context: any) {
-      Command.prepare(
-        target,
-        command => command.setDefaultMemberPermissions(perms.valueOf()),
-      )
-    }
-  }
-
   public static addSubCommand(name: string, description: string) {
     return function (target: any, _context: any) {
       Reflect.defineMetadata('subcommand', name, target)
