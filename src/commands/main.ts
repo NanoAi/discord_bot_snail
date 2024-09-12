@@ -41,9 +41,9 @@ export class ShutdownCommand {
 }
 
 @Factory.setDMPermission(false)
+@Factory.setPermissions([Discord.PFlags.KickMembers])
 @CommandFactory('dm', 'Send a Direct Message to a server member.')
 export class SendDM {
-  @Command.setPermissions([Discord.PFlags.KickMembers])
   @Command.setValidator(isOP => isOP)
   @Command.addStringOption('message', 'The message to send.')
   @Command.addMentionableOption('user', 'The user to target.')
@@ -65,9 +65,9 @@ export class SendDM {
 }
 
 @Factory.setDMPermission(false)
+@Factory.setPermissions([Discord.PFlags.Administrator])
 @CommandFactory('simulate', 'Simulates events for the database.')
 export class SimulateCommand {
-  @Command.setPermissions([Discord.PFlags.Administrator])
   @Command.setValidator(isOP => isOP)
   @Command.addMentionableOption('user', 'The user to target.')
   @Command.addSubCommand('user', 'Simulate a user joining the server.')
@@ -91,7 +91,6 @@ export class SimulateCommand {
     UserDBController.instance(member).upsertUser().catch(logger.catchError)
   }
 
-  @Command.setPermissions([Discord.PFlags.Administrator])
   @Command.setValidator(isOP => isOP)
   @Command.addSubCommand('guild', 'Simulate the bot joining the current guild.')
   public static async guild(ci: DT.ChatInteraction) {
@@ -110,10 +109,10 @@ export class SimulateCommand {
 }
 
 @Factory.setDMPermission(false)
+@Factory.setPermissions([Discord.PFlags.Administrator])
 @CommandFactory('leave', 'leave the current guild.')
 export class LeaveCommand {
   // This should be defined as the base function to call.
-  @Command.setPermissions([Discord.PFlags.Administrator])
   @Options.assertSlash()
   public static async main(ci: DT.ChatInteraction) {
     const reply = new DiscordInteraction.Reply(ci)
