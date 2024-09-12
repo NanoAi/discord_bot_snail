@@ -1,6 +1,6 @@
 {
   "name": "discordbot-server",
-  "version": "0.1.0",
+  "version": "0.1.3",
   "packageManager": "pnpm@9.10.0",
   "description": "",
   "author": "NanoAi",
@@ -15,9 +15,9 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "preinstall": "npx only-allow pnpm",
-    "prisma": "pnpm exec prisma generate && pnpm prisma:fix",
+    "prisma": "pnpm exec prisma format && pnpm exec prisma generate && pnpm prisma:fix",
     "prisma:fix": "pnpm exec eslint ./src/database/drizzle.schema.ts --fix",
-    "prisma:format": "pnpm exec prisma format",
+    "prisma:push": "pnpm exec prisma db push",
     "start": "nodemon -e ts -w ./src -x pnpm run watch:serve",
     "watch:serve": "tsx src/index.ts",
     "v": "node -v"

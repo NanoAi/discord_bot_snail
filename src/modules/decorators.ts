@@ -19,7 +19,6 @@ const defer = new Deferrer()
 export function CommandFactory(
   name: string,
   description: string,
-  permissions?: DT.Permissions[],
 ) {
   return function (target: any, _context: any) {
     name = name.toLowerCase() // Discord command names must be lowercase.
@@ -32,18 +31,10 @@ export function CommandFactory(
       Reflect.defineProperty(method, 'parent', { value: target })
     })
 
-    const perms = new Discord.PermissionBuilder()
-    if (permissions) {
-      for (const permission of permissions) {
-        if (permission)
-          perms.add(permission as any)
-      }
-    }
-
     const command = new SlashCommandBuilder()
       .setName(metadata.name)
       .setDescription(metadata.description)
-      .setDefaultMemberPermissions(perms.valueOf())
+      .setDefaultMemberPermissions(0)
 
     Discord.Commands.getMap().set(metadata.name, {
       data: command,
@@ -105,23 +96,32 @@ export class Factory {
     }
   }
 
-  public static setDefaultMemberPermissions(permissions: DT.Permissions) {
+  public static setPermissions(permissions: DT.Permissions[], assert?: DT.Permissions) {
     return function (target: any, _context: any) {
       const metadata = Reflect.getOwnMetadata('command', target)
-
       const command = Discord.Commands.getCommand(metadata.name)
 
       if (!command) {
         throw new Error('Command not yet defined in this context.')
       }
 
-      command.data.setDefaultMemberPermissions(permissions)
+      if (assert) {
+        command.data.setDefaultMemberPermissions(assert)
+        Factory.updateCommand(metadata, command)
+        return
+      }
+
+      const perms = new Discord.PermissionBuilder()
+      if (permissions) {
+        for (const permission of permissions) {
+          if (permission)
+            perms.add(permission as any)
+        }
+      }
+
+      command.data.setDefaultMemberPermissions(perms.valueOf())
       Factory.updateCommand(metadata, command)
     }
-  }
-
-  public static ownerOnly() {
-
   }
 
   public static setIntegrations(value: Discord.InteractionContextType[]) {
@@ -270,6 +270,22 @@ export class Command {
 
     meta.push(target._lastOptionTarget)
     Reflect.defineMetadata(key, meta, target)
+  }
+
+  public static setPermissions(permissions?: DT.Permissions[]) {
+    const perms = new Discord.PermissionBuilder()
+    if (permissions) {
+      for (const permission of permissions) {
+        if (permission)
+          perms.add(permission as any)
+      }
+    }
+    return function (target: any, _context: any) {
+      Command.prepare(
+        target,
+        command => command.setDefaultMemberPermissions(perms.valueOf()),
+      )
+    }
   }
 
   public static addSubCommand(name: string, description: string) {

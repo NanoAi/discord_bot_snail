@@ -9,11 +9,14 @@ datasource db {
 }
 
 model Guild {
-  id       String @id
-  name     String
-  settings Json // Store guild settings here
-  users    User[] // Relation to Users
-  cases    Case[] // Relation to Cases
+  id              String   @id
+  name            String
+  enableXP        Boolean  @default(true)
+  earlyBirdFilter Boolean  @default(false)
+  trustedURLs     Json
+  users           User[] // Relation to Users
+  cases           Case[] // Relation to Cases
+  createdAt       DateTime @default(now())
 }
 
 model User {
@@ -21,6 +24,7 @@ model User {
   guildId         String
   username        String
   xp              Int      @default(0)
+  level           Int      @default(0)
   warnings        Int      @default(0)
   lastMessageDate DateTime
   lastKudosDate   DateTime @default(now())

@@ -1,6 +1,7 @@
 import type {
   ClientOptions,
   REST as DRestClient,
+  User,
 } from 'discord.js'
 import {
   Client as DClient,
@@ -131,7 +132,7 @@ async function getOptions(func: any, pass: any[], ci: ChatInteractionAssert) {
   return options as { [key: string]: () => any }
 }
 
-async function getMessageOptions(func: any, pass: string[] = [], ci: ChatInteractionAssert) {
+async function getMessageOptions(func: any, args: string[], ci: ChatInteractionAssert) {
   const options: any = []
   const vars = Reflect.getOwnMetadata('command:vars', func)
 
@@ -139,7 +140,7 @@ async function getMessageOptions(func: any, pass: string[] = [], ci: ChatInterac
     let output: any
     const value: SubCommandMeta = vars[key]
 
-    let re: any = pass.length > 0 && pass[Number(key)] || undefined
+    let re: string | undefined = args && args.length > 0 && args[Number(key)] || undefined
     if (typeof re === 'object')
       re = re[1] && re[1] || re[0]
     if (typeof re !== 'undefined') {
@@ -212,7 +213,7 @@ class CommandProcessor {
   public static async process(
     getter: any,
     ci: ChatInteraction,
-    opts: any[] = [],
+    opts: string[] = [],
     command?: CommandStore,
     subId?: string,
   ) {
@@ -256,22 +257,45 @@ Client.on(Events.MessageCreate, async (message) => {
     match[k] = v && String(v) || undefined
   })
 
-  const baseCommand = match[1]
-  let args = [...(match[3] || '').matchAll(/['"]([^'"]+)['"]|\S+/g)]
-  const subCommand = match[2] === activator && (args && String(args[0][0])) || undefined
+  const baseCommand = match[1] || ''
+  const commandArgs: string[] = []
 
-  if (subCommand && subCommand.match(/\w+/g))
-    args = args.splice(1, 1)
+  const baseMatch = match[3] || ''
 
-  const command = Commands.getCommand(baseCommand!)
+  const args = [...baseMatch.matchAll(/['"]([^'"]+)['"]|\S+/g)]
+  const subMatch = [...baseMatch.matchAll(/((-{2}|[?;.])(\w+))/g)]
+
+  let subCommand = subMatch[0] && subMatch[0][3] || undefined
+  const subCommandMatch = subCommand && subMatch[0][1]
+
+  if (args) {
+    for (const arg of args) {
+      const insert = arg[1] || arg[0]
+      if (insert && insert !== subCommandMatch)
+        commandArgs.push(insert)
+    }
+  }
+
+  const command = Commands.getCommand(baseCommand)
   const ci: ChatInteraction = { message }
-  const finalArgs = args.length > 0 && args || undefined
 
-  // console.log('[DEBUG] Command: ', baseCommand)
-  // console.log('[DEBUG] subCommand: ', subCommand)
-  // console.log('[DEBUG] Arguments', args)
+  if (command) {
+    if (!subCommand && command.subcommands && command.subcommands.size > 0) {
+      const hasSubCommand = command.subcommands.has(commandArgs[0])
+      if (hasSubCommand)
+        subCommand = commandArgs.shift()
+    }
+  }
 
-  CommandProcessor.process(getMessageOptions, ci, finalArgs, command, subCommand)
+  /*
+  console.log('[DEBUG:PUSHED]', commandArgs)
+  console.log('[DEBUG:SUBCMD]', subCommand)
+  console.log('[DEBUG] Command: ', baseCommand)
+  console.log('[DEBUG] subCommand: ', subCommand)
+  console.log('[DEBUG] Arguments', commandArgs)
+  */
+
+  CommandProcessor.process(getMessageOptions, ci, commandArgs, command, subCommand)
 })
 
 Client.on(Events.InteractionCreate, async (interaction) => {

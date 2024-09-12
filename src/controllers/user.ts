@@ -20,6 +20,7 @@ export class UserDBController {
       username: assign.username || member.user.username,
       warnings: assign.warnings || 0,
       xp: assign.xp || 0,
+      level: assign.level || 0,
     }
   }
 
