@@ -43,3 +43,11 @@ export function bindLogger() {
   client.on(Events.Warn, info => logger.warn(info))
   client.on(Events.Error, error => logger.error(error))
 }
+
+export const sLog = (function (n) {
+  return function (...args: any[]) {
+    console.log(`[${n}] ${args.join(', ')}`)
+    n += 1
+    return n
+  }
+}(0))

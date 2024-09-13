@@ -5,6 +5,7 @@ import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
 import type { Args, DT } from '~/types/discord'
 import { UserDBController } from '~/controllers/user'
 import dayjs from '~/modules/utils/dayjs'
+import { PFlags } from '~/modules/discord'
 
 async function giveKudos(
   reply: DiscordInteraction.Reply,
@@ -76,6 +77,7 @@ async function giveKudos(
 }
 
 @Factory.setDMPermission(false)
+@Factory.setPermissions([PFlags.Administrator])
 @CommandFactory('kudosop', 'Admin commands for the Kudos system.')
 export class KudosAdmin {
   @Command.addBooleanOption('ephemeral', 'Should the response be hidden? (Slash Command Only.)')

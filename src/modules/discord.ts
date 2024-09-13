@@ -1,13 +1,20 @@
+import process from 'node:process'
 import type {
+  Channel,
   ClientOptions,
   REST as DRestClient,
+  GuildMember,
+  GuildResolvable,
+  Message,
   User,
 } from 'discord.js'
 import {
+  ApplicationCommandPermissionType,
   Client as DClient,
   Routes as DRoutes,
   Events,
   GatewayIntentBits,
+  Guild,
   Partials,
   PermissionFlagsBits,
   PermissionsBitField,
@@ -77,6 +84,12 @@ export class IntegrationType {
 
 export class Global {
   public static REST: DRestClient
+
+  public static Application() {
+    if (!Client.application)
+      throw new Error(`Expected "Application" got "${Client.application}".`)
+    return Client.application
+  }
 }
 
 export class Commands {
@@ -93,6 +106,69 @@ export class Commands {
     }
     // console.log('[DEBUG]\n', commandsAsJson, '\r\n\r\n')
     return commandsAsJson
+  }
+
+  public static async syncCommands() {
+    const commandsUpdated = []
+    const app = Client.application
+
+    if (!app)
+      throw new Error(`Unable to synchronize commands, expected "Application" got "${app}".`)
+
+    const commands = await app.commands.fetch()
+    for (const [_, command] of commands) {
+      if (command.guild !== null)
+        continue
+
+      const internal = this.commands.get(command.name)
+      if (internal) {
+        internal.id = command.id
+        this.commands.set(command.name, internal)
+        commandsUpdated.push(command.name)
+      }
+    }
+
+    return { updated: commandsUpdated, found: commands.size }
+  }
+
+  public static async fetchGuildPermissions(guild: Guild | GuildResolvable) {
+    const resolvable = (guild instanceof Guild) ? guild.id : guild
+    return await Global.Application().commands.permissions.fetch({ guild: resolvable })
+  }
+
+  public static async hasGuildPermission(
+    guild: Guild | GuildResolvable,
+    command: CommandStore,
+    caller: User,
+    channel: Channel,
+    member: GuildMember,
+  ) {
+    if (!command.id)
+      throw new Error('The command must be synchronized to Discord.')
+
+    if (member.permissions.has(PFlags.Administrator))
+      return true
+
+    const commandPerms = await this.fetchGuildPermissions(guild)
+    const realms = commandPerms.get(command.id)
+
+    if (realms && realms.length > 0) {
+      const realm = realms.at(0)
+      if (!realm)
+        return false
+      switch (realm.type) {
+        case ApplicationCommandPermissionType.User:
+          return (caller.id === realm.id) && realm.permission
+        case ApplicationCommandPermissionType.Channel:
+          return (channel.id === realm.id) && realm.permission
+        case ApplicationCommandPermissionType.Role:
+          return (member.roles.highest.id === realm.id && realm.permission)
+        default:
+          return false
+      }
+    }
+
+    return false
   }
 
   public static getCommand(command: string) {
@@ -210,6 +286,27 @@ class CommandProcessor {
     return output
   }
 
+  public static async checkMessagePermissions(message: Message<boolean>, command: CommandStore) {
+    if (!message.inGuild() || !message.guild || !message.member)
+      return false
+
+    const caller = message.author
+    const member = message.member
+    const channel = message.channel
+    const channelPerms = channel.permissionsFor(caller, true)
+
+    if (!channelPerms)
+      return false
+
+    const canUse = channelPerms.has(PFlags.UseApplicationCommands)
+    if (!command.id) {
+      await message.reply('Command not registered.').then(msg => setTimeout(() => msg.delete(), 1000))
+      return false
+    }
+
+    return canUse && await Commands.hasGuildPermission(message.guild, command, caller, channel, member)
+  }
+
   public static async process(
     getter: any,
     ci: ChatInteraction,
@@ -285,6 +382,10 @@ Client.on(Events.MessageCreate, async (message) => {
       if (hasSubCommand)
         subCommand = commandArgs.shift()
     }
+
+    // If we don't have permission to run the command we fail silently.
+    if (!CommandProcessor.checkMessagePermissions(message, command))
+      return
   }
 
   /*

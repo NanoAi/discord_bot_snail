@@ -6,7 +6,7 @@ import chalk from 'chalk'
 import { Drizzle } from '@utils/drizzle'
 import langConfig from '@utils/i18next.config'
 import * as Discord from './modules/discord'
-import { bindLogger, logger } from './modules/utils/logger'
+import { bindLogger, sLog } from './modules/utils/logger'
 import declare from './modules/utils/declare'
 
 console.log('~\nStarting...')
@@ -16,9 +16,21 @@ console.log('~\nStarting...')
 // When the client is ready, run this code (only once).
 // The distinction between `client: Client<boolean>` and `readyClient: Client<true>` is important for TypeScript developers.
 // It makes some properties non-nullable.
-Discord.Client.once(Events.ClientReady, (readyClient) => {
+Discord.Client.once(Events.ClientReady, async (readyClient) => {
   console.log(chalk.gray('-'.repeat(process.stdout.columns)))
-  console.log(`${chalk.green('✅ - Ready! Logged in as')} ${chalk.bold.blueBright(readyClient.user.tag)}`)
+  try {
+    sLog('Synchronizing Commands to Client.')
+    const syncResult = await Discord.Commands.syncCommands()
+    sLog(`Found ${chalk.underline.bold(syncResult.found)} commands in Discord Cache.`)
+    sLog(`Successfully synchronized ${chalk.underline.bold(syncResult.updated.length)} application (/) commands.`)
+    console.log(chalk.gray('-'.repeat(process.stdout.columns)))
+    console.log(`${chalk.green('✅ - Ready! Logged in as')} ${chalk.bold.blueBright(readyClient.user.tag)}`)
+  }
+  catch (error) {
+    console.error(error)
+    console.log(chalk.bold.bgRed('💀 - Forcing Shutdown.'))
+    await readyClient.destroy()
+  }
 })
 
 Discord.Client.once(Events.Error, (error) => {
@@ -44,14 +56,6 @@ for (const [k, v] of Object.entries(env)) {
 Discord.Global.REST = new DRestClient().setToken(env.token)
 const rest = Discord.Global.REST
 
-const sLog = (function (n) {
-  return function (...args: any[]) {
-    console.log(`[${n}] ${args.join(', ')}`)
-    n += 1
-    return n
-  }
-}(0))
-
 ;(async () => {
   try {
     sLog('Initializing Language Settings...')
@@ -65,13 +69,11 @@ const sLog = (function (n) {
 
     const commandCount = Discord.Commands.getMap().size
     sLog(`Started refreshing ${chalk.underline.bold(commandCount)} application (/) commands.`)
-
     // The put method is used to fully refresh all commands in the guild with the current set
     // Routes.applicationGuildCommands(env.appID, env.testServer)
     await rest.put(Routes.applicationCommands(env.appID), {
       body: Discord.Commands.getCommandsAsJson(),
     })
-
     sLog(`Successfully reloaded ${chalk.underline.bold(commandCount)} application (/) commands.`)
 
     sLog('Loading Events...')

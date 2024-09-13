@@ -45,7 +45,7 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
     const date = new Date()
     const messageMembers = message.mentions.members || new Collection()
     if (member.moderatable) {
-      const urls = [...message.content.matchAll(/https?:\/{2}([^ !@#$%^&*()[/\\\]]+)/g)]
+      const urls = [...message.content.matchAll(/https?:\/\/([^ !@#$%^&*()[/\\\]]+)/g)]
       if (message.mentions.everyone || messageMembers.size > 3) {
         if (message.deletable)
           await message.delete()

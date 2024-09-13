@@ -73,6 +73,7 @@ export interface CommandStore {
     | SlashCommandSubcommandsOnlyBuilder
   subcommands: Map<string, any>
   main?: (interaction: ChatInteraction, options: any) => void
+  id?: string
 }
 
 export * as DT from '~/types/discord'
