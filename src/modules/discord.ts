@@ -384,7 +384,7 @@ Client.on(Events.MessageCreate, async (message) => {
     }
 
     // If we don't have permission to run the command we fail silently.
-    if (!CommandProcessor.checkMessagePermissions(message, command))
+    if (!(await CommandProcessor.checkMessagePermissions(message, command)))
       return
   }
 
