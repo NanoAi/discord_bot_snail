@@ -1,15 +1,16 @@
 import process from 'node:process'
 import type {
+  ApplicationCommandPermissions,
   Channel,
   ClientOptions,
   REST as DRestClient,
   GuildMember,
   GuildResolvable,
   Message,
-  User,
 } from 'discord.js'
 import {
   ApplicationCommandPermissionType,
+  ClientUser,
   Client as DClient,
   Routes as DRoutes,
   Events,
@@ -18,11 +19,13 @@ import {
   Partials,
   PermissionFlagsBits,
   PermissionsBitField,
+  User,
 } from 'discord.js'
+import NodeCache from 'node-cache'
 import { operators } from '../../admins.json'
 import { logger } from './utils/logger'
 import { Convert } from '~/modules/convert'
-import type { ChatInteraction, ChatInteractionAssert, CommandStore, CommandValidator, SubCommandMeta } from '~/types/discord'
+import type * as DT from '~/types/discord'
 
 console.log('\r\n'.repeat(12))
 console.clear()
@@ -47,6 +50,9 @@ const partials = [
   Partials.GuildMember,
   Partials.GuildScheduledEvent,
 ]
+
+const CommandRunManager = new NodeCache({ stdTTL: 1, checkperiod: 1 })
+export const GuildPermsCache = new NodeCache({ stdTTL: 300, checkperiod: 30 })
 
 export const Routes = DRoutes
 export const Client = new DClient({ intents, partials })
@@ -82,6 +88,17 @@ export class IntegrationType {
   static readonly ALL = [0, 1]
 }
 
+export enum SubCommandType {
+  Attachment,
+  Bool,
+  Channel,
+  Mentionable,
+  Number,
+  Role,
+  String,
+  User,
+}
+
 export class Global {
   public static REST: DRestClient
 
@@ -92,8 +109,29 @@ export class Global {
   }
 }
 
+function realmLoopHelper(realm: ApplicationCommandPermissions, caller: User, channel: Channel, member: GuildMember) {
+  if (!realm)
+    return false
+  switch (realm.type) {
+    case ApplicationCommandPermissionType.User:
+      return (caller.id === realm.id) && realm.permission
+    case ApplicationCommandPermissionType.Channel:
+      return (channel.id === realm.id) && realm.permission
+    case ApplicationCommandPermissionType.Role: {
+      const role = member.roles.cache.find(role => role.id === realm.id)
+      return role && realm.permission
+    }
+    default:
+      return false
+  }
+}
+
+export function isUser(target: any) {
+  return (target instanceof User || target instanceof ClientUser)
+}
+
 export class Commands {
-  private static commands = new Map<string, CommandStore>()
+  private static commands = new Map<string, DT.CommandStore>()
 
   public static lock() {
     Object.freeze(this.commands)
@@ -133,12 +171,23 @@ export class Commands {
 
   public static async fetchGuildPermissions(guild: Guild | GuildResolvable) {
     const resolvable = (guild instanceof Guild) ? guild.id : guild
-    return await Global.Application().commands.permissions.fetch({ guild: resolvable })
+    const cache = GuildPermsCache.get<DT.PermsResponseInterface>(resolvable.toString())
+
+    if (cache) {
+      console.log('[DEBUG:CACHE][HIT]', resolvable.toString(), cache)
+      return cache.collection
+    }
+
+    console.log('[DEBUG:CACHE][MISS]', resolvable.toString(), '<PENDING>')
+    const collection = await Global.Application().commands.permissions.fetch({ guild: resolvable })
+    GuildPermsCache.set(resolvable.toString(), { collection, timestamp: new Date() })
+
+    return collection
   }
 
   public static async hasGuildPermission(
     guild: Guild | GuildResolvable,
-    command: CommandStore,
+    command: DT.CommandStore,
     caller: User,
     channel: Channel,
     member: GuildMember,
@@ -146,27 +195,18 @@ export class Commands {
     if (!command.id)
       throw new Error('The command must be synchronized to Discord.')
 
+    /*
     if (member.permissions.has(PFlags.Administrator))
       return true
+    */
 
     const commandPerms = await this.fetchGuildPermissions(guild)
     const realms = commandPerms.get(command.id)
 
     if (realms && realms.length > 0) {
-      const realm = realms.at(0)
-      if (!realm)
-        return false
-      switch (realm.type) {
-        case ApplicationCommandPermissionType.User:
-          return (caller.id === realm.id) && realm.permission
-        case ApplicationCommandPermissionType.Channel:
-          return (channel.id === realm.id) && realm.permission
-        case ApplicationCommandPermissionType.Role: {
-          const role = member.roles.cache.find(role => role.id === realm.id)
-          return role && realm.permission
-        }
-        default:
-          return false
+      for (const realm of realms) {
+        if (realmLoopHelper(realm, caller, channel, member))
+          return true
       }
     }
 
@@ -177,7 +217,7 @@ export class Commands {
     return this.commands.get(command)
   }
 
-  public static setCommand(key: string, value: CommandStore) {
+  public static setCommand(key: string, value: DT.CommandStore) {
     return this.commands.set(key, value)
   }
 
@@ -186,10 +226,10 @@ export class Commands {
   }
 }
 
-async function getOptions(func: any, pass: any[], ci: ChatInteractionAssert) {
+async function getOptions(func: any, pass: any[], ci: DT.ChatInteractionAssert) {
   const options: any = []
   const hoisted: any = []
-  const vars = Reflect.getOwnMetadata('command:vars', func) || []
+  const vars: DT.SubCommandMeta[] = Reflect.getOwnMetadata('command:vars', func) || []
 
   for (const value of pass) {
     hoisted[value.name] = value.value
@@ -202,6 +242,11 @@ async function getOptions(func: any, pass: any[], ci: ChatInteractionAssert) {
     if (typeof re !== 'undefined')
       output = await Convert.ValueToType(ci, re, value.type)
 
+    if (value.type === SubCommandType.User && isUser(value.value) && (value.value as DT.UserLike).bot) {
+      options[value.name] = (fallback: any) => fallback
+      continue
+    }
+
     options[value.name] = (fallback: any) => {
       return output || fallback
     }
@@ -210,13 +255,13 @@ async function getOptions(func: any, pass: any[], ci: ChatInteractionAssert) {
   return options as { [key: string]: () => any }
 }
 
-async function getMessageOptions(func: any, args: string[], ci: ChatInteractionAssert) {
+async function getMessageOptions(func: any, args: string[], ci: DT.ChatInteractionAssert) {
   const options: any = []
   const vars = Reflect.getOwnMetadata('command:vars', func)
 
   for (const key in vars) {
     let output: any
-    const value: SubCommandMeta = vars[key]
+    const value: DT.SubCommandMeta = vars[key]
 
     let re: string | undefined = args && args.length > 0 && args[Number(key)] || undefined
     if (typeof re === 'object')
@@ -225,6 +270,11 @@ async function getMessageOptions(func: any, args: string[], ci: ChatInteractionA
       output = (await Convert.ValueToType(ci, re, value.type))
     }
 
+    if (isUser(output) && (output as DT.UserLike).bot) {
+      options[value.name] = (fallback: any) => fallback
+      continue
+    }
+
     options[value.name] = (fallback: any) => {
       return output || fallback
     }
@@ -233,8 +283,8 @@ async function getMessageOptions(func: any, args: string[], ci: ChatInteractionA
   return options as { [key: string]: () => any }
 }
 
-function commandValidate(ci: ChatInteraction, func: any) {
-  const validator: CommandValidator = func.validator
+function commandValidate(ci: DT.ChatInteraction, func: any) {
+  const validator: DT.CommandValidator = func.validator
   if (validator) {
     const user = ci.interaction && ci.interaction.user || ci.message!.author
     const member = ci.interaction && ci.interaction.member || ci.message!.member
@@ -246,9 +296,9 @@ function commandValidate(ci: ChatInteraction, func: any) {
 class CommandProcessor {
   private static async call(
     getter: any,
-    ci: ChatInteraction,
+    ci: DT.ChatInteraction,
     opts: any[] = [],
-    command: CommandStore,
+    command: DT.CommandStore,
     subcommands: Map<string, any>,
     subId?: string,
   ) {
@@ -288,9 +338,14 @@ class CommandProcessor {
     return output
   }
 
-  public static async checkMessagePermissions(message: Message<boolean>, command: CommandStore) {
+  public static async checkMessagePermissions(message: Message<boolean>, command: DT.CommandStore) {
     if (!message.inGuild() || !message.guild || !message.member)
       return false
+
+    if (!command.id) {
+      await message.reply('Command not registered.').then(msg => setTimeout(() => msg.delete(), 1000))
+      return false
+    }
 
     const caller = message.author
     const member = message.member
@@ -301,19 +356,14 @@ class CommandProcessor {
       return false
 
     const canUse = channelPerms.has(PFlags.UseApplicationCommands)
-    if (!command.id) {
-      await message.reply('Command not registered.').then(msg => setTimeout(() => msg.delete(), 1000))
-      return false
-    }
-
     return canUse && await Commands.hasGuildPermission(message.guild, command, caller, channel, member)
   }
 
   public static async process(
     getter: any,
-    ci: ChatInteraction,
+    ci: DT.ChatInteraction,
     opts: string[] = [],
-    command?: CommandStore,
+    command?: DT.CommandStore,
     subId?: string,
   ) {
     let output = false
@@ -347,6 +397,11 @@ Client.on(Events.MessageCreate, async (message) => {
   if (activator !== content.charAt(0))
     return
 
+  // * Maybe this needs to be stored in PostgreSQL?
+  const cache = CommandRunManager.get<Date>(message.author.id)
+  if (cache)
+    return
+
   const matcher = [...content.matchAll(/^\?(\w+)(?:(;| )(.+))?/g)]
   if (matcher.length === 0)
     return
@@ -362,7 +417,7 @@ Client.on(Events.MessageCreate, async (message) => {
   const baseMatch = match[3] || ''
 
   const args = [...baseMatch.matchAll(/['"]([^'"]+)['"]|\S+/g)]
-  const subMatch = [...baseMatch.matchAll(/((-{2}|[?;.])(\w+))/g)]
+  const subMatch = [...baseMatch.matchAll(/((-{2}|[?;])(\w+))/g)]
 
   let subCommand = subMatch[0] && subMatch[0][3] || undefined
   const subCommandMatch = subCommand && subMatch[0][1]
@@ -376,7 +431,8 @@ Client.on(Events.MessageCreate, async (message) => {
   }
 
   const command = Commands.getCommand(baseCommand)
-  const ci: ChatInteraction = { message }
+  const ci: DT.ChatInteraction = { message }
+  CommandRunManager.set(message.author.id, new Date())
 
   if (command) {
     if (!subCommand && command.subcommands && command.subcommands.size > 0) {
@@ -407,7 +463,7 @@ Client.on(Events.InteractionCreate, async (interaction) => {
 
   const name = interaction.commandName
   const command = Commands.getCommand(name)
-  const ci: ChatInteraction = { interaction }
+  const ci: DT.ChatInteraction = { interaction }
 
   const subCommandId = (interaction.options as any)._subcommand
   const hoistedOptions = (interaction.options as any)._hoistedOptions

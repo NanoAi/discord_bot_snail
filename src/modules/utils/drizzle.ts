@@ -23,7 +23,7 @@ export class Drizzle {
         console.log(result)
         throw new Error('Unexpected Database Version Return.')
       }
-      logger.info(`Database Version: ${output}`)
+      console.log(`- Database Version: ${output}`)
     }
     catch (err) {
       logger.error(err, 'Failed to connect to Database.')

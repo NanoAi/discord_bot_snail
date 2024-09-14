@@ -2,32 +2,38 @@ import * as Discord from './discord'
 import type { DT } from '~/types/discord'
 import * as DI from '~/modules/interactions'
 
+const SCT = Discord.SubCommandType
+
 export class Convert {
   public static async ValueToType(ci: DT.ChatInteraction, value: string, type: DT.SubCommandType) {
     switch (type) {
-      case 'boolean':
+      case SCT.Bool:
         return this.Boolean(value)
-      case 'string':
+      case SCT.String:
         return String(value)
-      case 'number':
+      case SCT.Number:
         return Number(value)
-      case 'integer':
-        return Number(value)
-      case 'double':
-        return Number(value)
-      case 'user':
+      case SCT.User:
         return this.User(value)
-      case 'role':
+      case SCT.Role:
         return this.Role(ci, value)
-      case 'mentionable':
+      case SCT.Mentionable:
         return await this.Mentionable(ci, value)
       default:
         break
     }
   }
 
-  public static User(value: string) {
-    return Discord.Client.users.cache.get(value)
+  public static User(value: string | DT.UserLike) {
+    if (Discord.isUser(value))
+      return value
+
+    const cachedUser = Discord.Client.users.cache.get(value)
+    if (!cachedUser) {
+      return Discord.Client.users.fetch(value)
+    }
+
+    return cachedUser || value
   }
 
   public static Role(ci: DT.ChatInteraction, value: string) {
@@ -51,13 +57,22 @@ export class Convert {
     if (value === guildId)
       return '@everyone'
 
+    const isSnowflake = String(value).match(/^(?:<@!?)?(\d{17,19})>?$/) && true || false
+    if (!isSnowflake)
+      return undefined
+
     const role = guild && guild.roles.cache.get(value)
     const userCache = guild && guild.members.cache.get(value)
     const cachedUser = (userCache && userCache.user) || Discord.Client.users.cache.get(value)
 
     if (guild && !cachedUser) {
-      const fetchMember = await guild.members.fetch({ user: value, force: true })
-      return role || fetchMember.user
+      try {
+        const fetchMember = await guild.members.fetch({ user: value })
+        return role || fetchMember.user
+      }
+      catch {
+        return role || undefined
+      }
     }
 
     return role || cachedUser

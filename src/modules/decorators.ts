@@ -15,6 +15,7 @@ import * as Discord from './discord'
 import type * as DT from '~/types/discord'
 
 const defer = new Deferrer()
+const SCT = Discord.SubCommandType
 
 export function CommandFactory(
   name: string,
@@ -294,7 +295,7 @@ export class Command {
     settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, 'boolean', target)
+      Command.initOptions(name, SCT.Bool, target)
       Command.prepare(
         target,
         command => command.addBooleanOption(Command.wrapper(target, name, description, settings)),
@@ -308,7 +309,7 @@ export class Command {
     settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, 'string', target)
+      Command.initOptions(name, SCT.String, target)
       Command.prepare(
         target,
         command => command.addStringOption(Command.wrapper(target, name, description, settings)),
@@ -323,7 +324,7 @@ export class Command {
     settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, 'integer', target)
+      Command.initOptions(name, SCT.Number, target)
       Command.prepare(
         target,
         command => command.addIntegerOption(Command.wrapper(target, name, description, settings)),
@@ -338,7 +339,7 @@ export class Command {
     settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, 'double', target)
+      Command.initOptions(name, SCT.Number, target)
       Command.prepare(
         target,
         command => command.addNumberOption(Command.wrapper(target, name, description, settings)),
@@ -352,7 +353,7 @@ export class Command {
     settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, 'string', target)
+      Command.initOptions(name, SCT.User, target)
       Command.prepare(
         target,
         command => command.addUserOption(Command.wrapper(target, name, description, settings)),
@@ -366,7 +367,7 @@ export class Command {
     settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, 'channel', target)
+      Command.initOptions(name, SCT.Channel, target)
       Command.prepare(
         target,
         command => command.addChannelOption(Command.wrapper(target, name, description, settings)),
@@ -380,7 +381,7 @@ export class Command {
     settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, 'role', target)
+      Command.initOptions(name, SCT.Role, target)
       Command.prepare(
         target,
         command => command.addRoleOption(Command.wrapper(target, name, description, settings)),
@@ -394,7 +395,7 @@ export class Command {
     settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, 'attachment', target)
+      Command.initOptions(name, SCT.Attachment, target)
       Command.prepare(
         target,
         command => command.addAttachmentOption(Command.wrapper(target, name, description, settings)),
@@ -408,7 +409,7 @@ export class Command {
     settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, 'mentionable', target)
+      Command.initOptions(name, SCT.Mentionable, target)
       Command.prepare(
         target,
         command => command.addMentionableOption(Command.wrapper(target, name, description, settings)),

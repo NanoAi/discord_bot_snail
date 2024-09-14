@@ -8,6 +8,7 @@ import * as Discord from '~/modules/discord'
 import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
 import { logger } from '~/modules/utils/logger'
 import type { DT } from '~/types/discord'
+import { nullDate } from '~/modules/utils/dayjs'
 
 @CommandFactory('shutdown', 'shutdown the bot.')
 export class ShutdownCommand {
@@ -37,6 +38,22 @@ export class ShutdownCommand {
     }
 
     Discord.shutdown()
+  }
+}
+
+@Factory.setDMPermission(false)
+@Factory.setPermissions([Discord.PFlags.Administrator])
+@CommandFactory('cacheClear', 'Send a Direct Message to a server member.')
+export class ClearPermsCache {
+  public static async main(ci: DT.ChatInteraction) {
+    const reply = new DiscordInteraction.Reply(ci)
+    const guild = reply.getGuild()!
+    Discord.GuildPermsCache.del(guild.id)
+
+    // eslint-disable-next-line no-control-regex
+    const safeName = guild.name.replaceAll(/[`\\\u0000-\u001F\u007F-\u009F]/g, '')
+    await reply.label(LK.GUILD, guild.id).style(Styles.Success)
+      .send(`Cleared Permissions Cache for "\`${safeName}\`".`)
   }
 }
 

@@ -89,9 +89,13 @@ export class KudosAdmin {
     args: Args<[['user', User], ['amount', number], ['ephemeral', boolean]]>,
   ) {
     const reply = new DiscordInteraction.Reply(ci)
+    if (!args.user()) {
+      reply.style(Styles.Error).send('Please give me a user to target.')
+      return
+    }
+
     const caller = await reply.getGuildMember()
     const target = await reply.getGuildMember(args.user())
-
     giveKudos(reply, caller!, target, args.amount(0), true, args.ephemeral(false))
   }
 }
@@ -104,12 +108,15 @@ export class KudosCommand {
   @Command.addIntegerOption('amount', 'How many points to give?', { required: true })
   @Command.addMentionableOption('user', 'Who to give kudos to?', { required: true })
   public static async main(ci: DT.ChatInteraction, args: Args<[['user', User], ['amount', number]]>) {
-    const amount = Math.max(1, Math.min(args.amount(1), 100))
-
     const reply = new DiscordInteraction.Reply(ci)
+    const amount = Math.max(1, Math.min(args.amount(1), 100))
+    if (!args.user()) {
+      reply.style(Styles.Error).send('Please give me a user to target.')
+      return
+    }
+
     const caller = await reply.getGuildMember()
     const target = await reply.getGuildMember(args.user())
-
     giveKudos(reply, caller!, target, amount, false, false)
   }
 }

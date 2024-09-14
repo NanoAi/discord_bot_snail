@@ -1,8 +1,11 @@
 import type {
   APIInteractionGuildMember,
   ApplicationCommandOptionBase,
+  ApplicationCommandPermissions,
   CacheType,
   ChatInputCommandInteraction,
+  ClientUser,
+  Collection,
   Interaction as DInteraction,
   Permissions as DPermissions,
   SlashCommandBuilder as DSlashCommandBuilder,
@@ -13,17 +16,20 @@ import type {
   SlashCommandStringOption,
   SlashCommandSubcommandBuilder,
   SlashCommandSubcommandsOnlyBuilder,
+  Snowflake,
   User,
 } from 'discord.js'
+import type { SubCommandType as DSubCommandType } from '~/modules/discord'
 
+export type SubCommandType = DSubCommandType
 export type CommandData = DSlashCommandBuilder | SlashCommandOptionsOnlyBuilder
 export type CommandOption = ApplicationCommandOptionBase
-export type SubCommandType = string
-export interface SubCommandMeta { name: string, type: SubCommandType }
+export interface SubCommandMeta { value?: any, name: string, type: SubCommandType }
 export type Permissions = DPermissions | bigint | number | null | undefined
 export type Interaction = DInteraction<CacheType>
 export type CommandMember = GuildMember | APIInteractionGuildMember | null
 export type CommandValidator = (isOP: boolean, user: User, member: CommandMember) => boolean
+export type UserLike = User | ClientUser
 
 export interface ChatInteractionAssert {
   interaction: ChatInputCommandInteraction<CacheType>
@@ -74,6 +80,11 @@ export interface CommandStore {
   subcommands: Map<string, any>
   main?: (interaction: ChatInteraction, options: any) => void
   id?: string
+}
+
+export interface PermsResponseInterface {
+  collection: Collection<Snowflake, ApplicationCommandPermissions[]>
+  timestamp: Date
 }
 
 export * as DT from '~/types/discord'
