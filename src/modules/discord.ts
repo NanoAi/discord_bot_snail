@@ -161,8 +161,10 @@ export class Commands {
           return (caller.id === realm.id) && realm.permission
         case ApplicationCommandPermissionType.Channel:
           return (channel.id === realm.id) && realm.permission
-        case ApplicationCommandPermissionType.Role:
-          return (member.roles.highest.id === realm.id && realm.permission)
+        case ApplicationCommandPermissionType.Role: {
+          const role = member.roles.cache.find(role => role.id === realm.id)
+          return role && realm.permission
+        }
         default:
           return false
       }
