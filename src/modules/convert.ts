@@ -14,9 +14,9 @@ export class Convert {
       case SCT.Number:
         return Number(value)
       case SCT.User:
-        return this.User(value)
+        return await this.User(value)
       case SCT.Role:
-        return this.Role(ci, value)
+        return await this.Role(ci, value)
       case SCT.Mentionable:
         return await this.Mentionable(ci, value)
       default:
@@ -24,25 +24,25 @@ export class Convert {
     }
   }
 
-  public static User(value: string | DT.UserLike) {
+  public static async User(value: string | DT.UserLike) {
     if (Discord.isUser(value))
       return value
 
     const cachedUser = Discord.Client.users.cache.get(value)
     if (!cachedUser) {
-      return Discord.Client.users.fetch(value)
+      return await Discord.Client.users.fetch(value)
     }
 
     return cachedUser || value
   }
 
-  public static Role(ci: DT.ChatInteraction, value: string) {
+  public static async Role(ci: DT.ChatInteraction, value: string) {
     if (!ci)
       return undefined
 
     const inter = DI.getChatInteraction(ci)
     const guild = inter.inGuild() && inter.guild
-    const role = guild && (guild.roles.cache.get(value) || guild.roles.fetch(value, { force: true }))
+    const role = guild && (guild.roles.cache.get(value) || await guild.roles.fetch(value, { force: true }))
     return role || undefined
   }
 
