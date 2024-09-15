@@ -36,6 +36,8 @@ export interface ChatInteractionAssert {
   message: Message<boolean>
 }
 
+export type Maybe<T> = T | undefined
+
 export type CommandFunction<T extends string, V> = {
   [K in T]: (value?: unknown) => V
 }

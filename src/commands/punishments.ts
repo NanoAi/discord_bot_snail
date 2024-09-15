@@ -3,6 +3,7 @@ import { t as $t } from 'i18next'
 import { DiscordInteraction, LabelKeys as LK, Styles } from '~/modules/interactions'
 import { Command, CommandFactory, Factory } from '~/modules/decorators'
 import type { Args, DT } from '~/types/discord'
+import { Client } from '~/modules/discord'
 
 @Factory.setDMPermission(false)
 @CommandFactory('softban', 'Ban then immediately unban a user.')
@@ -16,7 +17,7 @@ export class SoftBanCommand {
     const user: User = args.user(undefined)
     const member: GuildMember | undefined = await reply.getGuildMember(user)
 
-    if (!member) {
+    if (!member || user === Client.user) {
       await reply.style(Styles.Error).send(`Could not find ${user} in the guild.`)
       return
     }
@@ -56,7 +57,7 @@ export class KickCommand {
     const user: User = args.user(undefined)
     const member: GuildMember | undefined = await reply.getGuildMember(user)
 
-    if (!member) {
+    if (!member || user === Client.user) {
       await reply.style(Styles.Error).send($t('user.notfound', { user }))
       return
     }
@@ -96,7 +97,7 @@ export class BanCommand {
     const user: User = args.user(undefined)
     const member: GuildMember | undefined = await reply.getGuildMember(user)
 
-    if (!member) {
+    if (!member || user === Client.user) {
       await reply.style(Styles.Error).send($t('user.notfound', { user }))
       return
     }

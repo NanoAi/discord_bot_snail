@@ -9,6 +9,7 @@ import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
 import { logger } from '~/modules/utils/logger'
 import type { DT } from '~/types/discord'
 import { nullDate } from '~/modules/utils/dayjs'
+import { Client } from '~/modules/discord'
 
 @CommandFactory('shutdown', 'shutdown the bot.')
 export class ShutdownCommand {
@@ -69,6 +70,12 @@ export class SendDM {
     const guild: Guild = reply.getGuild()!
     const user: User = args.user()
 
+    if (user === Client.user) {
+      await reply.label(LK.ID, user.id).style(Styles.Error)
+        .send($t('command.error.noDM', { user: user.username }))
+      return
+    }
+
     try {
       const dm = new DiscordInteraction.DirectMessage(ci)
       await dm.label(LK.GUILD, guild.id).style(Styles.Info).to(user).send(args.message())
@@ -94,6 +101,12 @@ export class SimulateCommand {
     const guild = re.getGuild()
     const user: User = args.user()
     const member = await re.getGuildMember(user)
+
+    if (user === Client.user) {
+      await re.label(LK.ID, user.id).style(Styles.Error)
+        .send($t('command.error.noDM', { user: user.username }))
+      return
+    }
 
     if (!user || !guild || !member) {
       await re.ephemeral(true)

@@ -1,6 +1,6 @@
 import type { BitFieldResolvable, ColorResolvable, InteractionResponse, Message, MessageFlags, User } from 'discord.js'
 import { EmbedBuilder, GuildMember } from 'discord.js'
-import type { ChatInteraction, ChatInteractionAssert } from '~/types/discord'
+import type { ChatInteraction, ChatInteractionAssert, Maybe, UserLike } from '~/types/discord'
 
 export function getChatInteraction(ci: ChatInteraction) {
   if (ci.interaction)
@@ -93,7 +93,7 @@ export class CommandInteraction {
     return (ci.interaction && ci.interaction.user) || (ci.message && ci.message.author) || undefined
   }
 
-  async getGuildMember(user: any = this.getUser()) {
+  async getGuildMember(user: Maybe<UserLike> = this.getUser()) {
     const guild = this.getGuild()
     if (!guild || !user)
       return undefined
@@ -143,6 +143,14 @@ export class Reply extends CommandInteraction {
       .setTimestamp()
 
     return this
+  }
+
+  isBotInteraction(user: UserLike) {
+    if (user.bot) {
+      this.send(`Sorry, I can not run this command on ${user}.`)
+      return true
+    }
+    return false
   }
 
   style(style: Style) {
