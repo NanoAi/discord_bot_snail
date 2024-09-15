@@ -242,11 +242,6 @@ async function getOptions(func: any, pass: any[], ci: DT.ChatInteractionAssert) 
     if (typeof re !== 'undefined')
       output = await Convert.ValueToType(ci, re, value.type)
 
-    if (value.type === SubCommandType.User && isUser(value.value) && (value.value as DT.UserLike).bot) {
-      options[value.name] = (fallback: any) => fallback
-      continue
-    }
-
     options[value.name] = (fallback: any) => {
       return output || fallback
     }
@@ -268,11 +263,6 @@ async function getMessageOptions(func: any, args: string[], ci: DT.ChatInteracti
       re = re[1] && re[1] || re[0]
     if (typeof re !== 'undefined') {
       output = (await Convert.ValueToType(ci, re, value.type))
-    }
-
-    if (isUser(output) && (output as DT.UserLike).bot) {
-      options[value.name] = (fallback: any) => fallback
-      continue
     }
 
     options[value.name] = (fallback: any) => {
