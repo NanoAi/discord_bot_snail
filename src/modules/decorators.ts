@@ -1,4 +1,3 @@
-import 'reflect-metadata'
 import type {
   SlashCommandNumberOption,
   SlashCommandOptionsOnlyBuilder,
@@ -8,14 +7,15 @@ import {
   SlashCommandBuilder,
   SlashCommandSubcommandBuilder,
 } from 'discord.js'
+import 'reflect-metadata'
 
-import getMethods from './utils/method'
-import Deferrer from './utils/deferrer'
 import * as Discord from './discord'
+import { SubCommandType as SCT } from './discord'
+import Deferrer from './utils/deferrer'
+import getMethods from './utils/method'
 import type * as DT from '~/types/discord'
 
 const defer = new Deferrer()
-const SCT = Discord.SubCommandType
 
 export function CommandFactory(
   name: string,

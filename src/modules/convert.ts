@@ -1,23 +1,24 @@
 import * as Discord from './discord'
+import { SubCommandType as SBT } from './discord'
 import type { DT } from '~/types/discord'
 import * as DI from '~/modules/interactions'
 
-const SCT = Discord.SubCommandType
+// const SCT = Discord.SubCommandType
 
 export class Convert {
   public static async ValueToType(ci: DT.ChatInteraction, value: string, type: DT.SubCommandType) {
     switch (type) {
-      case SCT.Bool:
+      case SBT.Bool:
         return this.Boolean(value)
-      case SCT.String:
+      case SBT.String:
         return String(value)
-      case SCT.Number:
+      case SBT.Number:
         return Number(value)
-      case SCT.User:
+      case SBT.User:
         return await this.User(value)
-      case SCT.Role:
+      case SBT.Role:
         return await this.Role(ci, value)
-      case SCT.Mentionable:
+      case SBT.Mentionable:
         return await this.Mentionable(ci, value)
       default:
         break
