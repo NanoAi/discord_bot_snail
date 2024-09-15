@@ -3,6 +3,7 @@ import { UserDBController } from '@controllers/user'
 import { logger } from '@utils/logger'
 import * as Discord from '~/modules/discord'
 import dayjs from '~/modules/utils/dayjs'
+import { xpToLevel } from '~/modules/utils/levels'
 
 const allowedURLS = [
   'tenor.com',
@@ -69,6 +70,6 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
     let days = dayjs(now).diff(dbUser.lastMessageDate, 'day')
     days = days > 5 ? 5 : days
     const xp = (days > 1) ? (dbUser.xp + 24) + (24 - Math.floor(24 / days)) : dbUser.xp
-    await dbInstance.updateUser({ lastMessageDate: now, xp })
+    await dbInstance.updateUser({ lastMessageDate: now, xp, level: xpToLevel(xp) })
   }
 })

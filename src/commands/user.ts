@@ -6,6 +6,7 @@ import type { Args, DT } from '~/types/discord'
 import { UserDBController } from '~/controllers/user'
 import dayjs from '~/modules/utils/dayjs'
 import { PFlags } from '~/modules/discord'
+import { xpToLevel } from '~/modules/utils/levels'
 
 async function giveKudos(
   reply: DiscordInteraction.Reply,
@@ -15,6 +16,8 @@ async function giveKudos(
   admin: boolean = false,
   ephemeral: boolean = false,
 ) {
+  amount = Math.round(Math.max(-3000, Math.min(Number(amount), 3000)))
+
   if (amount === 0) {
     await reply.label(LK.ID, caller.user.id).style(Styles.Misc)
       .send('I uh... let\'s just pretend that worked.')
@@ -50,15 +53,20 @@ async function giveKudos(
   }
 
   const dbCallForTarget = new UserDBController(target)
-  const xp = { caller: callerData && callerData.xp, target: (await dbCallForTarget.getUser()).xp }
+  const dbTargetUser = await dbCallForTarget.getUser()
+
+  const xp = { caller: callerData && callerData.xp, target: dbTargetUser.xp }
   const amountLeft = (xp.caller - amount)
+  const amountToSet = Math.max(-3000, Math.min((xp.target + amount), 3000))
+  const targetLevel = Math.max(dbTargetUser.level, xpToLevel(amountToSet))
+
   if (!admin && amountLeft < 0) {
     await reply.label(LK.ID, caller.user.id).style(Styles.Error).send('You don\'t have enough points to give.')
     return
   }
 
   try {
-    await dbCallForTarget.updateUser({ xp: xp.target + amount })
+    await dbCallForTarget.updateUser({ xp: amountToSet, level: targetLevel })
     if (!admin)
       await dbCallForCaller.updateUser({ xp: amountLeft, lastKudosDate: new Date() })
 
@@ -94,6 +102,14 @@ export class KudosAdmin {
       return
     }
 
+    if (args.amount() > 2147483640 || args.amount() < -2147483640) {
+      reply.style(Styles.Error).send('`[Never Knows Best]]`')
+      return
+    }
+
+    if (reply.isBotInteraction(args.user()))
+      return
+
     const caller = await reply.getGuildMember()
     const target = await reply.getGuildMember(args.user())
     giveKudos(reply, caller!, target, args.amount(0), true, args.ephemeral(false))
@@ -114,6 +130,9 @@ export class KudosCommand {
       reply.style(Styles.Error).send('Please give me a user to target.')
       return
     }
+
+    if (reply.isBotInteraction(args.user()))
+      return
 
     const caller = await reply.getGuildMember()
     const target = await reply.getGuildMember(args.user())
