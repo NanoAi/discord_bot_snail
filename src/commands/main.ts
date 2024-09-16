@@ -72,7 +72,7 @@ export class SendDM {
 
     if (user === Client.user) {
       await reply.label(LK.ID, user.id).style(Styles.Error)
-        .send($t('command.error.noDM', { user: user.username }))
+        .ephemeral(true).send($t('command.error.noDM', { user: user.username }))
       return
     }
 
@@ -83,7 +83,7 @@ export class SendDM {
     }
     catch {
       await reply.label(LK.ID, user.id).style(Styles.Error)
-        .send($t('command.error.noDM', { user: user.username }))
+        .ephemeral(true).send($t('command.error.noDM', { user: user.username }))
     }
   }
 }
