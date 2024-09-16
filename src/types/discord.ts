@@ -24,7 +24,7 @@ import type { SubCommandType as DSubCommandType } from '~/modules/discord'
 export type SubCommandType = DSubCommandType
 export type CommandData = DSlashCommandBuilder | SlashCommandOptionsOnlyBuilder
 export type CommandOption = ApplicationCommandOptionBase
-export interface SubCommandMeta { value?: any, name: string, type: SubCommandType }
+export interface SubCommandMeta { value?: any, name: string, type: SubCommandType, settings: CommandSettings }
 export type Permissions = DPermissions | bigint | number | null | undefined
 export type Interaction = DInteraction<CacheType>
 export type CommandMember = GuildMember | APIInteractionGuildMember | null
@@ -62,6 +62,7 @@ export interface ChatInteraction {
 
 export interface CommandSettings {
   required?: boolean
+  captureRest?: boolean
 }
 
 export interface Configs {

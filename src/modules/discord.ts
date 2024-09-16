@@ -195,10 +195,8 @@ export class Commands {
     if (!command.id)
       throw new Error('The command must be synchronized to Discord.')
 
-    /*
     if (member.permissions.has(PFlags.Administrator))
       return true
-    */
 
     const commandPerms = await this.fetchGuildPermissions(guild)
     const realms = commandPerms.get(command.id)
@@ -256,14 +254,23 @@ async function getMessageOptions(func: any, args: string[], ci: DT.ChatInteracti
 
   for (const key in vars) {
     let output: any
-    const value: DT.SubCommandMeta = vars[key]
 
-    let re: string | undefined = args && args.length > 0 && args[Number(key)] || undefined
+    const nKey = Number(key)
+    const value: DT.SubCommandMeta = vars[key]
+    const captureRest = value.settings && value.settings.captureRest
+
+    let re: string | undefined = args && args.length > 0 && args[nKey] || undefined
+
+    /*
     if (typeof re === 'object')
       re = re[1] && re[1] || re[0]
-    if (typeof re !== 'undefined') {
+    */
+
+    if (re && captureRest)
+      re = args.slice(nKey).join(' ')
+
+    if (typeof re !== 'undefined')
       output = (await Convert.ValueToType(ci, re, value.type))
-    }
 
     options[value.name] = (fallback: any) => {
       return output || fallback

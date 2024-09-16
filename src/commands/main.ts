@@ -60,11 +60,10 @@ export class ClearPermsCache {
 
 @Factory.setDMPermission(false)
 @Factory.setPermissions([Discord.PFlags.KickMembers])
-@CommandFactory('dm', 'Send a Direct Message to a server member.')
+@CommandFactory('msg', 'Send a Direct Message to a server member.')
 export class SendDM {
-  @Command.setValidator(isOP => isOP)
-  @Command.addStringOption('message', 'The message to send.')
-  @Command.addMentionableOption('user', 'The user to target.')
+  @Command.addStringOption('message', 'The message to send.', { captureRest: true })
+  @Command.addUserOption('user', 'The user to target.')
   public static async main(ci: DT.ChatInteraction, args: DT.Args<[['user', User], ['message', string]]>) {
     const reply = new DiscordInteraction.Reply(ci)
     const guild: Guild = reply.getGuild()!
@@ -79,9 +78,10 @@ export class SendDM {
     try {
       const dm = new DiscordInteraction.DirectMessage(ci)
       await dm.label(LK.GUILD, guild.id).style(Styles.Info).to(user).send(args.message())
-      await reply.ephemeral(true).send(`Sent a DM to ${user}`)
+      await reply.ephemeral(true).setTitle(`Sent a DM to ${user}`).send(args.message())
     }
-    catch {
+    catch (error) {
+      console.log(error)
       await reply.label(LK.ID, user.id).style(Styles.Error)
         .ephemeral(true).send($t('command.error.noDM', { user: user.username }))
     }

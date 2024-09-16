@@ -1,5 +1,14 @@
-import type { BitFieldResolvable, ColorResolvable, InteractionResponse, Message, MessageFlags, User } from 'discord.js'
-import { EmbedBuilder, GuildMember } from 'discord.js'
+import type {
+  APIEmbedField,
+  BitFieldResolvable,
+  ColorResolvable,
+  InteractionResponse,
+  Message,
+  MessageFlags,
+  RestOrArray,
+  User,
+} from 'discord.js'
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, GuildMember } from 'discord.js'
 import type { ChatInteraction, ChatInteractionAssert, Maybe, UserLike } from '~/types/discord'
 
 export function getChatInteraction(ci: ChatInteraction) {
@@ -124,11 +133,14 @@ export async function acceptInteraction(ci: ChatInteraction) {
 
 interface ReplySettings {
   label?: { key: string, value: string }
+  useTitle?: boolean
   ephemeral?: boolean
   style: Style
 }
 
 export class Reply extends CommandInteraction {
+  public fields?: RestOrArray<APIEmbedField>
+  public title: string = ''
   public settings: ReplySettings = { style: Styles.Misc }
   public embed: EmbedBuilder
 
@@ -168,6 +180,17 @@ export class Reply extends CommandInteraction {
     return this
   }
 
+  setTitle(title: string) {
+    this.settings.useTitle = true
+    this.title = title
+    return this
+  }
+
+  setFields(...fields: RestOrArray<APIEmbedField>) {
+    this.fields = fields
+    return this
+  }
+
   async send(response: string, options = defaultOptions): MessageSend {
     const _i = this.getInteraction()
     const message = this.getMessage()!
@@ -176,6 +199,9 @@ export class Reply extends CommandInteraction {
 
     this.embed.setColor(settings.style.colour)
 
+    if (this.fields)
+      this.embed.addFields(...this.fields)
+
     if (settings.label)
       this.embed.setFooter({ iconURL: settings.style.icon, text: `${settings.label.key}: ${settings.label.value}` })
     else
@@ -183,7 +209,11 @@ export class Reply extends CommandInteraction {
 
     if (!options.noReplace) {
       response = response.replaceAll('%username%', _i && _i.user.username || message.author.username)
-      embed.setDescription(`**${response}**`)
+
+      if (!settings.useTitle)
+        embed.setDescription(`**${response}**`)
+      else
+        embed.setDescription(`### ${this.title}\n<:quote:1285270560967753849> **${response}**`)
     }
 
     if (_i) {
@@ -205,6 +235,7 @@ export class Reply extends CommandInteraction {
 }
 
 export class DirectMessage extends Reply {
+  private actionRow?: any
   private user?: User
 
   constructor(ci: ChatInteraction) {
@@ -223,6 +254,7 @@ export class DirectMessage extends Reply {
   }
 
   async send(message: string, options = defaultOptions): MessageSend {
+    const component = this.getBoth()
     const settings = this.settings
     const embed = this.embed
 
@@ -234,14 +266,31 @@ export class DirectMessage extends Reply {
     if (settings.label)
       this.embed.setFooter({ iconURL: settings.style.icon, text: `${settings.label.key}: ${settings.label.value}` })
     else
-      this.embed.setFooter({ iconURL: settings.style.icon, text: `GU: ${this.getBoth().guildId}` })
+      this.embed.setFooter({ iconURL: settings.style.icon, text: `GU: ${component.guildId}` })
+
+    if (component.guild) {
+      const source = new ButtonBuilder()
+        .setLabel(component.guild?.name || '')
+        .setURL(`https://discord.com/channels/${component.guildId}`)
+        .setEmoji('1285236737538392105')
+        .setStyle(ButtonStyle.Link)
+
+      this.actionRow = new ActionRowBuilder().addComponents(source)
+    }
 
     if (!options.noReplace) {
       message = message.replaceAll('%username%', this.user.username)
-      embed.setDescription(`**${message}**`)
+      if (!settings.useTitle)
+        embed.setDescription(`**${message}**`)
+      else
+        embed.setDescription(`### ${this.title}\n\`-\` **${message}**`)
     }
 
-    return await this.user.send({ embeds: [embed], flags: options.flags })
+    return await this.user.send({
+      embeds: [embed],
+      flags: options.flags,
+      components: this.actionRow && [this.actionRow] || undefined,
+    })
   }
 }
 

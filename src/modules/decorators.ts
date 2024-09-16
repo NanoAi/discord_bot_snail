@@ -263,11 +263,11 @@ export class Command {
     }
   }
 
-  private static initOptions(name: string, type: DT.SubCommandType, target: any) {
+  private static initOptions(name: string, type: DT.SubCommandType, target: any, settings: DT.CommandSettings) {
     const key = 'command:vars'
     const meta: DT.SubCommandMeta[] = Reflect.getOwnMetadata(key, target) || []
     target.commandOptions = target.commandOptions || new Map<string, (config: any) => any>()
-    target._lastOptionTarget = { name, type }
+    target._lastOptionTarget = { name, type, settings }
 
     meta.push(target._lastOptionTarget)
     Reflect.defineMetadata(key, meta, target)
@@ -295,7 +295,7 @@ export class Command {
     settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, SCT.Bool, target)
+      Command.initOptions(name, SCT.Bool, target, settings)
       Command.prepare(
         target,
         command => command.addBooleanOption(Command.wrapper(target, name, description, settings)),
@@ -309,7 +309,7 @@ export class Command {
     settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, SCT.String, target)
+      Command.initOptions(name, SCT.String, target, settings)
       Command.prepare(
         target,
         command => command.addStringOption(Command.wrapper(target, name, description, settings)),
@@ -324,7 +324,7 @@ export class Command {
     settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, SCT.Number, target)
+      Command.initOptions(name, SCT.Number, target, settings)
       Command.prepare(
         target,
         command => command.addIntegerOption(Command.wrapper(target, name, description, settings)),
@@ -339,7 +339,7 @@ export class Command {
     settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, SCT.Number, target)
+      Command.initOptions(name, SCT.Number, target, settings)
       Command.prepare(
         target,
         command => command.addNumberOption(Command.wrapper(target, name, description, settings)),
@@ -353,7 +353,7 @@ export class Command {
     settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, SCT.User, target)
+      Command.initOptions(name, SCT.User, target, settings)
       Command.prepare(
         target,
         command => command.addUserOption(Command.wrapper(target, name, description, settings)),
@@ -367,7 +367,7 @@ export class Command {
     settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, SCT.Channel, target)
+      Command.initOptions(name, SCT.Channel, target, settings)
       Command.prepare(
         target,
         command => command.addChannelOption(Command.wrapper(target, name, description, settings)),
@@ -381,7 +381,7 @@ export class Command {
     settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, SCT.Role, target)
+      Command.initOptions(name, SCT.Role, target, settings)
       Command.prepare(
         target,
         command => command.addRoleOption(Command.wrapper(target, name, description, settings)),
@@ -395,7 +395,7 @@ export class Command {
     settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, SCT.Attachment, target)
+      Command.initOptions(name, SCT.Attachment, target, settings)
       Command.prepare(
         target,
         command => command.addAttachmentOption(Command.wrapper(target, name, description, settings)),
@@ -409,7 +409,7 @@ export class Command {
     settings: DT.CommandSettings = {},
   ) {
     return function (target: any, _context: any) {
-      Command.initOptions(name, SCT.Mentionable, target)
+      Command.initOptions(name, SCT.Mentionable, target, settings)
       Command.prepare(
         target,
         command => command.addMentionableOption(Command.wrapper(target, name, description, settings)),
