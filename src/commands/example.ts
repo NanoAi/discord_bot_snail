@@ -1,11 +1,12 @@
 import * as Discord from '~/modules/discord'
-import { IntegrationType, InteractionContextType } from '~/modules/discord'
+import { IntegrationType, InteractionContextType, PFlags } from '~/modules/discord'
 import { DiscordInteraction } from '~/modules/interactions'
 import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
 import type { DT } from '~/types/discord'
 
 @Factory.setDMPermission(false)
-@CommandFactory('test', 'This is a test command.', [Discord.PFlags.BanMembers])
+@Factory.setPermissions([PFlags.Administrator])
+@CommandFactory('test', 'This is a test command.')
 export class TestCommand {
   @Command.addMentionableOption('mention', 'select a user.')
   public static async main(ci: DT.ChatInteraction, args: any) {
@@ -15,7 +16,8 @@ export class TestCommand {
 
 @Factory.setContexts(InteractionContextType.ALL)
 @Factory.setIntegrations(IntegrationType.ALL)
-@CommandFactory('send', 'Send a message.', [Discord.PFlags.SendMessages])
+@Factory.setPermissions([PFlags.Administrator])
+@CommandFactory('send', 'Send a message.')
 export class SendToServer {
   @Command.addStringOption('message', 'The message.')
   public static async main(ci: DT.ChatInteraction, args: any) {
@@ -23,6 +25,7 @@ export class SendToServer {
   }
 }
 
+@Factory.setPermissions([PFlags.Administrator])
 @CommandFactory('subcommands', 'Test subcommands.')
 export class SubCommands {
   // This will be called every time any of the subcommands below are called.
