@@ -47,18 +47,6 @@ export function CommandFactory(
   }
 }
 
-/* export class EventController {
-  public static bind(event: Events) {
-    return function (target: any, _context: any) {
-      getMethods(target.prototype, ['constructor']).forEach((proto) => {
-        if (!proto || typeof proto === 'function')
-          return
-        DT.Client.on(event as string, (message) => { proto(message) })
-      })
-    }
-  }
-} */
-
 export class Factory {
   private static updateCommand(metadata: { name: string, description: string }, command: DT.CommandStore) {
     Discord.Commands.getMap().set(metadata.name, {

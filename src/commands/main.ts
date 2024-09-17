@@ -8,7 +8,6 @@ import * as Discord from '~/modules/discord'
 import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
 import { logger } from '~/modules/utils/logger'
 import type { DT } from '~/types/discord'
-import { nullDate } from '~/modules/utils/dayjs'
 import { Client } from '~/modules/discord'
 
 @CommandFactory('shutdown', 'shutdown the bot.')

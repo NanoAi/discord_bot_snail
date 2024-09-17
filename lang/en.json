@@ -11,7 +11,11 @@
     "error": {
       "unknown": "An unknown error has occurred while running the \"{{cmd}}\" command.",
       "noBan": "I could not ban {{user}}.",
-      "noDM": "I could not DM {{user}}."
+      "noDM": "I could not DM {{user}}.",
+      "vars": {
+        "notfound": "The argument \"{{argument}}\" was expected, got undefined.",
+        "expected": "The argument \"{{argument}}\" expected a \"${{expected}}.\""
+      }
     }
   }
 }
