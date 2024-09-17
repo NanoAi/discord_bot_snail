@@ -103,7 +103,7 @@ export class KudosAdmin {
     }
 
     if (args.amount() > 2147483640 || args.amount() < -2147483640) {
-      reply.style(Styles.Error).send('`[Never Knows Best]]`')
+      reply.style(Styles.Error).setTitle('`[Never Knows Best]]`').send('Overflow Detected.')
       return
     }
 

@@ -97,20 +97,22 @@ export class Factory {
     }
   }
 
-  public static setPermissions(permissions: DT.Permissions[], assert?: DT.Permissions) {
+  public static setPermissions(permissions?: DT.Permissions[], assert?: DT.Permissions) {
     return function (target: any, _context: any) {
       const metadata = Reflect.getOwnMetadata('command', target)
       const command = Discord.Commands.getCommand(metadata.name)
 
-      if (!command) {
+      if (!command)
         throw new Error('Command not yet defined in this context.')
-      }
 
       if (assert) {
         command.data.setDefaultMemberPermissions(assert)
         Factory.updateCommand(metadata, command)
         return
       }
+
+      if (!permissions)
+        throw new Error('Permissions not defined.')
 
       const perms = new Discord.PermissionBuilder()
       if (permissions) {

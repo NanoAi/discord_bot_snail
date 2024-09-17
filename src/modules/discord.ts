@@ -261,11 +261,6 @@ async function getMessageOptions(func: any, args: string[], ci: DT.ChatInteracti
 
     let re: string | undefined = args && args.length > 0 && args[nKey] || undefined
 
-    /*
-    if (typeof re === 'object')
-      re = re[1] && re[1] || re[0]
-    */
-
     if (re && captureRest)
       re = args.slice(nKey).join(' ')
 
