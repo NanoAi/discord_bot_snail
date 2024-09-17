@@ -1,0 +1,33 @@
+{
+  "command:header": {
+    "prefix": "$cmd:head",
+    "body": [
+      "import type { GuildMember, User } from 'discord.js'",
+      "import { t as \\$t, t } from 'i18next'",
+      "import { DiscordInteraction, LabelKeys as LK, Styles } from '~/modules/interactions'",
+      "import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'",
+      "import type { Args, DT } from '~/types/discord'",
+      "import { UserDBController } from '~/controllers/user'",
+      "import { PFlags } from '~/modules/discord'",
+      "",
+      ""
+    ],
+    "description": "",
+    "scope": "typescript",
+    "isFileTemplate": true
+  },
+  "command:body": {
+    "prefix": "@CommandFactory",
+    "body": [
+      "@CommandFactory('${2:command_name}', '${3:command_description}')",
+      "export class ${1:ClassName} {",
+      "  $9",
+      "  public static async ${4:main}(ci: DT.ChatInteraction${8:, args: DT.Args<[['${5:arg_name}', ${6: arg_type}]${7:, }]}>) {",
+      "    $0",
+      "  }",
+      "}"
+    ],
+    "description": "",
+    "scope": "typescript"
+  }
+}
