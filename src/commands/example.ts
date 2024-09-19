@@ -1,10 +1,9 @@
-import * as Discord from '~/modules/discord'
-import { IntegrationType, InteractionContextType, PFlags } from '~/modules/discord'
-import { DiscordInteraction } from '~/modules/interactions'
+import { DiscordInteraction, LabelKeys as LK, Styles } from '~/modules/interactions'
 import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
 import type { DT } from '~/types/discord'
+import { ApplicationIntegrationType as AIT, InteractionContextType as ICT, PFlags } from '~/modules/discord'
 
-@Factory.setDMPermission(false)
+@Factory.setContexts(ICT.Guild)
 @Factory.setPermissions([PFlags.Administrator])
 @CommandFactory('test', 'This is a test command.')
 export class TestCommand {
@@ -14,8 +13,8 @@ export class TestCommand {
   }
 }
 
-@Factory.setContexts(InteractionContextType.ALL)
-@Factory.setIntegrations(IntegrationType.ALL)
+@Factory.setContexts(ICT.ALL)
+@Factory.setIntegrations(AIT.ALL)
 @Factory.setPermissions([PFlags.Administrator])
 @CommandFactory('send', 'Send a message.')
 export class SendToServer {

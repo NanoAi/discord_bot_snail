@@ -1,14 +1,14 @@
-import type { Guild, GuildMember, User } from 'discord.js'
-import { t as $t, use } from 'i18next'
+import type { Guild, User } from 'discord.js'
 import { MessageFlags } from 'discord.js'
-import { GuildDBController } from '@controllers/guild'
-import { UserDBController } from '@controllers/user'
+import { t as $t, t } from 'i18next'
 import { DiscordInteraction, LabelKeys as LK, Styles } from '~/modules/interactions'
-import * as Discord from '~/modules/discord'
 import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
-import { logger } from '~/modules/utils/logger'
 import type { DT } from '~/types/discord'
-import { Client } from '~/modules/discord'
+import { UserDBController } from '~/controllers/user'
+import { InteractionContextType as ICT } from '~/modules/discord'
+import * as Discord from '~/modules/discord'
+import { GuildDBController } from '~/controllers/guild'
+import { logger } from '~/modules/utils/logger'
 
 @CommandFactory('shutdown', 'shutdown the bot.')
 export class ShutdownCommand {
@@ -41,7 +41,7 @@ export class ShutdownCommand {
   }
 }
 
-@Factory.setDMPermission(false)
+@Factory.setContexts(ICT.Guild)
 @Factory.setPermissions([Discord.PFlags.Administrator])
 @CommandFactory('cacheClear', 'Send a Direct Message to a server member.')
 export class ClearPermsCache {
@@ -57,7 +57,7 @@ export class ClearPermsCache {
   }
 }
 
-@Factory.setDMPermission(false)
+@Factory.setContexts(ICT.Guild)
 @Factory.setPermissions([Discord.PFlags.KickMembers])
 @CommandFactory('msg', 'Send a Direct Message to a server member.')
 export class SendDM {
@@ -68,7 +68,7 @@ export class SendDM {
     const guild: Guild = reply.getGuild()!
     const user: User = args.user()
 
-    if (user === Client.user) {
+    if (user === Discord.Client.user) {
       await reply.label(LK.ID, user.id).style(Styles.Error)
         .ephemeral(true).send($t('command.error.noDM', { user: user.username }))
       return
@@ -87,7 +87,7 @@ export class SendDM {
   }
 }
 
-@Factory.setDMPermission(false)
+@Factory.setContexts(ICT.Guild)
 @Factory.setPermissions([Discord.PFlags.Administrator])
 @CommandFactory('simulate', 'Simulates events for the database.')
 export class SimulateCommand {
@@ -101,7 +101,7 @@ export class SimulateCommand {
     const user: User = args.user()
     const member = await re.getGuildMember(user)
 
-    if (user === Client.user) {
+    if (user === Discord.Client.user) {
       await re.label(LK.ID, user.id).style(Styles.Error)
         .send($t('command.error.noDM', { user: user.username }))
       return
@@ -137,7 +137,7 @@ export class SimulateCommand {
   }
 }
 
-@Factory.setDMPermission(false)
+@Factory.setContexts(ICT.Guild)
 @Factory.setPermissions([Discord.PFlags.Administrator])
 @CommandFactory('leave', 'leave the current guild.')
 export class LeaveCommand {

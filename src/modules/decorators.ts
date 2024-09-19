@@ -1,4 +1,7 @@
 import type {
+  ApplicationIntegrationType,
+  InteractionContextType,
+  RestOrArray,
   SlashCommandNumberOption,
   SlashCommandOptionsOnlyBuilder,
   SlashCommandSubcommandsOnlyBuilder,
@@ -70,21 +73,6 @@ export class Factory {
     }
   }
 
-  public static setDMPermission(permission: boolean) {
-    return function (target: any, _context: any) {
-      const metadata = Reflect.getOwnMetadata('command', target)
-
-      const command = Discord.Commands.getCommand(metadata.name)
-
-      if (!command) {
-        throw new Error('Command not yet defined in this context.')
-      }
-
-      command.data.setDMPermission(permission)
-      Factory.updateCommand(metadata, command)
-    }
-  }
-
   public static setPermissions(permissions?: DT.Permissions[], assert?: DT.Permissions) {
     return function (target: any, _context: any) {
       const metadata = Reflect.getOwnMetadata('command', target)
@@ -115,7 +103,7 @@ export class Factory {
     }
   }
 
-  public static setIntegrations(value: Discord.InteractionContextType[]) {
+  public static setIntegrations(integrationTypes: RestOrArray<ApplicationIntegrationType>) {
     return function (target: any, _context: any) {
       const metadata = Reflect.getOwnMetadata('command', target)
       const command = Discord.Commands.getCommand(metadata.name)
@@ -124,12 +112,13 @@ export class Factory {
         throw new Error('Command not yet defined in this context.')
       }
 
-      (command.data as any).integration_types = value
+      // (command.data as any).integration_types = value
+      command.data.setIntegrationTypes(...integrationTypes)
       Factory.updateCommand(metadata, command)
     }
   }
 
-  public static setContexts(value: Discord.IntegrationType[]) {
+  public static setContexts(...contexts: RestOrArray<InteractionContextType>) {
     return function (target: any, _context: any) {
       const metadata = Reflect.getOwnMetadata('command', target)
       const command = Discord.Commands.getCommand(metadata.name)
@@ -138,7 +127,8 @@ export class Factory {
         throw new Error('Command not yet defined in this context.')
       }
 
-      (command.data as any).contexts = value
+      // (command.data as any).contexts = value
+      command.data.setContexts(...contexts)
       Factory.updateCommand(metadata, command)
     }
   }

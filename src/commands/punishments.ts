@@ -3,9 +3,9 @@ import { t as $t } from 'i18next'
 import { DiscordInteraction, LabelKeys as LK, Styles } from '~/modules/interactions'
 import { Command, CommandFactory, Factory } from '~/modules/decorators'
 import type { Args, DT } from '~/types/discord'
-import { Client } from '~/modules/discord'
+import { Client, InteractionContextType as ICT } from '~/modules/discord'
 
-@Factory.setDMPermission(false)
+@Factory.setContexts(ICT.Guild)
 @CommandFactory('softban', 'Ban then immediately unban a user.')
 export class SoftBanCommand {
   @Command.addStringOption('reason', 'The reason for kicking the user.')
@@ -47,7 +47,7 @@ export class SoftBanCommand {
   }
 }
 
-@Factory.setDMPermission(false)
+@Factory.setContexts(ICT.Guild)
 @CommandFactory('kick', 'Kick a user from the guild.')
 export class KickCommand {
   @Command.addStringOption('reason', 'The reason for kicking the user.')

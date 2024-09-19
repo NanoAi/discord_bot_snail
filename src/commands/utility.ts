@@ -1,12 +1,12 @@
-import { BaseGuildTextChannel, type Channel, type GuildMember, type User } from 'discord.js'
+import { BaseGuildTextChannel, type Channel } from 'discord.js'
 import { t as $t, t } from 'i18next'
 import { DiscordInteraction, LabelKeys as LK, Styles } from '~/modules/interactions'
-import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
-import type { Args, DT } from '~/types/discord'
+import { Command, CommandFactory, Factory } from '~/modules/decorators'
+import type { DT } from '~/types/discord'
 import { UserDBController } from '~/controllers/user'
-import { PFlags } from '~/modules/discord'
+import { InteractionContextType as ICT, PFlags } from '~/modules/discord'
 
-@Factory.setDMPermission(false)
+@Factory.setContexts(ICT.Guild)
 @CommandFactory('bulk', 'Bulk commands for faster operations.')
 export class BulkCommands {
   // TODO: Add string options.

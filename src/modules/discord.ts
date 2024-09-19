@@ -20,6 +20,8 @@ import {
   PermissionFlagsBits,
   PermissionsBitField,
   User,
+  ApplicationIntegrationType as _AIT,
+  InteractionContextType as _ICT,
 } from 'discord.js'
 import NodeCache from 'node-cache'
 import { operators } from '../../admins.json'
@@ -61,31 +63,37 @@ export const PFlags: typeof PermissionFlagsBits = PermissionFlagsBits
 export const PermissionBuilder: typeof PermissionsBitField = PermissionsBitField
 
 /**
- * Interaction Context Types.
- * @readonly
+ * Context in Discord where an interaction can be used, or where it was triggered from.
+ * Details about using interaction contexts for application commands are in the commands context documentation.
+ * @details https://discord.com/developers/docs/interactions/application-commands#interaction-contexts
+ * https://discord.com/developers/docs/interactions/receiving-and-responding#interaction-object-interaction-context-types
  */
 export class InteractionContextType {
-  /** Interaction can be used within servers */
-  static readonly GUILD = 0
-  /** Interaction can be used within DMs with the app's bot user */
-  static readonly BOT_DM = 1
-  /** Interaction can be used within Group DMs and DMs other than the app's bot user */
-  static readonly PRIVATE_CHANNEL = 2
-  /** Interaction can be used with `GUILD`, `BOT_DM`, and `PRIVATE_CHANNEL` */
-  static readonly ALL = [0, 1, 2]
+  static readonly BotDM: 1 = _ICT.BotDM || 1
+  static readonly Guild: 0 = _ICT.Guild || 0
+  static readonly PrivateChannel: 2 = _ICT.PrivateChannel || 2
+  static readonly ALL: [1, 0, 2] = [
+    InteractionContextType.BotDM,
+    InteractionContextType.Guild,
+    InteractionContextType.PrivateChannel,
+  ]
 }
 
 /**
- * Application Integration Types.
- * @readonly
+ * Where an app can be installed, also called its supported installation contexts.
+ * @details https://discord.com/developers/docs/resources/application#installation-context
+ * https://discord.com/developers/docs/resources/application#application-object-application-integration-types
  */
-export class IntegrationType {
+export class ApplicationIntegrationType {
   /** App is installable to servers */
-  static readonly GUILD_INSTALL = 0
+  static readonly GuildInstall: 0 = _AIT.GuildInstall || 0
   /** App is installable to users */
-  static readonly USER_INSTALL = 1
+  static readonly UserInstall: 1 = _AIT.UserInstall || 1
   /** App is installable to both servers and users */
-  static readonly ALL = [0, 1]
+  static readonly ALL: [0, 1] = [
+    ApplicationIntegrationType.GuildInstall,
+    ApplicationIntegrationType.UserInstall,
+  ]
 }
 
 export enum SubCommandType {

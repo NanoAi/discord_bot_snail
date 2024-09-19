@@ -8,7 +8,8 @@
       "import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'",
       "import type { Args, DT } from '~/types/discord'",
       "import { UserDBController } from '~/controllers/user'",
-      "import { PFlags } from '~/modules/discord'",
+      "import { ApplicationIntegrationType as AIT, InteractionContextType as ICT, PFlags } from '~/modules/discord'",
+      "import { logger } from '~/modules/utils/logger'",
       "",
       ""
     ],

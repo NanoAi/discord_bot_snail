@@ -5,7 +5,7 @@ import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
 import type { Args, DT } from '~/types/discord'
 import { UserDBController } from '~/controllers/user'
 import dayjs from '~/modules/utils/dayjs'
-import { PFlags } from '~/modules/discord'
+import { InteractionContextType as ICT, PFlags } from '~/modules/discord'
 import { xpToLevel } from '~/modules/utils/levels'
 
 async function giveKudos(
@@ -84,7 +84,7 @@ async function giveKudos(
   }
 }
 
-@Factory.setDMPermission(false)
+@Factory.setContexts(ICT.Guild)
 @Factory.setPermissions([PFlags.Administrator])
 @CommandFactory('kudosop', 'Admin commands for the Kudos system.')
 export class KudosAdmin {
@@ -116,7 +116,7 @@ export class KudosAdmin {
   }
 }
 
-@Factory.setDMPermission(false)
+@Factory.setContexts(ICT.Guild)
 @CommandFactory('kudos', 'Give kudos to another user.')
 export class KudosCommand {
   // This should be defined as the base function to call.
