@@ -1,3 +1,4 @@
+import type { Channel } from 'discord.js'
 import * as Discord from './discord'
 import { SubCommandType as SBT } from './discord'
 import type { DT } from '~/types/discord'
@@ -20,6 +21,8 @@ export class Convert {
         return await this.Role(ci, value)
       case SBT.Mentionable:
         return await this.Mentionable(ci, value)
+      case SBT.Channel:
+        return await this.Channel(ci, value)
       default:
         break
     }
@@ -35,6 +38,21 @@ export class Convert {
     }
 
     return cachedUser || value
+  }
+
+  public static async Channel(ci: DT.ChatInteraction, value: string): Promise<Channel | undefined> {
+    if (!ci)
+      return undefined
+
+    const cache = Discord.Client.channels.cache.get(value)
+    if (cache)
+      return cache
+
+    const inter = DI.getChatInteraction(ci)
+    const guild = inter.inGuild() && inter.guild
+    const channel = guild && (guild.channels.cache.get(value) || await guild.channels.fetch(value, { force: true }))
+
+    return channel || undefined
   }
 
   public static async Role(ci: DT.ChatInteraction, value: string) {

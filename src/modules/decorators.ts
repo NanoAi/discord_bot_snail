@@ -1,4 +1,5 @@
 import type {
+  APIApplicationCommandOptionChoice,
   ApplicationIntegrationType,
   InteractionContextType,
   RestOrArray,
@@ -157,6 +158,17 @@ export class Options {
   public static string(config: DT.Configs['SlashString']) {
     return function (target: any, _context: any) {
       Options.main(target, target._lastOptionTarget, config)
+    }
+  }
+
+  public static stringChoice(...choices: string[]) {
+    const opts: RestOrArray<APIApplicationCommandOptionChoice<string>> = []
+    for (const choice of choices) {
+      opts.push({ name: String(choice), value: choice })
+    }
+    const func = (hook: any) => hook.addChoices(...opts)
+    return function (target: any, _context: any) {
+      Options.main(target, target._lastOptionTarget, func)
     }
   }
 

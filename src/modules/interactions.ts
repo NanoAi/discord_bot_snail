@@ -9,7 +9,8 @@ import type {
   User,
 } from 'discord.js'
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, GuildMember } from 'discord.js'
-import type { ChatInteraction, ChatInteractionAssert, Maybe, UserLike } from '~/types/discord'
+import type { ChatInteraction, ChatInteractionAssert, UserLike } from '~/types/discord'
+import type { Maybe } from '~/types/util'
 
 export function getChatInteraction(ci: ChatInteraction) {
   if (ci.interaction)

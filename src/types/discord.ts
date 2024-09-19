@@ -19,6 +19,7 @@ import type {
   Snowflake,
   User,
 } from 'discord.js'
+import type { KeyedFunction, KeyedFunctionGroup } from './util'
 import type { SubCommandType as DSubCommandType } from '~/modules/discord'
 
 export type SubCommandType = DSubCommandType
@@ -36,21 +37,11 @@ export interface ChatInteractionAssert {
   message: Message<boolean>
 }
 
-export type Maybe<T> = T | undefined
+/** Alias of {@link KeyedFunction} */
+export type F<K extends string, T> = KeyedFunction<K, T>
 
-export type CommandFunction<T extends string, V> = {
-  [K in T]: (value?: unknown) => V
-}
-
-export type CommandFunctionGroup<T extends [string, any][]> = {
-  [K in T[number] as K[0]]: (value?: K[1]) => K[1];
-}
-
-/** Alias of CommandFunction */
-export type F<K extends string, T> = CommandFunction<K, T>
-
-/** Alias of CommandArgsGroup */
-export type Args<T extends [string, any][]> = CommandFunctionGroup<T>
+/** Alias of {@link KeyedFunctionGroup} */
+export type Args<T extends [string, any][]> = KeyedFunctionGroup<T>
 
 /**
  * Interaction OR Message are ALWAYS defined.
