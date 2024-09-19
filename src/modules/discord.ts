@@ -138,6 +138,21 @@ export function isUser(target: any) {
   return (target instanceof User || target instanceof ClientUser)
 }
 
+export class SnowflakeRegex {
+  public static isSnowflake(value: string) {
+    return String(value).match(/^(?:<[@#]!?)?(\d{17,19})>?$/) && true || false
+  }
+
+  public static getSnowflake(value: string) {
+    const str = String(value)
+    const match = [...str.matchAll(/^(?:<[@#]!?)?(\d{17,19})>?$/g)][0]
+    if (match && match[1])
+      return match[1]
+    else
+      return undefined
+  }
+}
+
 export class Commands {
   private static commands = new Map<string, DT.CommandStore>()
 

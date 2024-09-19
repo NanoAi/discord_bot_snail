@@ -44,6 +44,12 @@ export class Convert {
     if (!ci)
       return undefined
 
+    const snowflake = Discord.SnowflakeRegex.getSnowflake(value)
+    if (!snowflake)
+      return undefined
+
+    value = snowflake
+
     const cache = Discord.Client.channels.cache.get(value)
     if (cache)
       return cache
@@ -76,8 +82,7 @@ export class Convert {
     if (value === guildId)
       return '@everyone'
 
-    const isSnowflake = String(value).match(/^(?:<@!?)?(\d{17,19})>?$/) && true || false
-    if (!isSnowflake)
+    if (!Discord.SnowflakeRegex.isSnowflake(value))
       return undefined
 
     const role = guild && guild.roles.cache.get(value)

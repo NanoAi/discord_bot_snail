@@ -32,6 +32,7 @@ export class BulkCommands {
     const callerId = (caller && caller.id || '<unknown>')
     const channel = args.channel(undefined)
     const amount = Math.max(0, Math.min(Number(args.amount(1000)), 1000))
+    const around = args.around() !== 'x' && args.around() || undefined
 
     if (!channel) {
       msg = $t('command.error.vars.notfound', { argument: 'channel' })
@@ -62,7 +63,7 @@ export class BulkCommands {
       return true
     }
 
-    const searchSettings = { limit: amount, cache: false, around: args.around() }
+    const searchSettings = { limit: amount, cache: false, around }
     const msgCollection = (await channel.messages.fetch(searchSettings)).filter(filter)
 
     const deletedMessages = await channel.bulkDelete(msgCollection)
