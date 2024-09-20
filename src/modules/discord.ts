@@ -258,7 +258,10 @@ async function getOptions(func: any, pass: any[], ci: DT.ChatInteractionAssert) 
 
   for (const value of vars) {
     let output: any
-    const re = hoisted[value.name]
+    let re = hoisted[value.name]
+
+    if (re === ',x' || re === '{null}')
+      re = undefined
 
     if (typeof re !== 'undefined')
       output = await Convert.ValueToType(ci, re, value.type)
@@ -286,6 +289,9 @@ async function getMessageOptions(func: any, args: string[], ci: DT.ChatInteracti
 
     if (re && captureRest)
       re = args.slice(nKey).join(' ')
+
+    if (re === ',x' || re === '{null}')
+      re = undefined
 
     if (typeof re !== 'undefined')
       output = (await Convert.ValueToType(ci, re, value.type))
@@ -432,10 +438,10 @@ Client.on(Events.MessageCreate, async (message) => {
   const baseMatch = match[3] || ''
 
   const args = [...baseMatch.matchAll(/['"]([^'"]+)['"]|\S+/g)]
-  const subMatch = [...baseMatch.matchAll(/((-{2}|[?;])(\w+))/g)]
+  const subMatch = [...baseMatch.matchAll(/((-{2}|[?;])(\w+))/g)][0]
 
-  let subCommand = subMatch[0] && subMatch[0][3] || undefined
-  const subCommandMatch = subCommand && subMatch[0][1]
+  let subCommand = subMatch && subMatch[3] || undefined
+  const subCommandMatch = subCommand && subMatch[1]
 
   if (args) {
     for (const arg of args) {
