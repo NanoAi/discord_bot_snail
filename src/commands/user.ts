@@ -72,11 +72,11 @@ async function giveKudos(
 
     if (amount > 0) {
       await reply.label(LK.ID, caller.user.id).ephemeral(ephemeral).style(Styles.Success)
-        .send(`${caller} has awarded ${amount} tokens to ${target}.`)
+        .send(`${caller} has awarded ${amount} tokens to ${target}.`, { flags: 'SuppressNotifications' })
     }
     else {
       await reply.label(LK.ID, caller.user.id).ephemeral(ephemeral).style(Styles.Warn)
-        .send(`${caller} has removed ${Math.abs(amount)} tokens from ${target}.`)
+        .send(`${caller} has removed ${Math.abs(amount)} tokens from ${target}.`, { flags: 'SuppressNotifications' })
     }
   }
   catch {

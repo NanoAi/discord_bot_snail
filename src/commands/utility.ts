@@ -32,7 +32,7 @@ export class BulkCommands {
     const callerId = (caller && caller.id || '<unknown>')
     const channel = args.channel(undefined)
     const amount = Math.max(0, Math.min(Number(args.amount(1000)), 1000))
-    const around = args.around() !== 'x' && args.around() || undefined
+    const around = args.around(undefined)
 
     if (!channel) {
       msg = $t('command.error.vars.notfound', { argument: 'channel' })
