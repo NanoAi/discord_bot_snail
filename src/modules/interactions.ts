@@ -217,20 +217,26 @@ export class Reply extends CommandInteraction {
         embed.setDescription(`### ${this.title}\n<:quote:1285270560967753849> **${response}**`)
     }
 
-    if (_i) {
-      if (_i.replied)
-        return
+    try {
+      if (_i) {
+        if (_i.replied)
+          return
 
-      const re = { embeds: [embed], fetchReply: true, ephemeral: !!settings.ephemeral }
-      if (_i.deferred) {
-        return await _i.editReply(re)
+        const re = { embeds: [embed], fetchReply: true, ephemeral: !!settings.ephemeral }
+        if (_i.deferred) {
+          return await _i.editReply(re)
+        }
+        else {
+          return await _i.reply({ embeds: [embed], ephemeral: !!settings.ephemeral })
+        }
       }
       else {
-        return await _i.reply({ embeds: [embed], ephemeral: !!settings.ephemeral })
+        return await message.reply({ embeds: [embed], flags: options.flags })
       }
-    }
-    else {
-      return await message.reply({ embeds: [embed], flags: options.flags })
+    } catch {
+      // TODO: Add a "console" channel to catch errors etc.
+      if (message.channel.isSendable())
+        message.channel.send({ embeds: [embed], flags: options.flags })
     }
   }
 }

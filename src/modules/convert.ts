@@ -56,7 +56,17 @@ export class Convert {
 
     const inter = DI.getChatInteraction(ci)
     const guild = inter.inGuild() && inter.guild
-    const channel = guild && (guild.channels.cache.get(value) || await guild.channels.fetch(value, { force: true }))
+    const channel = guild && guild.channels.cache.get(value)
+
+    if (guild && !channel) {
+      try {
+        const fetchChannel = await guild.channels.fetch(value, { force: true })
+        return fetchChannel || undefined
+      }
+      catch {
+        return undefined
+      }
+    }
 
     return channel || undefined
   }
@@ -75,15 +85,13 @@ export class Convert {
     if (!ci)
       return undefined
 
+    const snowflake = Discord.SnowflakeRegex.getSnowflake(value)
+    if (!snowflake)
+      return undefined
+
+    value = snowflake
     const inter = DI.getChatInteraction(ci)
     const guild = inter.inGuild() && inter.guild
-    const guildId = guild && inter.guildId || undefined
-
-    if (value === guildId)
-      return '@everyone'
-
-    if (!Discord.SnowflakeRegex.isSnowflake(value))
-      return undefined
 
     const role = guild && guild.roles.cache.get(value)
     const userCache = guild && guild.members.cache.get(value)

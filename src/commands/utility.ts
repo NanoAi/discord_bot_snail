@@ -67,6 +67,7 @@ export class BulkCommands {
     const msgCollection = (await channel.messages.fetch(searchSettings)).filter(filter)
 
     const deletedMessages = await channel.bulkDelete(msgCollection)
-    await channel.send(`Deleted ${deletedMessages.size} Messages in ${channel}.`)
+    await reply.label(LK.ID, callerId).style(Styles.Success)
+      .ephemeral(true).send(`Deleted ${deletedMessages.size} Messages in ${channel}.`)
   }
 }
