@@ -1,10 +1,10 @@
-import { BaseGuildTextChannel, type Channel, type Message, type User } from 'discord.js'
+import { BaseGuildTextChannel, type Channel, ForumChannel, type Message, type User } from 'discord.js'
 import { t as $t, t } from 'i18next'
 import { DiscordInteraction, LabelKeys as LK, Styles } from '~/modules/interactions'
 import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
 import type { DT } from '~/types/discord'
 import { UserDBController } from '~/controllers/user'
-import { InteractionContextType as ICT, PFlags } from '~/modules/discord'
+import { Client, InteractionContextType as ICT, PFlags } from '~/modules/discord'
 import { logger } from '~/modules/utils/logger'
 
 type bulkDeleteArgs = DT.Args<[
@@ -69,5 +69,30 @@ export class BulkCommands {
     const deletedMessages = await channel.bulkDelete(msgCollection)
     await reply.label(LK.ID, callerId).style(Styles.Success)
       .ephemeral(true).send(`Deleted ${deletedMessages.size} Messages in ${channel}.`)
+  }
+}
+
+@Factory.setContexts(ICT.Guild)
+@CommandFactory('thread', 'Setup thread controller for a target thread.')
+export class ThreadCommand {
+  @Command.addChannelOption('channel', 'The channel to target.', { required: true })
+  public static async main(ci: DT.ChatInteraction, args: DT.Args<[['channel', Channel]]>) {
+    const reply = new DiscordInteraction.Reply(ci)
+    const caller = reply.getUser()
+    const callerId = (caller && caller.id || '<unknown>')
+    const forum = args.channel()
+
+    if (!(forum instanceof ForumChannel)) {
+      const msg = $t('command.error.vars.expected', { argument: 'channel', expected: 'a forum channel' })
+      await reply.label(LK.ID, callerId).style(Styles.Error)
+        .ephemeral(true).send(msg)
+      return
+    }
+
+    forum.threads.create({
+      name: 'channel-settings',
+      reason: 'Channel Settings',
+      message: { content: 'hi' },
+    })
   }
 }
