@@ -17,7 +17,7 @@
     "preinstall": "npx only-allow pnpm",
     "prisma": "pnpm exec prisma format && pnpm exec prisma generate && pnpm prisma:fix",
     "prisma:fix": "pnpm exec eslint ./src/database/drizzle.schema.ts --fix",
-    "prisma:push": "pnpm exec prisma db push",
+    "prisma:push": "pnpm exec prisma db push && pnpm prisma:fix",
     "start": "nodemon -e ts -w ./src -x pnpm run watch:serve",
     "watch:serve": "tsx src/index.ts",
     "v": "node -v"

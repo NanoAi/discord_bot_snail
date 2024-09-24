@@ -1,4 +1,4 @@
-import type { Action, Case, Guild, Ticket, User } from '@schema'
+import type { Action, Case, Forum, Guild, Ticket, User } from '@schema'
 
 export interface ActionDB {
   insert: typeof Action.$inferInsert
@@ -10,6 +10,12 @@ export interface CaseDB {
   insert: typeof Case.$inferInsert
   update: Partial<Omit<this['insert'], 'id' | 'guildId'>>
   select: typeof Case.$inferSelect
+}
+
+export interface ForumDB {
+  insert: typeof Forum.$inferInsert
+  update: Partial<Omit<this['insert'], 'id' | 'guildId'>>
+  select: typeof Forum.$inferSelect
 }
 
 export interface GuildDB {

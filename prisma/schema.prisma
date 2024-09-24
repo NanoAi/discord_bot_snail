@@ -16,6 +16,7 @@ model Guild {
   trustedURLs     Json
   users           User[] // Relation to Users
   cases           Case[] // Relation to Cases
+  forums          Forum[] // Relation to Forums
   createdAt       DateTime @default(now())
 }
 
@@ -64,4 +65,13 @@ model Ticket {
   createdAt DateTime @default(now())
 
   case Case @relation(fields: [caseId], references: [id])
+}
+
+model Forum {
+  id      String  @id
+  guildId String
+  managed Boolean @default(false)
+  bump    Boolean @default(false)
+
+  guild Guild @relation(fields: [guildId], references: [id])
 }

@@ -84,12 +84,30 @@ export const Ticket = pgTable('Ticket', {
     .onUpdate('cascade'),
 }))
 
+export const Forum = pgTable('Forum', {
+  id: text('id').notNull().primaryKey(),
+  guildId: text('guildId').notNull(),
+  managed: boolean('managed').notNull(),
+  bump: boolean('bump').notNull(),
+}, Forum => ({
+  Forum_guild_fkey: foreignKey({
+    name: 'Forum_guild_fkey',
+    columns: [Forum.guildId],
+    foreignColumns: [Guild.id],
+  })
+    .onDelete('cascade')
+    .onUpdate('cascade'),
+}))
+
 export const GuildRelations = relations(Guild, ({ many }) => ({
   users: many(User, {
     relationName: 'GuildToUser',
   }),
   cases: many(Case, {
     relationName: 'CaseToGuild',
+  }),
+  forums: many(Forum, {
+    relationName: 'ForumToGuild',
   }),
 }))
 
@@ -136,5 +154,13 @@ export const TicketRelations = relations(Ticket, ({ one }) => ({
     relationName: 'CaseToTicket',
     fields: [Ticket.caseId],
     references: [Case.id],
+  }),
+}))
+
+export const ForumRelations = relations(Forum, ({ one }) => ({
+  guild: one(Guild, {
+    relationName: 'ForumToGuild',
+    fields: [Forum.guildId],
+    references: [Guild.id],
   }),
 }))
