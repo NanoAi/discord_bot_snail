@@ -31,7 +31,6 @@ export type Interaction = DInteraction<CacheType>
 export type CommandMember = GuildMember | APIInteractionGuildMember | null
 export type CommandValidator = (isOP: boolean, user: User, member: CommandMember) => boolean
 export type UserLike = User | ClientUser
-export type PrivateCommandSettings = Exclude<CommandSettings, CommandSettings.Defer | CommandSettings.SlashOnly>
 
 export interface ChatInteractionAssert {
   interaction: ChatInputCommandInteraction<CacheType>

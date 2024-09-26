@@ -97,31 +97,37 @@ export class ApplicationIntegrationType {
   ]
 }
 
-export enum SubCommandType {
-  Attachment,
-  Bool,
-  Channel,
-  Mentionable,
-  Number,
-  Role,
-  String,
-  User,
+export class SubCommandType {
+  static readonly Attachment = 0
+  static readonly Bool = 1
+  static readonly Channel = 2
+  static readonly Mentionable = 3
+  static readonly Number = 4
+  static readonly Role = 5
+  static readonly String = 6
+  static readonly User = 7
 }
 
 /**
  * Command Variable Settings.
  */
-export enum CommandVarSettings {
-  Required,
-  TakeRest,
+export class CommandVarSettings {
+  /** This command is required. */
+  static readonly Required = 0
+  /** All left over variables will be propagated into this command. */
+  static readonly TakeRest = 1
+  /** @alias Required */
+  static readonly R = this.Required
+  /** @alias TakeRest */
+  static readonly T = this.TakeRest
 }
 
 /**
  * Command Settings
  */
-export enum CommandSettings {
-  Defer,
-  SlashOnly,
+export class CommandSettings {
+  static readonly Defer = 0
+  static readonly SlashOnly = 1
 }
 
 export const CVar = CommandVarSettings
