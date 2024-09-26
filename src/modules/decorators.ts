@@ -14,7 +14,7 @@ import {
 import 'reflect-metadata'
 
 import * as Discord from './discord'
-import { SubCommandType as SCT } from './discord'
+import { CommandSettings, CommandVarSettings, SubCommandType as SCT } from './discord'
 import Deferrer from './utils/deferrer'
 import getMethods from './utils/method'
 import type * as DT from '~/types/discord'
@@ -48,6 +48,61 @@ export function CommandFactory(
     })
 
     defer.resolve()
+  }
+}
+
+export class CommandMeta {
+  private static mk = 'meta:settings'
+  private static kp = '_lastMetaTarget'
+
+  public static update(target: any, withMeta: DT.SubCommandMeta) {
+    Reflect.defineProperty(target, CommandMeta.kp, {
+      value: withMeta,
+      writable: true,
+      configurable: true,
+    })
+    return withMeta
+  }
+
+  public static set(target: any, property: string, value: any) {
+    const meta = target._lastMetaTarget || {}
+    const hasOwnProperty = Object.prototype.hasOwnProperty.call(meta, property)
+
+    if (hasOwnProperty)
+      meta[property] = value
+    else
+      return undefined
+
+    Reflect.defineProperty(target, CommandMeta.kp, {
+      value: meta,
+      writable: true,
+      configurable: true,
+    })
+    return meta
+  }
+
+  /**
+   * Provides command settings to the parent command.
+   * @param parent The function to set metadata for.
+   * @param commandSettings The settings for the functions command.
+   * @returns The command settings provided. (commandSettings)
+   */
+  public static setParentMeta(parent: any, commandSettings: Discord.CommandSettings[]) {
+    Reflect.defineMetadata(CommandMeta.mk, commandSettings, parent)
+    return commandSettings
+  }
+
+  /**
+   * Get the command settings from the parent command.
+   * @param parent The function to get metadata for.
+   * @returns The command settings set within its metadata.
+   */
+  public static getParentMeta(parent: any): Discord.CommandSettings[] {
+    return Reflect.getMetadata(CommandMeta.mk, parent) || []
+  }
+
+  public static get(target: any): DT.SubCommandMeta {
+    return target[CommandMeta.kp] || { settings: [] }
   }
 }
 
@@ -143,21 +198,44 @@ export class Options {
     target.commandOptions.set(meta.name, config)
   }
 
+  /** Sets data on parent. */
   public static defer() {
     return function (target: any, _context: any) {
-      Reflect.defineProperty(target, '_defer', { value: true })
+      const meta = CommandMeta.getParentMeta(target)
+      if (!meta)
+        throw new Error(`Expected \`<CommandMeta>\` got ${meta}.`)
+      meta.push(CommandSettings.Defer)
+      CommandMeta.setParentMeta(target, meta)
     }
   }
 
-  public static assertSlash() {
+  /** Sets data on parent. */
+  public static slashOnly() {
     return function (target: any, _context: any) {
-      Reflect.defineProperty(target, '_assert', { value: true })
+      const meta = CommandMeta.getParentMeta(target)
+      if (!meta)
+        throw new Error(`Expected \`<CommandMeta>\` got ${meta}.`)
+      meta.push(CommandSettings.SlashOnly)
+      CommandMeta.setParentMeta(target, meta)
+    }
+  }
+
+  /**
+   * Sets options for the command under it, and propagates to the parent.
+   * @param settings The enum settings for this command.
+   * @returns void
+   */
+  public static set(...settings: CommandVarSettings[]) {
+    return function (target: any, _context: any) {
+      const meta = CommandMeta.set(target, 'settings', settings)
+      if (!meta)
+        throw new Error(`Expected \`<CommandMeta>\` got ${meta}.`)
     }
   }
 
   public static string(config: DT.Configs['SlashString']) {
     return function (target: any, _context: any) {
-      Options.main(target, target._lastOptionTarget, config)
+      Options.main(target, CommandMeta.get(target), config)
     }
   }
 
@@ -168,13 +246,13 @@ export class Options {
     }
     const func = (hook: any) => hook.addChoices(...opts)
     return function (target: any, _context: any) {
-      Options.main(target, target._lastOptionTarget, func)
+      Options.main(target, CommandMeta.get(target), func)
     }
   }
 
   public static number(config: DT.SlashConfig<SlashCommandNumberOption>) {
     return function (target: any, _context: any) {
-      Options.main(target, target._lastOptionTarget, config)
+      Options.main(target, CommandMeta.get(target), config)
     }
   }
 }
@@ -241,27 +319,29 @@ export class Command {
     })
   }
 
-  private static wrapper(target: any, name: string, description: string, settings: DT.CommandSettings) {
+  private static wrapper(target: any, name: string, description: string, settings: Discord.CommandVarSettings[]) {
     return (command: any) => {
+      const lastMetaTarget = CommandMeta.get(target)
       const cmdOptions: DT.Configs['options'] = target.commandOptions
       const wrapper = cmdOptions && cmdOptions.get(name) || undefined
+      // If no settings passed, pull from last known metadata. (Sanity check via argument name.)
+      if (lastMetaTarget.name === name && settings.length === 0)
+        settings = lastMetaTarget && (lastMetaTarget.settings as any) || []
       let re = command
         .setName(name)
         .setDescription(description)
-        .setRequired(settings.required || false)
+        .setRequired(settings.includes(CommandVarSettings.Required))
       if (wrapper)
         re = wrapper(re)
       return re
     }
   }
 
-  private static initOptions(name: string, type: DT.SubCommandType, target: any, settings: DT.CommandSettings) {
+  private static initOptions(name: string, type: DT.SubCommandType, target: any, settings: Discord.CommandVarSettings[]) {
     const key = 'command:vars'
     const meta: DT.SubCommandMeta[] = Reflect.getOwnMetadata(key, target) || []
     target.commandOptions = target.commandOptions || new Map<string, (config: any) => any>()
-    target._lastOptionTarget = { name, type, settings }
-
-    meta.push(target._lastOptionTarget)
+    meta.push(CommandMeta.update(target, { name, type, settings }))
     Reflect.defineMetadata(key, meta, target)
   }
 
@@ -284,7 +364,7 @@ export class Command {
   public static addBooleanOption(
     name: string,
     description: string,
-    settings: DT.CommandSettings = {},
+    settings: CommandVarSettings[] = [],
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, SCT.Bool, target, settings)
@@ -298,7 +378,7 @@ export class Command {
   public static addStringOption(
     name: string,
     description: string,
-    settings: DT.CommandSettings = {},
+    settings: CommandVarSettings[] = [],
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, SCT.String, target, settings)
@@ -313,7 +393,7 @@ export class Command {
   public static addIntegerOption(
     name: string,
     description: string,
-    settings: DT.CommandSettings = {},
+    settings: CommandVarSettings[] = [],
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, SCT.Number, target, settings)
@@ -328,7 +408,7 @@ export class Command {
   public static addNumberOption(
     name: string,
     description: string,
-    settings: DT.CommandSettings = {},
+    settings: CommandVarSettings[] = [],
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, SCT.Number, target, settings)
@@ -342,7 +422,7 @@ export class Command {
   public static addUserOption(
     name: string,
     description: string,
-    settings: DT.CommandSettings = {},
+    settings: CommandVarSettings[] = [],
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, SCT.User, target, settings)
@@ -356,7 +436,7 @@ export class Command {
   public static addChannelOption(
     name: string,
     description: string,
-    settings: DT.CommandSettings = {},
+    settings: CommandVarSettings[] = [],
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, SCT.Channel, target, settings)
@@ -370,7 +450,7 @@ export class Command {
   public static addRoleOption(
     name: string,
     description: string,
-    settings: DT.CommandSettings = {},
+    settings: CommandVarSettings[] = [],
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, SCT.Role, target, settings)
@@ -384,7 +464,7 @@ export class Command {
   public static addAttachmentOption(
     name: string,
     description: string,
-    settings: DT.CommandSettings = {},
+    settings: CommandVarSettings[] = [],
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, SCT.Attachment, target, settings)
@@ -398,7 +478,7 @@ export class Command {
   public static addMentionableOption(
     name: string,
     description: string,
-    settings: DT.CommandSettings = {},
+    settings: CommandVarSettings[] = [],
   ) {
     return function (target: any, _context: any) {
       Command.initOptions(name, SCT.Mentionable, target, settings)

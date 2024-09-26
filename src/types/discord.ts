@@ -20,17 +20,18 @@ import type {
   User,
 } from 'discord.js'
 import type { KeyedFunction, KeyedFunctionGroup } from './util'
-import type { SubCommandType as DSubCommandType } from '~/modules/discord'
+import type { CommandSettings, CommandVarSettings, SubCommandType as DSubCommandType } from '~/modules/discord'
 
 export type SubCommandType = DSubCommandType
 export type CommandData = DSlashCommandBuilder | SlashCommandOptionsOnlyBuilder
 export type CommandOption = ApplicationCommandOptionBase
-export interface SubCommandMeta { value?: any, name: string, type: SubCommandType, settings: CommandSettings }
+export interface SubCommandMeta { value?: any, name: string, type: SubCommandType, settings: CommandVarSettings[] }
 export type Permissions = DPermissions | bigint | number | null | undefined
 export type Interaction = DInteraction<CacheType>
 export type CommandMember = GuildMember | APIInteractionGuildMember | null
 export type CommandValidator = (isOP: boolean, user: User, member: CommandMember) => boolean
 export type UserLike = User | ClientUser
+export type PrivateCommandSettings = Exclude<CommandSettings, CommandSettings.Defer | CommandSettings.SlashOnly>
 
 export interface ChatInteractionAssert {
   interaction: ChatInputCommandInteraction<CacheType>
@@ -49,11 +50,6 @@ export type Args<T extends [string, any][]> = KeyedFunctionGroup<T>
 export interface ChatInteraction {
   interaction?: ChatInteractionAssert['interaction']
   message?: ChatInteractionAssert['message']
-}
-
-export interface CommandSettings {
-  required?: boolean
-  captureRest?: boolean
 }
 
 export interface Configs {

@@ -5,7 +5,7 @@ import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
 import type { Args, DT } from '~/types/discord'
 import { UserDBController } from '~/controllers/user'
 import dayjs from '~/modules/utils/dayjs'
-import { InteractionContextType as ICT, PFlags } from '~/modules/discord'
+import { CVar, InteractionContextType as ICT, PFlags } from '~/modules/discord'
 import { xpToLevel } from '~/modules/utils/levels'
 
 async function giveKudos(
@@ -89,8 +89,8 @@ async function giveKudos(
 @CommandFactory('kudosop', 'Admin commands for the Kudos system.')
 export class KudosAdmin {
   @Command.addBooleanOption('ephemeral', 'Should the response be hidden? (Slash Command Only.)')
-  @Command.addIntegerOption('amount', 'How many points to give?', { required: true })
-  @Command.addMentionableOption('user', 'Who to give kudos to?', { required: true })
+  @Command.addIntegerOption('amount', 'How many points to give?', [CVar.Required])
+  @Command.addMentionableOption('user', 'Who to give kudos to?', [CVar.Required])
   @Command.addSubCommand('add', 'Add Kudos to a user. (Use a negative to take.)')
   public static async addPoints(
     ci: DT.ChatInteraction,
@@ -121,8 +121,8 @@ export class KudosAdmin {
 export class KudosCommand {
   // This should be defined as the base function to call.
   @Options.number(c => c.setMinValue(1).setMaxValue(100))
-  @Command.addIntegerOption('amount', 'How many points to give?', { required: true })
-  @Command.addMentionableOption('user', 'Who to give kudos to?', { required: true })
+  @Command.addIntegerOption('amount', 'How many points to give?', [CVar.Required])
+  @Command.addMentionableOption('user', 'Who to give kudos to?', [CVar.Required])
   public static async main(ci: DT.ChatInteraction, args: Args<[['user', User], ['amount', number]]>) {
     const reply = new DiscordInteraction.Reply(ci)
     const amount = Math.max(1, Math.min(args.amount(1), 100))

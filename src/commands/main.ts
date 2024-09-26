@@ -5,8 +5,8 @@ import { DiscordInteraction, LabelKeys as LK, Styles } from '~/modules/interacti
 import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
 import type { DT } from '~/types/discord'
 import { UserDBController } from '~/controllers/user'
-import { InteractionContextType as ICT } from '~/modules/discord'
 import * as Discord from '~/modules/discord'
+import { CVar, InteractionContextType as ICT } from '~/modules/discord'
 import { GuildDBController } from '~/controllers/guild'
 import { logger } from '~/modules/utils/logger'
 
@@ -61,7 +61,7 @@ export class ClearPermsCache {
 @Factory.setPermissions([Discord.PFlags.KickMembers])
 @CommandFactory('msg', 'Send a Direct Message to a server member.')
 export class SendDM {
-  @Command.addStringOption('message', 'The message to send.', { captureRest: true })
+  @Command.addStringOption('message', 'The message to send.', [CVar.TakeRest])
   @Command.addUserOption('user', 'The user to target.')
   public static async main(ci: DT.ChatInteraction, args: DT.Args<[['user', User], ['message', string]]>) {
     const reply = new DiscordInteraction.Reply(ci)
@@ -142,7 +142,7 @@ export class SimulateCommand {
 @CommandFactory('leave', 'leave the current guild.')
 export class LeaveCommand {
   // This should be defined as the base function to call.
-  @Options.assertSlash()
+  @Options.slashOnly()
   public static async main(ci: DT.ChatInteraction) {
     const reply = new DiscordInteraction.Reply(ci)
     await reply.send(`Goodbye~ %username%`)

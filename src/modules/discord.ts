@@ -26,6 +26,7 @@ import {
 import NodeCache from 'node-cache'
 import { operators } from '../../admins.json'
 import { logger } from './utils/logger'
+import { CommandMeta } from './decorators'
 import { Convert } from '~/modules/convert'
 import type * as DT from '~/types/discord'
 
@@ -106,6 +107,24 @@ export enum SubCommandType {
   String,
   User,
 }
+
+/**
+ * Command Variable Settings.
+ */
+export enum CommandVarSettings {
+  Required,
+  TakeRest,
+}
+
+/**
+ * Command Settings
+ */
+export enum CommandSettings {
+  Defer,
+  SlashOnly,
+}
+
+export const CVar = CommandVarSettings
 
 export class Global {
   public static REST: DRestClient
@@ -283,7 +302,7 @@ async function getMessageOptions(func: any, args: string[], ci: DT.ChatInteracti
 
     const nKey = Number(key)
     const value: DT.SubCommandMeta = vars[key]
-    const captureRest = value.settings && value.settings.captureRest
+    const captureRest = value.settings.includes(CommandVarSettings.TakeRest)
 
     let re: string | undefined = args && args.length > 0 && args[nKey] || undefined
 
@@ -326,10 +345,11 @@ class CommandProcessor {
     let output = false
 
     if (command.main) {
-      if (ci.message && (command.main as any)._assert) {
+      const settings = CommandMeta.getParentMeta(command.main)
+      if (ci.message && settings.includes(CommandSettings.SlashOnly)) {
         return false
       }
-      if (ci.interaction && (command.main as any)._defer) {
+      if (ci.interaction && settings.includes(CommandSettings.Defer)) {
         ci.interaction.deferReply()
       }
       if (commandValidate(ci, command.main))
@@ -342,10 +362,11 @@ class CommandProcessor {
     if (subId) {
       const func: any = subcommands.get(subId)
       if (func) {
-        if (ci.message && func._assert) {
+        const settings = CommandMeta.getParentMeta(func)
+        if (ci.message && settings.includes(CommandSettings.SlashOnly)) {
           return false
         }
-        if (ci.interaction && func._defer && !ci.interaction.deferred) {
+        if (ci.interaction && settings.includes(CommandSettings.Defer) && !ci.interaction.deferred) {
           ci.interaction.deferReply()
         }
         if (commandValidate(ci, func))
