@@ -38,7 +38,7 @@ export const logger: pino.Logger & { catchError: typeof catchError, catchFatal: 
 
 export function bindLogger() {
   const client = Discord.Client
-  client.once(Events.ClientReady, readyClient => logger.info(`Logged in as ${readyClient.user.tag}`))
+  client.once(Events.ClientReady, readyClient => logger.silent(`Logged in as ${readyClient.user.tag}`))
   client.on(Events.Debug, info => logger.debug(info))
   client.on(Events.Warn, info => logger.warn(info))
   client.on(Events.Error, error => logger.error(error))
