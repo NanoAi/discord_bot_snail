@@ -1,9 +1,11 @@
 import { Collection, Events } from 'discord.js'
 import { UserDBController } from '@controllers/user'
 import { logger } from '@utils/logger'
+import NodeCache from 'node-cache'
 import * as Discord from '~/modules/discord'
 import dayjs from '~/modules/utils/dayjs'
 import { xpToLevel } from '~/modules/utils/levels'
+import { ForumController } from '~/controllers/forum'
 
 const allowedURLS = [
   'tenor.com',
@@ -19,6 +21,9 @@ const allowedURLS = [
   'twittpr.com',
   'cdn.discordapp.com',
 ]
+
+const forumController = new ForumController()
+const guildForumCache = new NodeCache({ stdTTL: 300, checkperiod: 30 })
 
 Discord.Client.on(Events.MessageCreate, async (message) => {
   const member = message.member
@@ -71,5 +76,27 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
     days = days > 5 ? 5 : days
     const xp = (days > 1) ? (dbUser.xp + 24) + (24 - Math.floor(24 / days)) : dbUser.xp
     await dbInstance.updateUser({ lastMessageDate: now, xp, level: xpToLevel(xp) })
+  }
+})
+
+Discord.Client.on(Events.MessageCreate, async (message) => {
+  const member = message.member
+  if (message.system || message.author.bot || !member)
+    return
+
+  if (!message.inGuild())
+    return
+
+  const channel = message.channel
+
+  if (channel.isThread() && channel.parentId) {
+    const cache: string[] = guildForumCache.get(message.guildId) || []
+    if (!cache.includes(channel.parentId)) {
+      console.log('CACHE:HIT')
+      console.log(await forumController.getForumById(channel.parentId))
+      cache.push(channel.parentId)
+      guildForumCache.set(message.guildId, cache)
+    }
+    console.log(cache)
   }
 })

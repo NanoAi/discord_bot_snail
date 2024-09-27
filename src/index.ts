@@ -71,8 +71,7 @@ const sourceDir = './src'
     await Drizzle.version()
 
     sLog('Loading Commands...')
-    // eslint-disable-next-line regexp/no-useless-escape
-    await declare(sourceDir, /commands[\/\\][^.].+\.ts/)
+    await declare(sourceDir, /commands[/\\][^.].+\.ts/)
 
     const commandCount = Discord.Commands.getMap().size
     sLog(`Started refreshing ${chalk.underline.bold(commandCount)} application (/) commands.`)
