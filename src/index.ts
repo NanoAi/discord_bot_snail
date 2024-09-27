@@ -9,6 +9,11 @@ import * as Discord from './modules/discord'
 import { bindLogger, sLog } from './modules/utils/logger'
 import declare from './modules/utils/declare'
 
+// Cleanup Console.
+console.log('\r\n'.repeat(12))
+console.clear()
+console.clear()
+
 console.log('~\nStarting...')
 
 // Create a new client instance
@@ -55,6 +60,7 @@ for (const [k, v] of Object.entries(env)) {
 
 Discord.Global.REST = new DRestClient().setToken(env.token)
 const rest = Discord.Global.REST
+const sourceDir = './src'
 
 ;(async () => {
   try {
@@ -65,7 +71,8 @@ const rest = Discord.Global.REST
     await Drizzle.version()
 
     sLog('Loading Commands...')
-    await declare('commands/*.ts')
+    // eslint-disable-next-line regexp/no-useless-escape
+    await declare(sourceDir, /commands[\/\\][^.].+\.ts/)
 
     const commandCount = Discord.Commands.getMap().size
     sLog(`Started refreshing ${chalk.underline.bold(commandCount)} application (/) commands.`)
@@ -77,7 +84,7 @@ const rest = Discord.Global.REST
     sLog(`Successfully reloaded ${chalk.underline.bold(commandCount)} application (/) commands.`)
 
     sLog('Loading Events...')
-    await declare('events/*.ts')
+    await declare(sourceDir, /events[/\\][^.].+\.ts/)
     sLog('Successfully bound all events.')
 
     Discord.Client.login(process.env.DISCORD_TOKEN)
