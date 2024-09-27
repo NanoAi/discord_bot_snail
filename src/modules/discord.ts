@@ -30,10 +30,6 @@ import { CommandMeta } from './decorators'
 import { Convert } from '~/modules/convert'
 import type * as DT from '~/types/discord'
 
-console.log('\r\n'.repeat(12))
-console.clear()
-console.clear()
-
 const intents: ClientOptions['intents'] = [
   GatewayIntentBits.Guilds,
   GatewayIntentBits.GuildMembers,
@@ -111,21 +107,17 @@ export class SubCommandType {
 /**
  * Command Variable Settings.
  */
-export class CommandVarSettings {
+export abstract class CommandVarSettings {
   /** This command is required. */
   static readonly Required = 0
   /** All left over variables will be propagated into this command. */
   static readonly TakeRest = 1
-  /** @alias Required */
-  static readonly R = this.Required
-  /** @alias TakeRest */
-  static readonly T = this.TakeRest
 }
 
 /**
  * Command Settings
  */
-export class CommandSettings {
+export abstract class CommandSettings {
   static readonly Defer = 0
   static readonly SlashOnly = 1
 }
