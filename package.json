@@ -1,7 +1,7 @@
 {
   "name": "discordbot-server",
   "version": "0.1.5",
-  "packageManager": "pnpm@9.10.0",
+  "packageManager": "pnpm@9.11.0",
   "description": "",
   "author": "NanoAi",
   "license": "ISC",
@@ -12,14 +12,15 @@
     "node": ">=22.0.0"
   },
   "scripts": {
+    "deps": "pnpm exec taze minor -r && pnpm exec taze major -r && echo.",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "preinstall": "npx only-allow pnpm",
     "prisma": "pnpm exec prisma format && pnpm exec prisma generate && pnpm prisma:fix",
     "prisma:fix": "pnpm exec eslint ./src/database/drizzle.schema.ts --fix",
     "prisma:push": "pnpm exec prisma db push && pnpm prisma:fix",
-    "start": "nodemon -e ts -w ./src -x pnpm run watch:serve",
-    "watch:serve": "tsx src/index.ts",
+    "start": "tsx src/index.ts",
+    "watch": "tsx watch src/index.ts",
     "v": "node -v"
   },
   "dependencies": {
@@ -34,7 +35,6 @@
     "morgan": "^1.10.0",
     "nanoid": "^5.0.7",
     "node-cache": "^5.1.2",
-    "nodemon": "^3.1.7",
     "ora": "^8.1.0",
     "pg": "^8.13.0",
     "pino": "^9.4.0",
@@ -42,7 +42,7 @@
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^2.27.3",
+    "@antfu/eslint-config": "^3.7.3",
     "@eslint/eslintrc": "^3.1.0",
     "@eslint/js": "^9.11.1",
     "@types/eslint": "^8.56.12",
@@ -51,7 +51,7 @@
     "drizzle-prisma-generator": "^0.1.7",
     "eslint": "^9.11.1",
     "prisma": "^5.20.0",
-    "taze": "^0.14.3",
+    "taze": "^0.17.2",
     "tsx": "^4.19.1",
     "typescript": "^5.6.2"
   }

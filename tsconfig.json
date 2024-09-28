@@ -1,12 +1,12 @@
 {
   "compilerOptions": {
-    "target": "ESNext", // Disallow inconsistently-cased references to the same file.
-    "baseUrl": "./src", // Specify module code generation
-    "rootDir": "./src", // Specify ECMAScript target version
-    "module": "ESNext", // Base directory to resolve non-absolute module names
+    "target": "ESNext", // Use latest ECMAScript features
+    "baseUrl": "./src", // Base path for module resolution
+    "rootDir": "./src", // Root folder for input files
+    "module": "ESNext", // Use ESNext module system
     "moduleResolution": "node", // Use Node.js module resolution strategy
     "paths": {
-      "~/*": ["./*"],
+      "~/*": ["./*"], // Aliases for cleaner import paths
       "@controllers/*": ["./controllers/*"],
       "@modules/*": ["./core/*"],
       "@core/*": ["./core/*"],
@@ -14,20 +14,20 @@
       "@utils/*": ["./core/utils/*"],
       "@schema": ["./database/drizzle.schema.ts"]
     },
-    "resolveJsonModule": true,
-    "allowJs": false, // Redirect output structure to the directory
-    "strict": true, // Specify the root directory of input files
-    "outDir": "./dist", // Enable all strict type-checking options
-    "esModuleInterop": true, // Skip type checking of all declaration files
-    "forceConsistentCasingInFileNames": true, // Enables emit interoperability between CommonJS and ES Modules
-    "skipLibCheck": true
+    "resolveJsonModule": true, // Enable importing .json files
+    "allowJs": false, // TypeScript files only, no .js
+    "strict": true, // Enable all strict type-checking options
+    "outDir": "./dist", // Output directory for compiled files
+    "esModuleInterop": true, // Compatibility between ES and CommonJS modules
+    "forceConsistentCasingInFileNames": true, // Enforce consistent file name casing
+    "skipLibCheck": true // Skip type checking of declaration files for faster builds
   },
   "include": [
-    "src/**/*.ts", // Include all .ts files in subdirectories under src
-    "types/**/*.d.ts" // Include all .d.ts files under `types`.
+    "src/**/*.ts", // Include all .ts files in src
+    "types/**/*.d.ts" // Include all declaration files
   ],
   "exclude": [
-    "node_modules", // Exclude node_modules
-    "dist" // Exclude dist directory
+    "node_modules", // Exclude dependencies
+    "dist" // Exclude the output directory
   ]
 }

@@ -54,7 +54,8 @@
     "pino",
     "preinstall",
     "softban",
-    "subcmd"
+    "subcmd",
+    "taze"
   ],
   "i18n-ally.localesPaths": [
     "lang"
