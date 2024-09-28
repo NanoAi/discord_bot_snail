@@ -51,7 +51,7 @@ export function CommandFactory(
   }
 }
 
-export class CommandMeta {
+export abstract class CommandMeta {
   private static mk = 'meta:settings'
   private static kp = '_lastMetaTarget'
 
@@ -106,7 +106,7 @@ export class CommandMeta {
   }
 }
 
-export class Factory {
+export abstract class Factory {
   private static updateCommand(metadata: { name: string, description: string }, command: DT.CommandStore) {
     Discord.Commands.getMap().set(metadata.name, {
       data: command.data,
@@ -190,7 +190,7 @@ export class Factory {
   }
 }
 
-export class Options {
+export abstract class Options {
   private static main(target: any, meta: DT.SubCommandMeta, config: any) {
     const vars: DT.SubCommandMeta[] = Reflect.getOwnMetadata('command:vars', target)
     if (!vars.includes(meta))
@@ -257,7 +257,7 @@ export class Options {
   }
 }
 
-export class Command {
+export abstract class Command {
   private static subCommand(
     target: any,
     mutator: (
