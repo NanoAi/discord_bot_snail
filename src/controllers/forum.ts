@@ -1,7 +1,7 @@
-import { Drizzle } from '~/core/utils/drizzle'
 import { eq } from 'drizzle-orm'
 import { Forum } from '@schema'
 import type { QueryResult } from 'pg'
+import { Drizzle } from '~/core/utils/drizzle'
 
 interface ForumData {
   forumId: string
