@@ -8,6 +8,7 @@
     "paths": {
       "~/*": ["./*"],
       "@controllers/*": ["./controllers/*"],
+      "@modules/*": ["./core/*"],
       "@core/*": ["./core/*"],
       "@types/*": ["./types/*"],
       "@utils/*": ["./core/utils/*"],
