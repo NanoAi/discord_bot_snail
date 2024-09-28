@@ -1,8 +1,8 @@
-import { Drizzle } from '@utils/drizzle' // Import the drizzle instance
 import { Action, Case, Guild, Ticket } from '@schema'
 import { eq } from 'drizzle-orm'
 import type { Guild as DiscordGuild } from 'discord.js'
 import type { GuildDB } from '../types/controllers'
+import { Drizzle } from '~/core/utils/drizzle' // Import the drizzle instance
 
 const db = Drizzle.db
 

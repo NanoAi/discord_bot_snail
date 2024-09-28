@@ -301,4 +301,4 @@ export class DirectMessage extends Reply {
   }
 }
 
-export * as DiscordInteraction from '~/modules/interactions'
+export * as DiscordInteraction from '~/core/interactions'

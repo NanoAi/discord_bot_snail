@@ -8,9 +8,9 @@
     "paths": {
       "~/*": ["./*"],
       "@controllers/*": ["./controllers/*"],
-      "@modules/*": ["./modules/*"],
+      "@core/*": ["./core/*"],
       "@types/*": ["./types/*"],
-      "@utils/*": ["./modules/utils/*"],
+      "@utils/*": ["./core/utils/*"],
       "@schema": ["./database/drizzle.schema.ts"]
     },
     "resolveJsonModule": true,

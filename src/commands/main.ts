@@ -1,14 +1,14 @@
 import type { Guild, User } from 'discord.js'
 import { MessageFlags } from 'discord.js'
 import { t as $t, t } from 'i18next'
-import { DiscordInteraction, LabelKeys as LK, Styles } from '~/modules/interactions'
-import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
+import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
+import { Command, CommandFactory, Factory, Options } from '~/core/decorators'
 import type { DT } from '~/types/discord'
 import { UserDBController } from '~/controllers/user'
-import * as Discord from '~/modules/discord'
-import { CVar, InteractionContextType as ICT } from '~/modules/discord'
+import * as Discord from '~/core/discord'
+import { CVar, InteractionContextType as ICT } from '~/core/discord'
 import { GuildDBController } from '~/controllers/guild'
-import { logger } from '~/modules/utils/logger'
+import { logger } from '~/core/utils/logger'
 
 @CommandFactory('shutdown', 'shutdown the bot.')
 export class ShutdownCommand {

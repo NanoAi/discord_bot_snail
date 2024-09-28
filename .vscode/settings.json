@@ -69,6 +69,9 @@
   "files.trimTrailingWhitespace": true,
 
   "vsicons.associations.files": [
-    { "icon": "typescriptdef", "extensions": [".types.ts"], "format": "svg" }
+    { "icon": "typescriptdef", "extensions": [".types.ts"], "format": "svg", "light": true }
+  ],
+  "vsicons.associations.folders": [
+    { "icon": "tools", "extensions": ["core"], "format": "svg", "light": true }
   ]
 }

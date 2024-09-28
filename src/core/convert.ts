@@ -2,7 +2,7 @@ import type { Channel } from 'discord.js'
 import * as Discord from './discord'
 import { SubCommandType as SBT } from './discord'
 import type { DT } from '~/types/discord'
-import * as DI from '~/modules/interactions'
+import * as DI from '~/core/interactions'
 
 // const SCT = Discord.SubCommandType
 

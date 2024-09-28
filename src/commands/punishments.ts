@@ -1,9 +1,9 @@
 import type { GuildMember, User } from 'discord.js'
 import { t as $t } from 'i18next'
-import { DiscordInteraction, LabelKeys as LK, Styles } from '~/modules/interactions'
-import { Command, CommandFactory, Factory } from '~/modules/decorators'
+import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
+import { Command, CommandFactory, Factory } from '~/core/decorators'
 import type { Args, DT } from '~/types/discord'
-import { Client, InteractionContextType as ICT } from '~/modules/discord'
+import { Client, InteractionContextType as ICT } from '~/core/discord'
 
 @Factory.setContexts(ICT.Guild)
 @CommandFactory('softban', 'Ban then immediately unban a user.')

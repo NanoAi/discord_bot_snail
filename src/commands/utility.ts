@@ -1,12 +1,9 @@
-import { Buffer } from 'node:buffer'
 import { BaseGuildTextChannel, type Channel, ForumChannel, type GuildMember, type Message, type User } from 'discord.js'
 import { t as $t, t } from 'i18next'
-import { DiscordInteraction, LabelKeys as LK, Styles } from '~/modules/interactions'
-import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
+import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
+import { Command, CommandFactory, Factory } from '~/core/decorators'
 import type { DT } from '~/types/discord'
-import { UserDBController } from '~/controllers/user'
-import { CVar, Client, InteractionContextType as ICT, PFlags } from '~/modules/discord'
-import { logger } from '~/modules/utils/logger'
+import { CVar, InteractionContextType as ICT, PFlags } from '~/core/discord'
 import { ForumController } from '~/controllers/forum'
 
 type bulkDeleteArgs = DT.Args<[

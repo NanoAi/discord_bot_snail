@@ -3,11 +3,11 @@ import * as process from 'node:process'
 
 import { REST as DRestClient, Events, Routes } from 'discord.js'
 import chalk from 'chalk'
-import { Drizzle } from '@utils/drizzle'
-import langConfig from '@utils/i18next.config'
-import * as Discord from './modules/discord'
-import { bindLogger, sLog } from './modules/utils/logger'
-import declare from './modules/utils/declare'
+import * as Discord from './core/discord'
+import { bindLogger, sLog } from './core/utils/logger'
+import declare from './core/utils/declare'
+import langConfig from '~/core/utils/i18next.config'
+import { Drizzle } from '~/core/utils/drizzle'
 
 // Cleanup Console.
 console.log('\r\n'.repeat(12))

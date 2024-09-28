@@ -1,10 +1,10 @@
 import { Collection, Events } from 'discord.js'
 import { UserDBController } from '@controllers/user'
-import { logger } from '@utils/logger'
 import NodeCache from 'node-cache'
-import * as Discord from '~/modules/discord'
-import dayjs from '~/modules/utils/dayjs'
-import { xpToLevel } from '~/modules/utils/levels'
+import { logger } from '~/core/utils/logger'
+import * as Discord from '~/core/discord'
+import dayjs from '~/core/utils/dayjs'
+import { xpToLevel } from '~/core/utils/levels'
 import { ForumController } from '~/controllers/forum'
 
 const allowedURLS = [

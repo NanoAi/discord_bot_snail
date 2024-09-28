@@ -1,9 +1,9 @@
-import { Drizzle } from '@utils/drizzle' // Import the Drizzle instance
 import { and, eq } from 'drizzle-orm'
 import type { GuildMember } from 'discord.js'
 import { Case, User } from '@schema'
 import type { UserDB } from '../types/controllers'
-import { nullDate } from '~/modules/utils/dayjs'
+import { Drizzle } from '~/core/utils/drizzle' // Import the Drizzle instance
+import { nullDate } from '~/core/utils/dayjs'
 
 const db = Drizzle.db
 

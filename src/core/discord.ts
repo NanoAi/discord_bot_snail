@@ -27,7 +27,7 @@ import NodeCache from 'node-cache'
 import { operators } from '../../admins.json'
 import { logger } from './utils/logger'
 import { CommandMeta } from './decorators'
-import { Convert } from '~/modules/convert'
+import { Convert } from '~/core/convert'
 import type * as DT from '~/types/discord'
 
 const intents: ClientOptions['intents'] = [

@@ -1,6 +1,6 @@
-import { Drizzle } from '@utils/drizzle'
 import { Action, Case, Ticket } from '@schema'
 import { eq } from 'drizzle-orm'
+import { Drizzle } from '~/core/utils/drizzle'
 
 const db = Drizzle.db
 

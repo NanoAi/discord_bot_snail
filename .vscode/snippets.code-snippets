@@ -4,12 +4,12 @@
     "body": [
       "import type { GuildMember, User } from 'discord.js'",
       "import { t as \\$t, t } from 'i18next'",
-      "import { DiscordInteraction, LabelKeys as LK, Styles } from '~/modules/interactions'",
-      "import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'",
+      "import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'",
+      "import { Command, CommandFactory, Factory, Options } from '~/core/decorators'",
       "import type { Args, DT } from '~/types/discord'",
       "import { UserDBController } from '~/controllers/user'",
-      "import { ApplicationIntegrationType as AIT, InteractionContextType as ICT, PFlags } from '~/modules/discord'",
-      "import { logger } from '~/modules/utils/logger'",
+      "import { ApplicationIntegrationType as AIT, InteractionContextType as ICT, PFlags } from '~/core/discord'",
+      "import { logger } from '~/core/utils/logger'",
       "",
       ""
     ],

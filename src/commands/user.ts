@@ -1,12 +1,12 @@
 import type { GuildMember, User } from 'discord.js'
 import { t as $t, t } from 'i18next'
-import { DiscordInteraction, LabelKeys as LK, Styles } from '~/modules/interactions'
-import { Command, CommandFactory, Factory, Options } from '~/modules/decorators'
+import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
+import { Command, CommandFactory, Factory, Options } from '~/core/decorators'
 import type { Args, DT } from '~/types/discord'
 import { UserDBController } from '~/controllers/user'
-import dayjs from '~/modules/utils/dayjs'
-import { CVar, InteractionContextType as ICT, PFlags } from '~/modules/discord'
-import { xpToLevel } from '~/modules/utils/levels'
+import dayjs from '~/core/utils/dayjs'
+import { CVar, InteractionContextType as ICT, PFlags } from '~/core/discord'
+import { xpToLevel } from '~/core/utils/levels'
 
 async function giveKudos(
   reply: DiscordInteraction.Reply,
