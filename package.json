@@ -12,7 +12,7 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "deps": "pnpm exec taze minor -r && pnpm exec taze major -r && echo.",
+    "deps": "echo --MINOR-- && pnpm exec taze minor -r && echo --MAJOR-- && pnpm exec taze major -r && echo.",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "preinstall": "npx only-allow pnpm",
@@ -27,7 +27,7 @@
     "@types/pg": "^8.11.10",
     "chalk": "^5.3.0",
     "dayjs": "^1.11.13",
-    "discord.js": "^14.16.2",
+    "discord.js": "^14.16.3",
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.33.0",
     "i18next": "^23.15.1",

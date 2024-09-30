@@ -1,3 +1,4 @@
+import type { Message, OmitPartialGroupDMChannel } from 'discord.js'
 import { Collection, Events } from 'discord.js'
 import { UserDBController } from '@controllers/user'
 import NodeCache from 'node-cache'
@@ -6,6 +7,7 @@ import * as Discord from '~/core/discord'
 import dayjs from '~/core/utils/dayjs'
 import { xpToLevel } from '~/core/utils/levels'
 import { ForumController } from '~/controllers/forum'
+import type { ForumDB } from '~/types/controllers'
 
 const allowedURLS = [
   'tenor.com',
@@ -79,6 +81,26 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
   }
 })
 
+async function bumpHandler(settings: ForumDB['select'], message: OmitPartialGroupDMChannel<Message<boolean>>) {
+  const content = message.content.toLowerCase()
+  const member = message.member!
+  const regex = /(?:^|^.\{,6\})<:\w+:\d+>|^bump|^solve/
+
+  if (settings.bump <= 0)
+    return
+
+  if (content.length <= 6 || regex.test(content)) {
+    try {
+      await message.react('‼️')
+      await member.timeout(settings.bump * 1000, 'Thread Bumping.')
+    }
+    catch (e: any) {
+      if (e.code !== 50013)
+        logger.error(e)
+    }
+  }
+}
+
 Discord.Client.on(Events.MessageCreate, async (message) => {
   const member = message.member
   if (message.system || message.author.bot || !member)
@@ -87,16 +109,19 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
   if (!message.inGuild())
     return
 
+  const guildId = message.guildId
   const channel = message.channel
 
   if (channel.isThread() && channel.parentId) {
-    const cache: string[] = guildForumCache.get(message.guildId) || []
-    if (!cache.includes(channel.parentId)) {
-      console.log('CACHE:HIT')
-      console.log(await forumController.getForumById(channel.parentId))
-      cache.push(channel.parentId)
+    const cache: ForumDB['select'][] = guildForumCache.get(message.guildId) || []
+    const index = cache.findIndex(v => v.id === channel.parentId)
+    if (index === -1) {
+      const db = await forumController.getGuildForumById(guildId, channel.parentId)
+      cache.push(db[0])
       guildForumCache.set(message.guildId, cache)
+      bumpHandler(db[0], message)
+      return
     }
-    console.log(cache)
+    bumpHandler(cache[index], message)
   }
 })

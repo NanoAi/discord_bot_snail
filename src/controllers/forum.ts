@@ -1,13 +1,14 @@
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { Forum } from '@schema'
 import type { QueryResult } from 'pg'
 import { Drizzle } from '~/core/utils/drizzle'
+import type { ForumDB } from '~/types/controllers'
 
 interface ForumData {
   forumId: string
   guildId: string
   managed: boolean
-  bump: boolean
+  bump: number
 }
 
 const db = Drizzle.db
@@ -31,13 +32,12 @@ export class ForumController {
   }
 
   // Get a forum by ID
-  async getForumById(forumId: string):
-  Promise<{ id: string, guildId: string, managed: boolean, bump: boolean }[]> { // Adjust return type if needed
-    return await db.select().from(Forum).where(eq(Forum.id, forumId))
+  async getGuildForumById(guildId: string, forumId: string): Promise<ForumDB['select'][]> {
+    return await db.select().from(Forum).where(and(eq(Forum.guildId, guildId), eq(Forum.id, forumId)))
   }
 
   // Get all forums for a specific guild
-  async getForumsByGuild(guildId: string): Promise<any[]> { // Adjust return type if needed
+  async getForumsByGuild(guildId: string): Promise<ForumDB['select'][]> {
     return await db.select().from(Forum).where(eq(Forum.guildId, guildId))
   }
 

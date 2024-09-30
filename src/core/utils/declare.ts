@@ -1,8 +1,15 @@
 import { extname, join, resolve } from 'node:path'
 import { promises as fs } from 'node:fs'
 import { pathToFileURL } from 'node:url'
+import NodeCache from 'node-cache'
+import type { Maybe } from '~/types/util'
+
+const fileCache = new NodeCache({ stdTTL: 24, checkperiod: 12 })
 
 async function getFiles(dir: string): Promise<string[]> {
+  const cache: Maybe<string[]> = fileCache.get(0)
+  if (cache)
+    return cache
   const dirents = await fs.readdir(dir, { withFileTypes: true })
   const files = await Promise.all(dirents.map((dirent) => {
     const res = join(dir, dirent.name)
@@ -14,6 +21,7 @@ async function getFiles(dir: string): Promise<string[]> {
 export default async function declare(from: string, pattern: RegExp): Promise<any[]> {
   try {
     const files = await getFiles(from)
+    fileCache.set(0, files)
 
     const filteredFiles = files
       .filter(path => pattern.test(path))
@@ -32,3 +40,8 @@ export default async function declare(from: string, pattern: RegExp): Promise<an
   }
   throw new Error(`Couldn't import files in "${pattern}".`)
 }
+
+fileCache.on('expired', () => {
+  fileCache.flushAll()
+  fileCache.close()
+})

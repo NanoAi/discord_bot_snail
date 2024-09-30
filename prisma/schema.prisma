@@ -71,7 +71,7 @@ model Forum {
   id      String  @id
   guildId String
   managed Boolean @default(false)
-  bump    Boolean @default(false)
+  bump    Int     @default(0)
 
   guild Guild @relation(fields: [guildId], references: [id])
 }

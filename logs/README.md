@@ -1,1 +1,1 @@
-Log files are automaticlly added in here.
+Log files are automatically added in here.

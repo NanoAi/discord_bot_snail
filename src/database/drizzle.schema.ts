@@ -88,7 +88,7 @@ export const Forum = pgTable('Forum', {
   id: text('id').notNull().primaryKey(),
   guildId: text('guildId').notNull(),
   managed: boolean('managed').notNull(),
-  bump: boolean('bump').notNull(),
+  bump: integer('bump').notNull(),
 }, Forum => ({
   Forum_guild_fkey: foreignKey({
     name: 'Forum_guild_fkey',
