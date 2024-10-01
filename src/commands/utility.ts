@@ -1,7 +1,7 @@
 import { BaseGuildTextChannel, type Channel, ForumChannel, type GuildMember, type Message, type User } from 'discord.js'
 import { t as $t } from 'i18next'
 import { ForumController } from '~/controllers/forum'
-import { Command, CommandFactory, Factory } from '~/core/decorators'
+import { Command, CommandFactory, Factory, Options } from '~/core/decorators'
 import { CVar, InteractionContextType as ICT, PFlags } from '~/core/discord'
 import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
 import type { DT } from '~/types/discord'
@@ -83,7 +83,8 @@ type ThreadCommandArgs = DT.Args<[
 @CommandFactory('thread', 'Setup thread controller for a target thread.')
 export class ThreadCommand {
   @Command.addBooleanOption('managed', 'Managed threads/answers.')
-  @Command.addBooleanOption('bumps', 'The amount of time to timeout for bumping. (0 to disable.)')
+  @Options.number(config => config.setMinValue(0))
+  @Command.addIntegerOption('bumps', 'The amount of time to timeout for bumping. (0 to disable.)')
   @Command.addChannelOption('channel', 'The channel to target.', [CVar.Required])
   @Command.addSubCommand('bind', 'make the bot control a forum.')
   public static async setup(ci: DT.ChatInteraction, args: ThreadCommandArgs) {
@@ -113,7 +114,7 @@ export class ThreadCommand {
       forumId: forum.id,
       guildId: reply.getGuild()!.id,
       managed: args.managed(false),
-      bump: args.bumps(0),
+      bump: args.bumps(300),
     })
 
     await reply.label(LK.ID, callerId).style(Styles.Success).ephemeral(true).send(`Thread Settings Created for ${forum}.`)

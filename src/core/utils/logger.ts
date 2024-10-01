@@ -1,24 +1,35 @@
+import fs from 'node:fs'
 import dayjs from 'dayjs'
 import { Events } from 'discord.js'
 import { pino } from 'pino'
+import pretty from 'pino-pretty'
+import { ENV } from '~/index'
 import * as Discord from '../discord'
 
-const pinoTransport = pino.transport({
-  targets: [
-    {
-      level: 'trace',
-      target: 'pino/file',
-      options: { destination: `logs/${dayjs(new Date()).format('YYYY-MM-DD')}.log` },
-    },
-    {
-      level: 'trace',
-      target: 'pino-pretty',
-      options: { destination: 1 },
-    },
-  ],
+function pinoPath() {
+  return `logs/${dayjs(new Date()).format('YYYY-MM-DD')}.log`
+}
+
+const pinoPretty = pretty({
+  colorize: true, // Colorize logs in console
+  levelFirst: true, // Show level first in the log output
+  translateTime: 'HH:MM:ss.l', // Human-readable timestamp
 })
 
-const _pino = pino({}, pinoTransport)
+// Define the streams
+const streams = [
+  { level: 'info', stream: pinoPretty }, // Pretty print for info level and above to console
+  { level: 'debug', stream: fs.createWriteStream(pinoPath(), { flags: 'a' }) }, // Debug level and above to file
+]
+
+// Create the logger with multi-stream
+const _pino = pino(
+  {
+    level: 'debug', // Minimum log level
+  },
+  pino.multistream(streams),
+)
+
 const pinoErrorBound = _pino.error.bind(_pino)
 const pinoFatalBound = _pino.fatal.bind(_pino)
 
@@ -38,7 +49,9 @@ export const logger: pino.Logger & { catchError: typeof catchError, catchFatal: 
 
 export function bindLogger() {
   const client = Discord.Client
-  client.once(Events.ClientReady, readyClient => logger.silent(`Logged in as ${readyClient.user.tag}`))
+  client.once(Events.ClientReady, (readyClient) => {
+    logger.debug(`Logged in as ${readyClient.user.tag} in ${dayjs().diff(ENV.START_TIME, 'ms')}ms`)
+  })
   client.on(Events.Debug, info => logger.debug(info))
   client.on(Events.Warn, info => logger.warn(info))
   client.on(Events.Error, error => logger.error(error))

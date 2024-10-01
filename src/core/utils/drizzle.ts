@@ -1,14 +1,14 @@
-import { env } from 'node:process'
 import { sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
+import { ENV } from '~/index'
 import { logger } from './logger'
 
-if (!env.DATABASE_URL)
+if (!ENV.DATABASE_URL)
   throw new Error('Database Settings Not Defined.')
 
 const pool = new Pool({
-  connectionString: env.DATABASE_URL,
+  connectionString: ENV.DATABASE_URL,
   ssl: false,
 })
 
