@@ -1,12 +1,12 @@
 import type { Message, OmitPartialGroupDMChannel } from 'discord.js'
-import { Collection, Events } from 'discord.js'
 import { UserDBController } from '@controllers/user'
+import { Collection, Events } from 'discord.js'
 import NodeCache from 'node-cache'
-import { logger } from '~/core/utils/logger'
+import { ForumController } from '~/controllers/forum'
 import * as Discord from '~/core/discord'
 import dayjs from '~/core/utils/dayjs'
 import { xpToLevel } from '~/core/utils/levels'
-import { ForumController } from '~/controllers/forum'
+import { logger } from '~/core/utils/logger'
 import type { ForumDB } from '~/types/controllers'
 
 const allowedURLS = [

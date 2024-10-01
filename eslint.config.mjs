@@ -6,5 +6,6 @@ export default antfu({
     'no-console': 'off',
     'max-len': ['warn', { code: 125, tabWidth: 2 }],
     'linebreak-style': ['error', 'unix'],
+    'style/no-mixed-operators': ['error'],
   },
 })

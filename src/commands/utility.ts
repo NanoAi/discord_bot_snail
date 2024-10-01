@@ -1,10 +1,10 @@
 import { BaseGuildTextChannel, type Channel, ForumChannel, type GuildMember, type Message, type User } from 'discord.js'
-import { t as $t, t } from 'i18next'
-import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
-import { Command, CommandFactory, Factory } from '~/core/decorators'
-import type { DT } from '~/types/discord'
-import { CVar, InteractionContextType as ICT, PFlags } from '~/core/discord'
+import { t as $t } from 'i18next'
 import { ForumController } from '~/controllers/forum'
+import { Command, CommandFactory, Factory } from '~/core/decorators'
+import { CVar, InteractionContextType as ICT, PFlags } from '~/core/discord'
+import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
+import type { DT } from '~/types/discord'
 
 type bulkDeleteArgs = DT.Args<[
   ['channel', Channel],
@@ -29,22 +29,20 @@ export class BulkCommands {
 
     const reply = new DiscordInteraction.Reply(ci)
     const caller = reply.getUser()
-    const callerId = (caller && caller.id || '<unknown>')
+    const callerId = (caller && caller.id) || '<unknown>'
     const channel = args.channel(undefined)
     const amount = Math.max(0, Math.min(Number(args.amount(1000)), 1000))
     const around = args.around(undefined)
 
     if (!channel) {
       msg = $t('command.error.vars.notfound', { argument: 'channel' })
-      await reply.label(LK.ID, callerId).style(Styles.Error)
-        .ephemeral(true).send(msg)
+      await reply.label(LK.ID, callerId).style(Styles.Error).ephemeral(true).send(msg)
       return
     }
 
     if (!channel.isTextBased() || !(channel instanceof BaseGuildTextChannel)) {
       msg = $t('command.error.vars.expected', { argument: 'channel', expected: 'text based guild channel' })
-      await reply.label(LK.ID, callerId).style(Styles.Error)
-        .ephemeral(true).send(msg)
+      await reply.label(LK.ID, callerId).style(Styles.Error).ephemeral(true).send(msg)
       return
     }
 
@@ -67,14 +65,17 @@ export class BulkCommands {
     const msgCollection = (await channel.messages.fetch(searchSettings)).filter(filter)
 
     const deletedMessages = await channel.bulkDelete(msgCollection)
-    await reply.label(LK.ID, callerId).style(Styles.Success)
-      .ephemeral(true).send(`Deleted ${deletedMessages.size} Messages in ${channel}.`)
+    await reply
+      .label(LK.ID, callerId)
+      .style(Styles.Success)
+      .ephemeral(true)
+      .send(`Deleted ${deletedMessages.size} Messages in ${channel}.`)
   }
 }
 
 type ThreadCommandArgs = DT.Args<[
   ['channel', Channel],
-  ['bumps', boolean],
+  ['bumps', number],
   ['managed', boolean],
 ]>
 
@@ -82,26 +83,28 @@ type ThreadCommandArgs = DT.Args<[
 @CommandFactory('thread', 'Setup thread controller for a target thread.')
 export class ThreadCommand {
   @Command.addBooleanOption('managed', 'Managed threads/answers.')
-  @Command.addBooleanOption('bumps', 'Allow/disallow bumping.')
+  @Command.addBooleanOption('bumps', 'The amount of time to timeout for bumping. (0 to disable.)')
   @Command.addChannelOption('channel', 'The channel to target.', [CVar.Required])
   @Command.addSubCommand('bind', 'make the bot control a forum.')
   public static async setup(ci: DT.ChatInteraction, args: ThreadCommandArgs) {
     const reply = new DiscordInteraction.Reply(ci)
     const caller = reply.getUser()
-    const callerId = (caller && caller.id || '<unknown>')
+    const callerId = (caller && caller.id) || '<unknown>'
     const forum = args.channel()
     const member: GuildMember | undefined = await reply.getGuildMember(caller)
 
     if (member && !member.permissions.has(PFlags.KickMembers, true)) {
-      await reply.label(LK.ID, callerId).style(Styles.Error)
-        .ephemeral(true).send($t('command.error.permissions', { cmd: 'thread setup' }))
+      await reply
+        .label(LK.ID, callerId)
+        .style(Styles.Error)
+        .ephemeral(true)
+        .send($t('command.error.permissions', { cmd: 'thread setup' }))
       return
     }
 
     if (!(forum instanceof ForumChannel)) {
       const msg = $t('command.error.vars.expected', { argument: 'channel', expected: 'a forum channel' })
-      await reply.label(LK.ID, callerId).style(Styles.Error)
-        .ephemeral(true).send(msg)
+      await reply.label(LK.ID, callerId).style(Styles.Error).ephemeral(true).send(msg)
       return
     }
 
@@ -110,11 +113,10 @@ export class ThreadCommand {
       forumId: forum.id,
       guildId: reply.getGuild()!.id,
       managed: args.managed(false),
-      bump: args.bumps(false),
+      bump: args.bumps(0),
     })
 
-    await reply.label(LK.ID, callerId).style(Styles.Success)
-      .ephemeral(true).send(`Thread Settings Created for ${forum}.`)
+    await reply.label(LK.ID, callerId).style(Styles.Success).ephemeral(true).send(`Thread Settings Created for ${forum}.`)
   }
 
   @Command.addChannelOption('channel', 'The channel to target.', [CVar.Required])
@@ -122,27 +124,28 @@ export class ThreadCommand {
   public static async remove(ci: DT.ChatInteraction, args: DT.Args<[['channel', Channel]]>) {
     const reply = new DiscordInteraction.Reply(ci)
     const caller = reply.getUser()
-    const callerId = (caller && caller.id || '<unknown>')
+    const callerId = (caller && caller.id) || '<unknown>'
     const forum = args.channel()
     const member: GuildMember | undefined = await reply.getGuildMember(caller)
 
     if (member && !member.permissions.has(PFlags.KickMembers, true)) {
-      await reply.label(LK.ID, callerId).style(Styles.Error)
-        .ephemeral(true).send($t('command.error.permissions', { cmd: 'thread setup' }))
+      await reply
+        .label(LK.ID, callerId)
+        .style(Styles.Error)
+        .ephemeral(true)
+        .send($t('command.error.permissions', { cmd: 'thread setup' }))
       return
     }
 
     if (!(forum instanceof ForumChannel)) {
       const msg = $t('command.error.vars.expected', { argument: 'channel', expected: 'a forum channel' })
-      await reply.label(LK.ID, callerId).style(Styles.Error)
-        .ephemeral(true).send(msg)
+      await reply.label(LK.ID, callerId).style(Styles.Error).ephemeral(true).send(msg)
       return
     }
 
     const controller = new ForumController()
     await controller.deleteForum(forum.id)
 
-    await reply.label(LK.ID, callerId).style(Styles.Success)
-      .ephemeral(true).send(`Thread Settings Deleted for ${forum}.`)
+    await reply.label(LK.ID, callerId).style(Styles.Success).ephemeral(true).send(`Thread Settings Deleted for ${forum}.`)
   }
 }

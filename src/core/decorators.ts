@@ -11,13 +11,13 @@ import {
   SlashCommandBuilder,
   SlashCommandSubcommandBuilder,
 } from 'discord.js'
-import 'reflect-metadata'
+import type * as DT from '~/types/discord'
 
 import * as Discord from './discord'
 import { CommandSettings, CommandVarSettings, SubCommandType as SCT } from './discord'
 import Deferrer from './utils/deferrer'
 import getMethods from './utils/method'
-import type * as DT from '~/types/discord'
+import 'reflect-metadata'
 
 const defer = new Deferrer()
 
@@ -323,10 +323,10 @@ export abstract class Command {
     return (command: any) => {
       const lastMetaTarget = CommandMeta.get(target)
       const cmdOptions: DT.Configs['options'] = target.commandOptions
-      const wrapper = cmdOptions && cmdOptions.get(name) || undefined
+      const wrapper = (cmdOptions && cmdOptions.get(name)) || undefined
       // If no settings passed, pull from last known metadata. (Sanity check via argument name.)
       if (lastMetaTarget.name === name && settings.length === 0)
-        settings = lastMetaTarget && (lastMetaTarget.settings as any) || []
+        settings = (lastMetaTarget && lastMetaTarget.settings) || []
       let re = command
         .setName(name)
         .setDescription(description)

@@ -1,7 +1,7 @@
-import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
 import { Command, CommandFactory, Factory, Options } from '~/core/decorators'
-import type { DT } from '~/types/discord'
 import { ApplicationIntegrationType as AIT, InteractionContextType as ICT, PFlags } from '~/core/discord'
+import { DiscordInteraction } from '~/core/interactions'
+import type { DT } from '~/types/discord'
 
 @Factory.setContexts(ICT.Guild)
 @Factory.setPermissions([PFlags.Administrator])

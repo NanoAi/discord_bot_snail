@@ -1,9 +1,9 @@
 import type { GuildMember, User } from 'discord.js'
 import { t as $t } from 'i18next'
-import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
 import { Command, CommandFactory, Factory } from '~/core/decorators'
-import type { Args, DT } from '~/types/discord'
 import { Client, InteractionContextType as ICT } from '~/core/discord'
+import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
+import type { Args, DT } from '~/types/discord'
 
 @Factory.setContexts(ICT.Guild)
 @CommandFactory('softban', 'Ban then immediately unban a user.')
@@ -28,8 +28,11 @@ export class SoftBanCommand {
     }
 
     try {
-      const dm = new DiscordInteraction.DirectMessage(ci)
-      await dm.label(LK.ID, member.user.id).style(Styles.Error).to(member.user)
+      const directMessage = new DiscordInteraction.DirectMessage(ci)
+      await directMessage
+        .label(LK.ID, member.user.id)
+        .style(Styles.Error)
+        .to(member.user)
         .send($t(`you.${args.kick() ? 'kicked' : 'banned'}`))
     }
     catch {
@@ -69,8 +72,7 @@ export class KickCommand {
 
     try {
       const dm = new DiscordInteraction.DirectMessage(ci)
-      await dm.label(LK.ID, member.user.id).style(Styles.Error).to(member.user)
-        .send($t('you.kicked'))
+      await dm.label(LK.ID, member.user.id).style(Styles.Error).to(member.user).send($t('you.kicked'))
     }
     catch {
       await reply.label(LK.ID, member.user.id).style(Styles.Error).send($t('command.error.noDM', { user: user.username }))
@@ -81,8 +83,7 @@ export class KickCommand {
       await reply.label(LK.ID, member.user.id).style(Styles.Success).send(`${member} was kicked.`)
     }
     catch {
-      await reply.label(LK.ID, member.user.id).style(Styles.Error)
-        .send($t('command.error.unknown', { cmd: 'kick' }))
+      await reply.label(LK.ID, member.user.id).style(Styles.Error).send($t('command.error.unknown', { cmd: 'kick' }))
     }
   }
 }
@@ -109,8 +110,7 @@ export class BanCommand {
 
     try {
       const dm = new DiscordInteraction.DirectMessage(ci)
-      await dm.label(LK.ID, member.user.id).style(Styles.Error).to(member.user)
-        .send($t('you.banned'))
+      await dm.label(LK.ID, member.user.id).style(Styles.Error).to(member.user).send($t('you.banned'))
     }
     catch {
       await reply.label(LK.ID, member.user.id).style(Styles.Error).send($t('command.error.noDM', { user: user.username }))

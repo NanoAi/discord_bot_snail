@@ -94,7 +94,7 @@ export class CommandInteraction {
 
   getGuild() {
     const ci = this.ci
-    const guild = ci.interaction && ci.interaction.guild || ci.message && ci.message.guild || undefined
+    const guild = (ci.interaction && ci.interaction.guild) || (ci.message && ci.message.guild) || undefined
     return guild
   }
 
@@ -209,7 +209,7 @@ export class Reply extends CommandInteraction {
       this.embed.setFooter({ iconURL: settings.style.icon, text: `GU: ${this.getBoth().guildId}` })
 
     if (!options.noReplace) {
-      response = response.replaceAll('%username%', _i && _i.user.username || message.author.username)
+      response = response.replaceAll('%username%', (_i && _i.user.username) || message.author.username)
 
       if (!settings.useTitle)
         embed.setDescription(`**${response}**`)
@@ -233,7 +233,8 @@ export class Reply extends CommandInteraction {
       else {
         return await message.reply({ embeds: [embed], flags: options.flags })
       }
-    } catch {
+    }
+    catch {
       // TODO: Add a "console" channel to catch errors etc.
       if (message.channel.isSendable())
         message.channel.send({ embeds: [embed], flags: options.flags })
@@ -296,7 +297,7 @@ export class DirectMessage extends Reply {
     return await this.user.send({
       embeds: [embed],
       flags: options.flags,
-      components: this.actionRow && [this.actionRow] || undefined,
+      components: (this.actionRow && [this.actionRow]) || undefined,
     })
   }
 }

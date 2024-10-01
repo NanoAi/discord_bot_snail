@@ -1,13 +1,13 @@
-import 'dotenv/config'
 import * as process from 'node:process'
+import chalk from 'chalk'
 
 import { REST as DRestClient, Events, Routes } from 'discord.js'
-import chalk from 'chalk'
-import * as Discord from './core/discord'
-import { bindLogger, sLog } from './core/utils/logger'
-import declare from './core/utils/declare'
-import langConfig from '~/core/utils/i18next.config'
 import { Drizzle } from '~/core/utils/drizzle'
+import langConfig from '~/core/utils/i18next.config'
+import * as Discord from './core/discord'
+import declare from './core/utils/declare'
+import { bindLogger, sLog } from './core/utils/logger'
+import 'dotenv/config'
 
 // Cleanup Console.
 console.log('\r\n'.repeat(12))

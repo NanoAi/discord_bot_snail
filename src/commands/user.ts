@@ -1,12 +1,12 @@
 import type { GuildMember, User } from 'discord.js'
-import { t as $t, t } from 'i18next'
-import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
-import { Command, CommandFactory, Factory, Options } from '~/core/decorators'
-import type { Args, DT } from '~/types/discord'
+import { t as $t } from 'i18next'
 import { UserDBController } from '~/controllers/user'
-import dayjs from '~/core/utils/dayjs'
+import { Command, CommandFactory, Factory, Options } from '~/core/decorators'
 import { CVar, InteractionContextType as ICT, PFlags } from '~/core/discord'
+import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
+import dayjs from '~/core/utils/dayjs'
 import { xpToLevel } from '~/core/utils/levels'
+import type { Args, DT } from '~/types/discord'
 
 async function giveKudos(
   reply: DiscordInteraction.Reply,
@@ -19,35 +19,33 @@ async function giveKudos(
   amount = Math.round(Math.max(-3000, Math.min(Number(amount), 3000)))
 
   if (amount === 0) {
-    await reply.label(LK.ID, caller.user.id).style(Styles.Misc)
-      .send('I uh... let\'s just pretend that worked.')
+    await reply.label(LK.ID, caller.user.id).style(Styles.Misc).send('I uh... let\'s just pretend that worked.')
     return
   }
 
   if (!admin && caller === target) {
-    await reply.label(LK.ID, caller.user.id).style(Styles.Error)
-      .send('You can\'t give `kudos` to yourself.')
+    await reply.label(LK.ID, caller.user.id).style(Styles.Error).send('You can\'t give `kudos` to yourself.')
     return
   }
 
   if (!target) {
-    await reply.label(LK.ID, caller.user.id).style(Styles.Error)
-      .send(`I couldn't find ${target} in ${reply.getGuild()}.`)
+    await reply.label(LK.ID, caller.user.id).style(Styles.Error).send(`I couldn't find ${target} in ${reply.getGuild()}.`)
     return
   }
 
-  const dbCallForCaller = admin && undefined || new UserDBController(caller)
-  const callerData = admin && undefined || await dbCallForCaller.getUser()
+  const dbCallForCaller = (admin && undefined) || new UserDBController(caller)
+  const callerData = (admin && undefined) || await dbCallForCaller.getUser()
 
   if (!admin) {
     if (Math.abs(dayjs(callerData.createdAt).diff(callerData.lastKudosDate, 'd')) < 1) {
-      await reply.label(LK.ID, caller.user.id).style(Styles.Error)
+      await reply
+        .label(LK.ID, caller.user.id)
+        .style(Styles.Error)
         .send('You must wait a day before you may give `kudos`, sorry.')
       return
     }
     if (dayjs().diff(callerData.lastKudosDate, 'd') < 1) {
-      await reply.label(LK.ID, caller.user.id).style(Styles.Error)
-        .send('You may only give `kudos` once a day, sorry.')
+      await reply.label(LK.ID, caller.user.id).style(Styles.Error).send('You may only give `kudos` once a day, sorry.')
       return
     }
   }
@@ -71,11 +69,17 @@ async function giveKudos(
       await dbCallForCaller.updateUser({ xp: amountLeft, lastKudosDate: new Date() })
 
     if (amount > 0) {
-      await reply.label(LK.ID, caller.user.id).ephemeral(ephemeral).style(Styles.Success)
+      await reply
+        .label(LK.ID, caller.user.id)
+        .ephemeral(ephemeral)
+        .style(Styles.Success)
         .send(`${caller} has awarded ${amount} tokens to ${target}.`, { flags: 'SuppressNotifications' })
     }
     else {
-      await reply.label(LK.ID, caller.user.id).ephemeral(ephemeral).style(Styles.Warn)
+      await reply
+        .label(LK.ID, caller.user.id)
+        .ephemeral(ephemeral)
+        .style(Styles.Warn)
         .send(`${caller} has removed ${Math.abs(amount)} tokens from ${target}.`, { flags: 'SuppressNotifications' })
     }
   }

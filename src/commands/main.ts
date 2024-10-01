@@ -1,14 +1,14 @@
 import type { Guild, User } from 'discord.js'
 import { MessageFlags } from 'discord.js'
-import { t as $t, t } from 'i18next'
-import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
-import { Command, CommandFactory, Factory, Options } from '~/core/decorators'
-import type { DT } from '~/types/discord'
+import { t as $t } from 'i18next'
+import { GuildDBController } from '~/controllers/guild'
 import { UserDBController } from '~/controllers/user'
+import { Command, CommandFactory, Factory, Options } from '~/core/decorators'
 import * as Discord from '~/core/discord'
 import { CVar, InteractionContextType as ICT } from '~/core/discord'
-import { GuildDBController } from '~/controllers/guild'
+import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
 import { logger } from '~/core/utils/logger'
+import type { DT } from '~/types/discord'
 
 @CommandFactory('shutdown', 'shutdown the bot.')
 export class ShutdownCommand {
@@ -52,8 +52,7 @@ export class ClearPermsCache {
 
     // eslint-disable-next-line no-control-regex
     const safeName = guild.name.replaceAll(/[`\\\u0000-\u001F\u007F-\u009F]/g, '')
-    await reply.label(LK.GUILD, guild.id).style(Styles.Success)
-      .send(`Cleared Permissions Cache for "\`${safeName}\`".`)
+    await reply.label(LK.GUILD, guild.id).style(Styles.Success).send(`Cleared Permissions Cache for "\`${safeName}\`".`)
   }
 }
 
@@ -69,8 +68,8 @@ export class SendDM {
     const user: User = args.user()
 
     if (user === Discord.Client.user) {
-      await reply.label(LK.ID, user.id).style(Styles.Error)
-        .ephemeral(true).send($t('command.error.noDM', { user: user.username }))
+      const msg = reply.label(LK.ID, user.id).style(Styles.Error).ephemeral(true)
+      await msg.send($t('command.error.noDM', { user: user.username }))
       return
     }
 
@@ -81,8 +80,11 @@ export class SendDM {
     }
     catch (error) {
       console.log(error)
-      await reply.label(LK.ID, user.id).style(Styles.Error)
-        .ephemeral(true).send($t('command.error.noDM', { user: user.username }))
+      await reply
+        .label(LK.ID, user.id)
+        .style(Styles.Error)
+        .ephemeral(true)
+        .send($t('command.error.noDM', { user: user.username }))
     }
   }
 }
@@ -102,8 +104,7 @@ export class SimulateCommand {
     const member = await re.getGuildMember(user)
 
     if (user === Discord.Client.user) {
-      await re.label(LK.ID, user.id).style(Styles.Error)
-        .send($t('command.error.noDM', { user: user.username }))
+      await re.label(LK.ID, user.id).style(Styles.Error).send($t('command.error.noDM', { user: user.username }))
       return
     }
 

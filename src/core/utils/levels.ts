@@ -3,7 +3,7 @@ function getRequiredXP(level: number) {
 }
 
 const levels: { level: number, xpRequirement: number, next: number }[] = []
-for (const k in [...Array(11).keys()]) {
+for (const k in [...Array.from({ length: 11 }).keys()]) {
   const x = Number(k)
   levels.push({
     level: x + 1,

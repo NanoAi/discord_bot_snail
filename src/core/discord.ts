@@ -1,4 +1,3 @@
-import process from 'node:process'
 import type {
   ApplicationCommandPermissions,
   Channel,
@@ -9,6 +8,8 @@ import type {
   Message,
 } from 'discord.js'
 import {
+  ApplicationIntegrationType as _AIT,
+  InteractionContextType as _ICT,
   ApplicationCommandPermissionType,
   ClientUser,
   Client as DClient,
@@ -20,15 +21,13 @@ import {
   PermissionFlagsBits,
   PermissionsBitField,
   User,
-  ApplicationIntegrationType as _AIT,
-  InteractionContextType as _ICT,
 } from 'discord.js'
 import NodeCache from 'node-cache'
-import { operators } from '../../admins.json'
-import { logger } from './utils/logger'
-import { CommandMeta } from './decorators'
 import { Convert } from '~/core/convert'
 import type * as DT from '~/types/discord'
+import { operators } from '../../admins.json'
+import { CommandMeta } from './decorators'
+import { logger } from './utils/logger'
 
 const intents: ClientOptions['intents'] = [
   GatewayIntentBits.Guilds,
@@ -157,7 +156,7 @@ export function isUser(target: any) {
 
 export class SnowflakeRegex {
   public static isSnowflake(value: string) {
-    return String(value).match(/^(?:<[@#]!?)?(\d{17,19})>?$/) && true || false
+    return (/^(?:<[@#]!?)?\d{17,19}>?$/).test(String(value))
   }
 
   public static getSnowflake(value: string) {
@@ -302,7 +301,7 @@ async function getMessageOptions(func: any, args: string[], ci: DT.ChatInteracti
     const value: DT.SubCommandMeta = vars[key]
     const captureRest = value.settings.includes(CommandVarSettings.TakeRest)
 
-    let re: string | undefined = args && args.length > 0 && args[nKey] || undefined
+    let re: string | undefined = (args && args.length > 0 && args[nKey]) || undefined
 
     if (re && captureRest)
       re = args.slice(nKey).join(' ')
@@ -324,8 +323,8 @@ async function getMessageOptions(func: any, args: string[], ci: DT.ChatInteracti
 function commandValidate(ci: DT.ChatInteraction, func: any) {
   const validator: DT.CommandValidator = func.validator
   if (validator) {
-    const user = ci.interaction && ci.interaction.user || ci.message!.author
-    const member = ci.interaction && ci.interaction.member || ci.message!.member
+    const user = (ci.interaction && ci.interaction.user) || ci.message!.author
+    const member = (ci.interaction && ci.interaction.member) || ci.message!.member
     return validator(operators.includes(user.id), user, member)
   }
   return true
@@ -448,7 +447,7 @@ Client.on(Events.MessageCreate, async (message) => {
 
   const match: (string | undefined)[] = []
   matcher[0].forEach((v, k) => {
-    match[k] = v && String(v) || undefined
+    match[k] = (v && String(v)) || undefined
   })
 
   const baseCommand = match[1] || ''
@@ -459,8 +458,8 @@ Client.on(Events.MessageCreate, async (message) => {
   const args = [...baseMatch.matchAll(/['"]([^'"]+)['"]|\S+/g)]
   const subMatch = [...baseMatch.matchAll(/((-{2}|[?;])(\w+))/g)][0]
 
-  let subCommand = subMatch && subMatch[3] || undefined
-  const subCommandMatch = subCommand && subMatch[1]
+  let subCommand = (subMatch && subMatch[3]) || undefined
+  const subCommandMatch = (subCommand && subMatch[1])
 
   if (args) {
     for (const arg of args) {

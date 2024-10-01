@@ -1,5 +1,5 @@
-import { extname, join, resolve } from 'node:path'
 import { promises as fs } from 'node:fs'
+import { extname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import NodeCache from 'node-cache'
 import type { Maybe } from '~/types/util'

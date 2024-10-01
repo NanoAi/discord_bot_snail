@@ -1,9 +1,9 @@
-import { and, eq } from 'drizzle-orm'
 import type { GuildMember } from 'discord.js'
-import { Case, User } from '@schema'
 import type { UserDB } from '../types/controllers'
-import { Drizzle } from '~/core/utils/drizzle' // Import the Drizzle instance
-import { nullDate } from '~/core/utils/dayjs'
+import { Case, User } from '@schema'
+import { and, eq } from 'drizzle-orm'
+import { nullDate } from '~/core/utils/dayjs' // Import the Drizzle instance
+import { Drizzle } from '~/core/utils/drizzle'
 
 const db = Drizzle.db
 
@@ -48,7 +48,7 @@ export class UserDBController {
 
   async upsertUser(update?: UserDB['update']) {
     const { guildId, id, ...data } = this.data
-    const set = update && { ...update } || data && { ...data }
+    const set = (update && { ...update }) || (data && { ...data })
     const result = await db.insert(User).values(this.data).onConflictDoUpdate({
       target: User.id,
       set,
@@ -58,7 +58,9 @@ export class UserDBController {
 
   // Update a user's XP and roles
   async updateUser(update: UserDB['update']) {
-    return await db.update(User).set({ ...update })
+    return await db
+      .update(User)
+      .set({ ...update })
       .where(and(eq(User.guildId, this.data.guildId), eq(User.id, this.data.id)))
   }
 

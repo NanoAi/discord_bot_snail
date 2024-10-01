@@ -1,6 +1,6 @@
+import type { FsBackendOptions } from 'i18next-fs-backend'
 import * as process from 'node:process'
 import i18next from 'i18next'
-import type { FsBackendOptions } from 'i18next-fs-backend'
 import FsBackend from 'i18next-fs-backend'
 
 const options = {

@@ -20,7 +20,7 @@ import type {
   User,
 } from 'discord.js'
 import type { KeyedFunction, KeyedFunctionGroup } from './util'
-import type { CommandSettings, CommandVarSettings, SubCommandType as DSubCommandType } from '~/core/discord'
+import type { CommandVarSettings, SubCommandType as DSubCommandType } from '~/core/discord'
 
 export type SubCommandType = DSubCommandType
 export type CommandData = DSlashCommandBuilder | SlashCommandOptionsOnlyBuilder

@@ -1,8 +1,8 @@
-import { Events } from 'discord.js'
-import { UserDBController } from '@controllers/user'
 import { GuildDBController } from '@controllers/guild'
-import { logger } from '~/core/utils/logger'
+import { UserDBController } from '@controllers/user'
+import { Events } from 'discord.js'
 import { Client } from '~/core/discord'
+import { logger } from '~/core/utils/logger'
 
 Client.on(Events.GuildMemberAdd, async (member) => {
   // Do something on member join.
