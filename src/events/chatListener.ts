@@ -25,7 +25,7 @@ const allowedURLS = [
 ]
 
 const forumController = new ForumController()
-const guildForumCache = new NodeCache({ stdTTL: 300, checkperiod: 30 })
+const guildForumCache = new NodeCache({ stdTTL: 180, checkperiod: 30 })
 
 Discord.Client.on(Events.MessageCreate, async (message) => {
   const member = message.member
@@ -81,18 +81,27 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
   }
 })
 
-async function bumpHandler(settings: ForumDB['select'], message: OmitPartialGroupDMChannel<Message<boolean>>) {
+interface CacheType {
+  id: string
+  settings: ForumDB['select'] | undefined
+  found: boolean
+}
+
+async function bumpHandler(cache: CacheType, message: OmitPartialGroupDMChannel<Message<boolean>>) {
   const content = message.content.toLowerCase()
   const member = message.member!
   const regex = /(?:^|^.\{,6\})<:\w+:\d+>|^bump|^solve/
 
-  if (settings.bump <= 0)
+  if (!cache || !cache.settings)
+    return
+
+  if (cache.settings.bump === 0)
     return
 
   if (content.length <= 6 || regex.test(content)) {
     try {
       await message.react('‼️')
-      await member.timeout(settings.bump * 1000, 'Thread Bumping.')
+      await member.timeout(cache.settings.bump * 1000, 'Thread Bumping.')
     }
     catch (e: any) {
       if (e.code !== 50013)
@@ -113,15 +122,20 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
   const channel = message.channel
 
   if (channel.isThread() && channel.parentId) {
-    const cache: ForumDB['select'][] = guildForumCache.get(message.guildId) || []
-    const index = cache.findIndex(v => v.id === channel.parentId)
-    if (index === -1) {
-      const db = await forumController.getGuildForumById(guildId, channel.parentId)
-      cache.push(db[0])
-      guildForumCache.set(message.guildId, cache)
-      bumpHandler(db[0], message)
+    const cache: CacheType[] = guildForumCache.get(message.guildId) || []
+    const hit = cache.find(v => v.id === channel.parentId)
+    if (hit) {
+      if (!hit.found)
+        return
+      bumpHandler(hit, message)
       return
     }
-    bumpHandler(cache[index], message)
+    const db = (await forumController.getGuildForumById(guildId, channel.parentId)).pop()
+    let data: CacheType = { id: channel.parentId, settings: undefined, found: false }
+    if (db)
+      data = { id: data.id, settings: db, found: true }
+    cache.push(data)
+    bumpHandler(data, message)
+    guildForumCache.set(message.guildId, cache)
   }
 })
