@@ -13,11 +13,13 @@ model Guild {
   name            String
   enableXP        Boolean  @default(true)
   earlyBirdFilter Boolean  @default(false)
+  isPremium       Boolean  @default(false)
   trustedURLs     Json
   users           User[] // Relation to Users
   cases           Case[] // Relation to Cases
   forums          Forum[] // Relation to Forums
   createdAt       DateTime @default(now())
+  pruneWhen       Int
 }
 
 model User {
@@ -25,8 +27,8 @@ model User {
   guildId         String
   username        String
   xp              Int      @default(0)
+  heat            Int      @default(0)
   level           Int      @default(0)
-  warnings        Int      @default(0)
   lastMessageDate DateTime
   lastKudosDate   DateTime @default(now())
   createdAt       DateTime @default(now())
@@ -40,7 +42,7 @@ model Case {
   id          Int      @id @default(autoincrement())
   guildId     String
   userId      String
-  description String
+  description String   @default("")
   actions     Action[] // Relation to Actions
   tickets     Ticket[] // Relation to Tickets
 
@@ -51,7 +53,8 @@ model Case {
 model Action {
   id         Int      @id @default(autoincrement())
   caseId     Int
-  actionType String // e.g., "ban", "warn", "mute"
+  actionType Int // [0: kick, 1: ban, 2: warn, 3: mute]
+  reason     String
   timestamp  DateTime @default(now())
 
   case Case @relation(fields: [caseId], references: [id])
@@ -60,8 +63,8 @@ model Action {
 model Ticket {
   id        Int      @id @default(autoincrement())
   caseId    Int
+  status    Int // [0: Open, 1: Closed]
   issue     String
-  status    String // e.g., "open", "closed"
   createdAt DateTime @default(now())
 
   case Case @relation(fields: [caseId], references: [id])

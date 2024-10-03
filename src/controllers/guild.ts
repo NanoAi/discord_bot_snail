@@ -15,8 +15,10 @@ export class GuildDBController {
       id: assign.id || guild.id,
       name: assign.name || guild.name,
       earlyBirdFilter: assign.earlyBirdFilter || false,
+      isPremium: assign.isPremium || false,
       enableXP: assign.enableXP || true,
       trustedURLs: assign.trustedURLs || {},
+      pruneWhen: assign.pruneWhen || 15,
     }
   }
 
@@ -26,29 +28,32 @@ export class GuildDBController {
 
   // Create a new guild
   async createGuild() {
-    const { id, name, earlyBirdFilter, enableXP, trustedURLs } = this.data
+    const { id, name, earlyBirdFilter, isPremium, enableXP, trustedURLs, pruneWhen } = this.data
     await db.insert(Guild).values({
       id,
       name,
       earlyBirdFilter,
+      isPremium,
       enableXP,
       trustedURLs,
+      pruneWhen,
     })
     return `Guild '${name}' created successfully!`
   }
 
   async upsertGuild() {
-    const { id, name, earlyBirdFilter, enableXP, trustedURLs } = this.data
-    // console.log('[DEBUG]', id, name, settings)
+    const { id, name, earlyBirdFilter, isPremium, enableXP, trustedURLs, pruneWhen } = this.data
     await db.insert(Guild).values({
       id: String(id),
       name,
       earlyBirdFilter,
+      isPremium,
       enableXP,
       trustedURLs,
+      pruneWhen,
     }).onConflictDoUpdate({
       target: Guild.id,
-      set: { name, earlyBirdFilter, enableXP, trustedURLs },
+      set: { name, earlyBirdFilter, isPremium, enableXP, trustedURLs, pruneWhen },
     })
     return `Guild '${name}' created successfully!`
   }

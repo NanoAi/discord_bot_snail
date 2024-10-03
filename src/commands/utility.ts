@@ -99,7 +99,7 @@ export class ThreadCommand {
         .label(LK.ID, callerId)
         .style(Styles.Error)
         .ephemeral(true)
-        .send($t('command.error.permissions', { cmd: 'thread setup' }))
+        .send($t('command.error.permissions', { cmd: 'thread bind' }))
       return
     }
 
@@ -134,7 +134,7 @@ export class ThreadCommand {
         .label(LK.ID, callerId)
         .style(Styles.Error)
         .ephemeral(true)
-        .send($t('command.error.permissions', { cmd: 'thread setup' }))
+        .send($t('command.error.permissions', { cmd: 'thread unbind' }))
       return
     }
 

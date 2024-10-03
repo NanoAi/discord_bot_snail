@@ -6,8 +6,10 @@ export const Guild = pgTable('Guild', {
   name: text('name').notNull(),
   enableXP: boolean('enableXP').notNull().default(true),
   earlyBirdFilter: boolean('earlyBirdFilter').notNull(),
+  isPremium: boolean('isPremium').notNull(),
   trustedURLs: jsonb('trustedURLs').notNull(),
   createdAt: timestamp('createdAt', { precision: 3 }).notNull().defaultNow(),
+  pruneWhen: integer('pruneWhen').notNull(),
 })
 
 export const User = pgTable('User', {
@@ -15,8 +17,8 @@ export const User = pgTable('User', {
   guildId: text('guildId').notNull(),
   username: text('username').notNull(),
   xp: integer('xp').notNull(),
+  heat: integer('heat').notNull(),
   level: integer('level').notNull(),
-  warnings: integer('warnings').notNull(),
   lastMessageDate: timestamp('lastMessageDate', { precision: 3 }).notNull(),
   lastKudosDate: timestamp('lastKudosDate', { precision: 3 }).notNull().defaultNow(),
   createdAt: timestamp('createdAt', { precision: 3 }).notNull().defaultNow(),
@@ -56,7 +58,8 @@ export const Case = pgTable('Case', {
 export const Action = pgTable('Action', {
   id: serial('id').notNull().primaryKey(),
   caseId: integer('caseId').notNull(),
-  actionType: text('actionType').notNull(),
+  actionType: integer('actionType').notNull(),
+  reason: text('reason').notNull(),
   timestamp: timestamp('timestamp', { precision: 3 }).notNull().defaultNow(),
 }, Action => ({
   Action_case_fkey: foreignKey({
@@ -71,8 +74,8 @@ export const Action = pgTable('Action', {
 export const Ticket = pgTable('Ticket', {
   id: serial('id').notNull().primaryKey(),
   caseId: integer('caseId').notNull(),
+  status: integer('status').notNull(),
   issue: text('issue').notNull(),
-  status: text('status').notNull(),
   createdAt: timestamp('createdAt', { precision: 3 }).notNull().defaultNow(),
 }, Ticket => ({
   Ticket_case_fkey: foreignKey({
