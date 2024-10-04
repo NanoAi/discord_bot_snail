@@ -3,6 +3,7 @@ import { MessageFlags } from 'discord.js'
 import { t as $t } from 'i18next'
 import { GuildDBController } from '~/controllers/guild'
 import { UserDBController } from '~/controllers/user'
+import { SystemCache } from '~/core/cache'
 import { Command, CommandFactory, Factory, Options } from '~/core/decorators'
 import * as Discord from '~/core/discord'
 import { CVar, InteractionContextType as ICT } from '~/core/discord'
@@ -43,15 +44,25 @@ export class ShutdownCommand {
 
 @Factory.setContexts(ICT.Guild)
 @Factory.setPermissions([Discord.PFlags.Administrator])
-@CommandFactory('cacheClear', 'Send a Direct Message to a server member.')
-export class ClearPermsCache {
-  public static async main(ci: DT.ChatInteraction) {
+@CommandFactory('flush', 'Flush the guilds cache settings. (Updates Settings.)')
+export class FlushCommand {
+  @Command.addSubCommand('permissions', 'Flush the permissions cache.')
+  public static async permissions(ci: DT.ChatInteraction) {
     const reply = new DiscordInteraction.Reply(ci)
     const guild = reply.getGuild()!
-    Discord.GuildPermsCache.del(guild.id)
+    SystemCache.global().getGuildPermissions().del(guild.id)
 
-    // eslint-disable-next-line no-control-regex
-    const safeName = guild.name.replaceAll(/[`\\\u0000-\u001F\u007F-\u009F]/g, '')
+    const safeName = (guild.name.match(/[\w!@#$%^&*()[/\\\]]+/g) || []).join('')
+    await reply.label(LK.GUILD, guild.id).style(Styles.Success).send(`Cleared Permissions Cache for "\`${safeName}\`".`)
+  }
+
+  @Command.addSubCommand('forums', 'Flush the forums cache.')
+  public static async forums(ci: DT.ChatInteraction) {
+    const reply = new DiscordInteraction.Reply(ci)
+    const guild = reply.getGuild()!
+    SystemCache.global().getGuildForums().del(guild.id)
+
+    const safeName = (guild.name.match(/[\w!@#$%^&*()[/\\\]]+/g) || []).join('')
     await reply.label(LK.GUILD, guild.id).style(Styles.Success).send(`Cleared Permissions Cache for "\`${safeName}\`".`)
   }
 }

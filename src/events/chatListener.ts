@@ -3,6 +3,7 @@ import { UserDBController } from '@controllers/user'
 import { Collection, Events } from 'discord.js'
 import NodeCache from 'node-cache'
 import { ForumController } from '~/controllers/forum'
+import { SystemCache } from '~/core/cache'
 import * as Discord from '~/core/discord'
 import dayjs from '~/core/utils/dayjs'
 import { xpToLevel } from '~/core/utils/levels'
@@ -25,7 +26,7 @@ const allowedURLS = [
 ]
 
 const forumController = new ForumController()
-const guildForumCache = new NodeCache({ stdTTL: 180, checkperiod: 30 })
+const guildForumCache = SystemCache.global().getGuildForums()
 
 Discord.Client.on(Events.MessageCreate, async (message) => {
   const member = message.member

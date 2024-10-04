@@ -1,4 +1,5 @@
 import * as process from 'node:process'
+import { SystemCache } from './core/cache'
 import 'dotenv/config'
 
 // Reset Console.
@@ -19,5 +20,12 @@ for (const [k, v] of Object.entries(ENV)) {
   if (!v)
     throw new Error(`Expected Environment Variable "${k}" got "${v}".`)
 }
+
+SystemCache.init({
+  guildForumsTTL: 60,
+  guildForumsCheckPeriod: 30,
+  guildPermissionsTTL: 300,
+  guildPermissionsCheckPeriod: 30,
+})
 
 import('./client')
