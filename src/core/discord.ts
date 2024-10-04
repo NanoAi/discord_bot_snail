@@ -26,6 +26,7 @@ import NodeCache from 'node-cache'
 import { Convert } from '~/core/convert'
 import type * as DT from '~/types/discord'
 import { operators } from '../../admins.json'
+import { SystemCache } from './cache'
 import { CommandMeta } from './decorators'
 import { logger } from './utils/logger'
 
@@ -50,7 +51,7 @@ const partials = [
 ]
 
 const CommandRunManager = new NodeCache({ stdTTL: 1, checkperiod: 1 })
-export const GuildPermsCache = new NodeCache({ stdTTL: 300, checkperiod: 30 })
+export const GuildPermsCache = SystemCache.global().getGuildPermissions()
 
 export const Routes = DRoutes
 export const Client = new DClient({ intents, partials })

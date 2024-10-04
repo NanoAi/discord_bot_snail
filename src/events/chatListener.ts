@@ -1,7 +1,6 @@
 import type { Message, OmitPartialGroupDMChannel } from 'discord.js'
 import { UserDBController } from '@controllers/user'
 import { Collection, Events } from 'discord.js'
-import NodeCache from 'node-cache'
 import { ForumController } from '~/controllers/forum'
 import { SystemCache } from '~/core/cache'
 import * as Discord from '~/core/discord'
