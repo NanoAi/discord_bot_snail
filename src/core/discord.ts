@@ -28,6 +28,7 @@ import type * as DT from '~/types/discord'
 import { operators } from '../../admins.json'
 import { SystemCache } from './cache'
 import { CommandMeta } from './decorators'
+import { Metadata } from './metadata'
 import { logger } from './utils/logger'
 
 const intents: ClientOptions['intents'] = [
@@ -267,7 +268,7 @@ export class Commands {
 async function getOptions(func: any, pass: any[], ci: DT.ChatInteractionAssert) {
   const options: any = []
   const hoisted: any = []
-  const vars: DT.SubCommandMeta[] = Reflect.getOwnMetadata('command:vars', func) || []
+  const vars = Metadata.commandVars.get(func) || []
 
   for (const value of pass) {
     hoisted[value.name] = value.value
@@ -293,7 +294,7 @@ async function getOptions(func: any, pass: any[], ci: DT.ChatInteractionAssert) 
 
 async function getMessageOptions(func: any, args: string[], ci: DT.ChatInteractionAssert) {
   const options: any = []
-  const vars = Reflect.getOwnMetadata('command:vars', func)
+  const vars = Metadata.commandVars.get(func) || []
 
   for (const key in vars) {
     let output: any

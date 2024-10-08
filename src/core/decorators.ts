@@ -15,9 +15,10 @@ import type * as DT from '~/types/discord'
 
 import * as Discord from './discord'
 import { CommandSettings, CommandVarSettings, SubCommandType as SCT } from './discord'
+import { Metadata } from './metadata'
 import Deferrer from './utils/deferrer'
 import getMethods from './utils/method'
-import 'reflect-metadata'
+// import 'reflect-metadata'
 
 const defer = new Deferrer()
 
@@ -29,7 +30,8 @@ export function CommandFactory(
     name = name.toLowerCase() // Discord command names must be lowercase.
     const metadata = { name, description }
 
-    Reflect.defineMetadata('command', metadata, target)
+    // Reflect.defineMetadata('command', metadata, target)
+    Metadata.commands.set(target, metadata)
 
     const methods = getMethods(target)
     methods.forEach((method) => {
@@ -88,7 +90,7 @@ export abstract class CommandMeta {
    * @returns The command settings provided. (commandSettings)
    */
   public static setParentMeta(parent: any, commandSettings: Discord.CommandSettings[]) {
-    Reflect.defineMetadata(CommandMeta.mk, commandSettings, parent)
+    Metadata.settings.set(parent, commandSettings)
     return commandSettings
   }
 
@@ -98,7 +100,7 @@ export abstract class CommandMeta {
    * @returns The command settings set within its metadata.
    */
   public static getParentMeta(parent: any): Discord.CommandSettings[] {
-    return Reflect.getMetadata(CommandMeta.mk, parent) || []
+    return Metadata.settings.get(parent) || []
   }
 
   public static get(target: any): DT.SubCommandMeta {
@@ -117,7 +119,7 @@ export abstract class Factory {
 
   public static NSFW() {
     return function (target: any, _context: any) {
-      const metadata = Reflect.getOwnMetadata('command', target)
+      const metadata = Metadata.commands.get(target)!
       const command = Discord.Commands.getCommand(metadata.name)
 
       if (!command) {
@@ -131,7 +133,7 @@ export abstract class Factory {
 
   public static setPermissions(permissions?: DT.Permissions[], assert?: DT.Permissions) {
     return function (target: any, _context: any) {
-      const metadata = Reflect.getOwnMetadata('command', target)
+      const metadata = Metadata.commands.get(target)!
       const command = Discord.Commands.getCommand(metadata.name)
 
       if (!command)
@@ -161,7 +163,7 @@ export abstract class Factory {
 
   public static setIntegrations(integrationTypes: RestOrArray<ApplicationIntegrationType>) {
     return function (target: any, _context: any) {
-      const metadata = Reflect.getOwnMetadata('command', target)
+      const metadata = Metadata.commands.get(target)!
       const command = Discord.Commands.getCommand(metadata.name)
 
       if (!command) {
@@ -176,7 +178,7 @@ export abstract class Factory {
 
   public static setContexts(...contexts: RestOrArray<InteractionContextType>) {
     return function (target: any, _context: any) {
-      const metadata = Reflect.getOwnMetadata('command', target)
+      const metadata = Metadata.commands.get(target)!
       const command = Discord.Commands.getCommand(metadata.name)
 
       if (!command) {
@@ -192,7 +194,7 @@ export abstract class Factory {
 
 export abstract class Options {
   private static main(target: any, meta: DT.SubCommandMeta, config: any) {
-    const vars: DT.SubCommandMeta[] = Reflect.getOwnMetadata('command:vars', target)
+    const vars: DT.SubCommandMeta[] = Metadata.commandVars.get(target) || []
     if (!vars.includes(meta))
       throw new Error(`The variable "${meta.name}" of type "${meta.type}" is not defined in function "${target.name}".`)
     target.commandOptions.set(meta.name, config)
@@ -266,7 +268,7 @@ export abstract class Command {
     ) => SlashCommandSubcommandBuilder | SlashCommandSubcommandsOnlyBuilder,
     ignore: boolean = false,
   ) {
-    const subCommandMeta = Reflect.getMetadata('subcommand', target)
+    const subCommandMeta = Metadata.subCommands.get(target)
     if (!subCommandMeta)
       throw new Error('No metadata found for key "subcommand".')
 
@@ -290,8 +292,9 @@ export abstract class Command {
         throw new Error(msg)
       }
 
-      const parentMeta = Reflect.getMetadata('command', target.parent)
-      const subCommand = Reflect.getMetadata('subcommand', target)
+      const parentMeta = Metadata.commands.get(target.parent)!
+      const subCommand = Metadata.subCommands.get(target)!
+
       const command = Discord.Commands.getMap().get(parentMeta.name)
       if (!command)
         throw new Error('A command was created but became undefined.')
@@ -338,16 +341,15 @@ export abstract class Command {
   }
 
   private static initOptions(name: string, type: DT.SubCommandType, target: any, settings: Discord.CommandVarSettings[]) {
-    const key = 'command:vars'
-    const meta: DT.SubCommandMeta[] = Reflect.getOwnMetadata(key, target) || []
+    const meta: DT.SubCommandMeta[] = Metadata.commandVars.get(target) || []
     target.commandOptions = target.commandOptions || new Map<string, (config: any) => any>()
     meta.push(CommandMeta.update(target, { name, type, settings }))
-    Reflect.defineMetadata(key, meta, target)
+    Metadata.commandVars.set(target, meta)
   }
 
   public static addSubCommand(name: string, description: string) {
     return function (target: any, _context: any) {
-      Reflect.defineMetadata('subcommand', name, target)
+      Metadata.subCommands.set(target, name)
       target.subCommand = new SlashCommandSubcommandBuilder()
         .setName(name)
         .setDescription(description)

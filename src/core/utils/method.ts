@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 function emptyFunction() {}
 
 export function getMethods(

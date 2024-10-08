@@ -100,8 +100,11 @@ async function bumpHandler(cache: CacheType, message: OmitPartialGroupDMChannel<
 
   if (content.length <= 6 || regex.test(content)) {
     try {
+      const userController = new UserDBController(member)
       await message.react('‼️')
       await member.timeout(cache.settings.bump * 1000, 'Thread Bumping.')
+      const userData = await userController.getUser()
+      userController.updateUser({ heat: userData.heat + 2 })
     }
     catch (e: any) {
       if (e.code !== 50013)
