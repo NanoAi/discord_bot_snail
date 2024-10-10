@@ -79,6 +79,10 @@ export class CommandInteraction {
     return this
   }
 
+  getAuthor() {
+    return this.ci.author
+  }
+
   getBoth() {
     const ci = this.ci
     return (ci.interaction || ci.message)!
@@ -116,7 +120,7 @@ export class CommandInteraction {
     }
   }
 
-  callback() {
+  new() {
     return new CommandInteractionCallback(this.ci)
   }
 }

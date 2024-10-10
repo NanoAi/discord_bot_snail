@@ -16,7 +16,7 @@ export class Convert {
       case SBT.Number:
         return Number(value)
       case SBT.User:
-        return await this.User(value)
+        return await this.User(ci, value)
       case SBT.Role:
         return await this.Role(ci, value)
       case SBT.Mentionable:
@@ -28,7 +28,10 @@ export class Convert {
     }
   }
 
-  public static async User(value: string | DT.UserLike) {
+  public static async User(ci: DT.ChatInteraction, value: string | DT.UserLike) {
+    if (value === '^')
+      value = ci.author
+
     if (Discord.isUser(value))
       return value
 

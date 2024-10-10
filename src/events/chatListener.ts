@@ -35,19 +35,9 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
   const now = new Date()
   const dbInstance = new UserDBController(member)
 
-  let dbUser = await dbInstance.getUser()
-
-  if (!dbUser) {
-    logger.warn(`Member (${member.id}) doesn\'t exist in guild (${member.guild.id}), creating.`)
-    try {
-      await dbInstance.upsertUser()
-    }
-    catch {
-      logger.error(`Error: Could not create entry for member (${member.id}) in guild (${member.guild.id}).`)
-      return
-    }
-    dbUser = await dbInstance.getUser()
-  }
+  const dbUser = await dbInstance.getOrCreateUser()
+  if (!dbUser)
+    return
 
   if (dbUser.createdAt > dbUser.lastMessageDate) {
     const date = new Date()

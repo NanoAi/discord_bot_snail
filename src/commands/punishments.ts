@@ -1,5 +1,7 @@
 import type { GuildMember, User } from 'discord.js'
 import { t as $t } from 'i18next'
+import { CaseDBController } from '~/controllers/case'
+import { UserDBController } from '~/controllers/user'
 import { Command, CommandFactory, Factory } from '~/core/decorators'
 import { Client, InteractionContextType as ICT } from '~/core/discord'
 import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
@@ -123,5 +125,52 @@ export class BanCommand {
     catch {
       await reply.label(LK.ID, member.user.id).style(Styles.Error).send(`${$t('command.error.noBan')} ${member}.`)
     }
+  }
+}
+
+@CommandFactory('warn', 'Warn a user for a reason.')
+export class WarnCommand {
+  @Command.addNumberOption('case', 'The case number to attach this warning to.')
+  @Command.addStringOption('reason', 'The reason for warning the user.')
+  @Command.addUserOption('user', 'The user to warn in the server.')
+  public static async main(ci: DT.ChatInteraction, args: DT.Args<[['user', User], ['reason', string], ['case', number]]>) {
+    const reply = new DiscordInteraction.Reply(ci)
+    const user = args.user(undefined)
+    const reason = args.reason('unspecified').replaceAll('`', '')
+    const member = (await reply.getGuildMember(user)) as GuildMember
+
+    const userController = new UserDBController(member)
+    const dbUser = await userController.getOrCreateUser()
+    if (!dbUser)
+      return
+
+    const caseFile = await CaseDBController.upsertCase(args.case(0), member.guild.id, user.id, reason)
+    CaseDBController.new({
+      actionType: CaseDBController.ENUM.Action.WARN,
+      timestamp: new Date(),
+      userId: user.id,
+      actorId: reply.getAuthor().id,
+      reason,
+    }, caseFile).upsertAction()
+
+    userController.upsertUser({ heat: dbUser.heat + 5 })
+
+    try {
+      const dm = new DiscordInteraction.DirectMessage(ci)
+      const warnMessage = `
+        ⚠️ __You Have Been Warned!__ ⚠️
+        \`\`\`
+        ${reason}
+        \`\`\`
+      `.replaceAll(/\t| {3,}/g, '')
+      await dm.label(LK.ID, member.user.id).style(Styles.Warn).to(member.user).send(warnMessage)
+    }
+    catch {
+      await reply.label(LK.ID, member.user.id).style(Styles.Error).send($t('command.error.noDM', { user: user.username }))
+    }
+
+    const header = `Case: \`#${caseFile.id}\` | ${member}(\`${user.id}\`) was warned.`
+    const output = `${header}\n\`\`\`\nWarning Reason: ${reason}\n\`\`\``
+    await reply.label(LK.ID, member.user.id).style(Styles.Success).send(output)
   }
 }

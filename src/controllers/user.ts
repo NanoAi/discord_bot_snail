@@ -4,6 +4,7 @@ import { Case, User } from '@schema'
 import { and, eq } from 'drizzle-orm'
 import { nullDate } from '~/core/utils/dayjs' // Import the Drizzle instance
 import { Drizzle } from '~/core/utils/drizzle'
+import { logger } from '~/core/utils/logger'
 
 const db = Drizzle.db
 
@@ -26,6 +27,23 @@ export class UserDBController {
 
   static instance(member: GuildMember, assign: Partial<UserDB['insert']> = {}) {
     return new UserDBController(member, assign)
+  }
+
+  // Get a user by ID, if user doesn't exist create it.
+  async getOrCreateUser() {
+    const dbUser = await this.getUser()
+    if (!dbUser) {
+      logger.warn(`Member (${this.data.id}) doesn\'t exist in guild (${this.data.guildId}), creating.`)
+      try {
+        await this.upsertUser()
+      }
+      catch {
+        logger.error(`Error: Could not create entry for member (${this.data.id}) in guild (${this.data.guildId}).`)
+        return
+      }
+      return await this.getUser()
+    }
+    return dbUser
   }
 
   // Get a user by ID

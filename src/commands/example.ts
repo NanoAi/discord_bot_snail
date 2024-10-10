@@ -30,7 +30,7 @@ export class SubCommands {
   // This will be called every time any of the subcommands below are called.
   public static main(ci: DT.ChatInteraction) {
     new DiscordInteraction.CommandInteraction(ci)
-      .callback()
+      .new()
       .interaction(ci => console.log(`[CMD] The subcommands command was called by <${ci.user.username}>!`))
       .message(ci => console.log(`[CHAT] The subcommands command was called by <${ci.author.username}>!`))
   }

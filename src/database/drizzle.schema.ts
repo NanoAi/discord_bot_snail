@@ -60,6 +60,8 @@ export const Action = pgTable('Action', {
   caseId: integer('caseId').notNull(),
   actionType: integer('actionType').notNull(),
   reason: text('reason').notNull(),
+  userId: text('userId').notNull(),
+  actorId: text('actorId').notNull(),
   timestamp: timestamp('timestamp', { precision: 3 }).notNull().defaultNow(),
 }, Action => ({
   Action_case_fkey: foreignKey({

@@ -1,10 +1,17 @@
 import { Action, Case, Ticket } from '@schema'
-import { eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { Drizzle } from '~/core/utils/drizzle'
 import { logger } from '~/core/utils/logger'
 import type { ActionDB, CaseDB } from '~/types/controllers'
 
 const db = Drizzle.db
+
+function getEnumName(enumVar: typeof CaseDBController.ENUM.Ticket | typeof CaseDBController.ENUM.Action, value: number) {
+  for (const [k, v] of Object.entries(enumVar)) {
+    if (v === value)
+      return k.toUpperCase()
+  }
+}
 
 // Controller class to handle case-related database operations
 export class CaseDBController {
@@ -27,18 +34,24 @@ export class CaseDBController {
     case: CaseDB['select']
   }
 
-  constructor(action: ActionDB['update'], actionCase: CaseDB['select']) {
+  constructor(action: ActionDB['update'], caseVar: CaseDB['select']) {
     const actionInsert = {
-      caseId: actionCase.id,
+      caseId: caseVar.id,
       actionType: action.actionType,
       reason: action.reason,
+      userId: action.userId,
+      actorId: action.actorId,
       timestamp: action.timestamp,
     } as ActionDB['select']
     this.data = {
       action: actionInsert,
-      case: actionCase,
+      case: caseVar,
     }
     return this
+  }
+
+  static new(action: ActionDB['update'], caseVar: CaseDB['select']) {
+    return new this(action, caseVar)
   }
 
   // Create a new case
@@ -49,41 +62,66 @@ export class CaseDBController {
       description,
     }).returning({ id: Case.id }))[0].id
     logger.info(`Case #${caseId} created successfully for User '${userId}' in Guild '${guildId}'!`)
-    return { id: caseId, guildId, userId, description } as CaseDB['insert']
+    return { id: caseId, guildId, userId, description }
+  }
+
+  static async upsertCase(caseId: number, guildId: string, userId: string, description: string) {
+    let output
+    if (caseId > 0) {
+      output = await this.getCaseById(caseId)
+      if (output && output.userId === userId)
+        return output
+    }
+    return this.createCase(guildId, userId, description)
   }
 
   // Get a case by ID
   static async getCaseById(caseId: number) {
     const caseRecord = await db.select().from(Case).where(eq(Case.id, caseId)).limit(1)
-    if (!caseRecord || caseRecord.length === 0) {
-      throw new Error(`Case #${caseId} not found.`)
-    }
-    return caseRecord[0]
+    return (caseRecord && caseRecord.length > 0) && caseRecord[0] || undefined
   }
 
   // Update case description
-  static async updateCaseDescription(caseId: number, newDescription: string) {
+  async updateCaseDescription(newDescription: string) {
     await db.update(Case)
       .set({ description: newDescription })
-      .where(eq(Case.id, caseId))
-    return `Case #${caseId} updated with new description!`
+      .where(eq(Case.id, this.data.case.id))
+    return `Case #${this.data.case.id} updated with new description!`
   }
 
   // Delete a case by ID
-  static async deleteCase(caseId: number) {
-    await db.delete(Case).where(eq(Case.id, caseId))
-    return `Case #${caseId} deleted successfully.`
+  async deleteCase() {
+    await db.delete(Case).where(eq(Case.id, this.data.case.id))
+    return `Case #${this.data.case.id} deleted successfully.`
   }
 
   // Add an action to a case
-  static async addCase(caseFile: CaseDBController) {
-    const re = caseFile.data
+  async upsertAction() {
+    const _G = CaseDBController
+
+    const re = this.data
+    if (typeof re.case.id !== 'number')
+      throw new Error(`Expected a valid Number in \`data.case.id\` got ${re.case.id}(${typeof re.case.id}).`)
+
     await db.insert(Action).values({
       caseId: re.case.id,
       actionType: re.action.actionType,
+      userId: re.action.userId,
+      actorId: re.action.actorId,
       reason: re.action.reason,
+    }).onConflictDoUpdate({
+      target: Action.id,
+      set: {
+        actionType: re.action.actionType,
+        reason: re.action.reason,
+        userId: re.action.userId,
+        actorId: re.action.actorId,
+      },
+      setWhere: sql`public."Action"."caseId" = ${re.case.id}`,
     })
-    logger.info(`Action '${re.action.actionType}' added to Case #${re.case.id}!`)
+
+    const enumInfo = `'TYPE:${getEnumName(_G.ENUM.Action, re.action.actionType)}(${re.action.actionType})'`
+    logger.info(`Action ${enumInfo} added to Case '#${re.case.id}'!`)
   }
 
   // Get actions for a specific case

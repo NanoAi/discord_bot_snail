@@ -472,7 +472,7 @@ Client.on(Events.MessageCreate, async (message) => {
   }
 
   const command = Commands.getCommand(baseCommand)
-  const ci: DT.ChatInteraction = { message }
+  const ci: DT.ChatInteraction = { author: message.author, message }
   CommandRunManager.set(message.author.id, new Date())
 
   if (command) {
@@ -504,7 +504,7 @@ Client.on(Events.InteractionCreate, async (interaction) => {
 
   const name = interaction.commandName
   const command = Commands.getCommand(name)
-  const ci: DT.ChatInteraction = { interaction }
+  const ci: DT.ChatInteraction = { author: interaction.user, interaction }
 
   const subCommandId = (interaction.options as any)._subcommand
   const hoistedOptions = (interaction.options as any)._hoistedOptions

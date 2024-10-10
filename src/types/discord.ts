@@ -33,6 +33,7 @@ export type CommandValidator = (isOP: boolean, user: User, member: CommandMember
 export type UserLike = User | ClientUser
 
 export interface ChatInteractionAssert {
+  author: User
   interaction: ChatInputCommandInteraction<CacheType>
   message: Message<boolean>
 }
@@ -47,6 +48,7 @@ export type Args<T extends [string, any][]> = KeyedFunctionGroup<T>
  * Interaction OR Message are ALWAYS defined.
  */
 export interface ChatInteraction {
+  author: User
   interaction?: ChatInteractionAssert['interaction']
   message?: ChatInteractionAssert['message']
 }

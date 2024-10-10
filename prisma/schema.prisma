@@ -55,6 +55,8 @@ model Action {
   caseId     Int
   actionType Int // [0: kick, 1: ban, 2: warn, 3: mute]
   reason     String
+  userId     String
+  actorId    String
   timestamp  DateTime @default(now())
 
   case Case @relation(fields: [caseId], references: [id])
