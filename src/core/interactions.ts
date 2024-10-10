@@ -240,7 +240,7 @@ export class Reply extends CommandInteraction {
     }
     catch {
       // TODO: Add a "console" channel to catch errors etc.
-      if (message.channel.isSendable())
+      if (message.channel && message.channel.isSendable())
         message.channel.send({ embeds: [embed], flags: options.flags })
     }
   }
