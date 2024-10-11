@@ -11,6 +11,7 @@ import type {
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, GuildMember } from 'discord.js'
 import type { ChatInteraction, ChatInteractionAssert, UserLike } from '~/types/discord'
 import type { Maybe } from '~/types/util'
+import { logger } from './utils/logger'
 
 export function getChatInteraction(ci: ChatInteraction) {
   if (ci.interaction)
@@ -238,10 +239,20 @@ export class Reply extends CommandInteraction {
         return await message.reply({ embeds: [embed], flags: options.flags })
       }
     }
-    catch {
+    catch (eInfo) {
       // TODO: Add a "console" channel to catch errors etc.
-      if (message.channel && message.channel.isSendable())
-        message.channel.send({ embeds: [embed], flags: options.flags })
+      if (!message) {
+        logger.error('Expected a valid Message object got null or undefined.')
+        return
+      }
+      const ch = message.channel || (await message.fetch(true)).channel
+      if (ch && ch.isSendable()) {
+        ch.send({ embeds: [embed], flags: options.flags })
+      }
+      else {
+        logger.error('Could not find a valid channel to post in.')
+        console.log(eInfo)
+      }
     }
   }
 }

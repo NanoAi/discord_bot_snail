@@ -1,3 +1,4 @@
+import type { Guild } from 'discord.js'
 import fs from 'node:fs'
 import dayjs from 'dayjs'
 import { Events } from 'discord.js'
@@ -30,6 +31,13 @@ const _pino = pino(
   pino.multistream(streams),
 )
 
+function sendToSystem(guild: Guild, info: string, msg?: string) {
+  const t = '```'
+  const systemChannel = guild && guild.systemChannel
+  if (systemChannel)
+    systemChannel.send(`INFO <:info_snail:1276562523746865182> ${info}${t}${msg || 'undefined'}${t}`)
+}
+
 const pinoErrorBound = _pino.error.bind(_pino)
 const pinoFatalBound = _pino.fatal.bind(_pino)
 
@@ -43,6 +51,12 @@ function catchFatal(obj: object, msg?: string, ...args: any[]) {
   return pinoFatalBound(String(obj), msg, ...args)
 }
 
+function discordLog(guild: Guild, info: string, msg?: string) {
+  sendToSystem(guild, info, msg)
+  // return _pino.info.bind(_pino)(info, msg, ...args)
+}
+
+Reflect.defineProperty(_pino, 'discordLog', { value: discordLog, writable: false })
 Reflect.defineProperty(_pino, 'catchError', { value: catchError, writable: false })
 Reflect.defineProperty(_pino, 'catchFatal', { value: catchFatal, writable: false })
 export const logger: pino.Logger & { catchError: typeof catchError, catchFatal: typeof catchFatal } = _pino as any
