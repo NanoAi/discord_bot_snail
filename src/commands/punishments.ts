@@ -1,4 +1,5 @@
 import type { GuildMember, User } from 'discord.js'
+import dayjs from '@utils/dayjs'
 import { t as $t } from 'i18next'
 import { CaseDBController } from '~/controllers/case'
 import { UserDBController } from '~/controllers/user'
@@ -63,7 +64,7 @@ export class KickCommand {
     const member: GuildMember | undefined = await reply.getGuildMember(user)
 
     if (!member || user === Client.user) {
-      await reply.style(Styles.Error).send($t('user.notfound', { user }))
+      await reply.style(Styles.Error).send($t('user.notFound', { user }))
       return
     }
 
@@ -101,7 +102,7 @@ export class BanCommand {
     const member: GuildMember | undefined = await reply.getGuildMember(user)
 
     if (!member || user === Client.user) {
-      await reply.style(Styles.Error).send($t('user.notfound', { user }))
+      await reply.style(Styles.Error).send($t('user.notFound', { user }))
       return
     }
 
@@ -134,10 +135,16 @@ export class WarnCommand {
   @Command.addStringOption('reason', 'The reason for warning the user.')
   @Command.addUserOption('user', 'The user to warn in the server.')
   public static async main(ci: DT.ChatInteraction, args: DT.Args<[['user', User], ['reason', string], ['case', number]]>) {
-    const reply = new DiscordInteraction.Reply(ci)
+    const timestamp = dayjs().unix()
+    const reply = await new DiscordInteraction.Reply(ci).defer()
     const user = args.user(undefined)
     const reason = args.reason('unspecified').replaceAll('`', '')
-    const member = (await reply.getGuildMember(user)) as GuildMember
+    const member = (await reply.getGuildMember(user, true)) as GuildMember
+
+    if (!member) {
+      await reply.label(LK.ID, user.id).style(Styles.Error).send($t('user.noTarget', { user: user.username, id: user.id }))
+      return
+    }
 
     const userController = new UserDBController(member)
     const dbUser = await userController.getOrCreateUser()
@@ -153,15 +160,14 @@ export class WarnCommand {
       reason,
     }, caseFile).upsertAction()
 
-    userController.upsertUser({ heat: dbUser.heat + 5 })
+    const heatScore = dbUser.heat + 5
+    userController.upsertUser({ heat: heatScore })
 
     try {
       const dm = new DiscordInteraction.DirectMessage(ci)
       const warnMessage = `
-        ⚠️ __You Have Been Warned!__ ⚠️
-        \`\`\`
-        ${reason}
-        \`\`\`
+        [Case #\`${caseFile.id}\`] <:warn:1276566769867423848> User Warned @ <t:${timestamp}:f>
+        \`\`\`${reason}\`\`\`
       `.replaceAll(/\t| {3,}/g, '')
       await dm.label(LK.ID, member.user.id).style(Styles.Warn).to(member.user).send(warnMessage)
     }
@@ -170,7 +176,7 @@ export class WarnCommand {
     }
 
     const header = `Case: \`#${caseFile.id}\` | ${member}(\`${user.id}\`) was warned.`
-    const output = `${header}\n\`\`\`\nWarning Reason: ${reason}\n\`\`\``
+    const output = `${header}\n\`\`\`\nReason: ${reason}\n\`\`\``
     await reply.label(LK.ID, member.user.id).style(Styles.Success).send(output)
   }
 }

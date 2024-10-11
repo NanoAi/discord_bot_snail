@@ -4,8 +4,9 @@
     "banned": "You have been banned."
   },
   "user": {
-    "notfound": "Could not find {{user}} in guild.",
-    "has_been": "{{user}} has been {{action}}."
+    "notFound": "Could not find {{user}} in guild.",
+    "hasBeen": "{{user}} has been {{action}}.",
+    "noTarget": "Sorry, I could not target the user \"{{user}}\" (`{{id}}`)."
   },
   "command": {
     "error": {

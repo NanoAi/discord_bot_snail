@@ -108,13 +108,14 @@ export class CommandInteraction {
     return (ci.interaction && ci.interaction.user) || (ci.message && ci.message.author) || undefined
   }
 
-  async getGuildMember(user: Maybe<UserLike> = this.getUser()) {
+  async getGuildMember(user: Maybe<UserLike> = this.getUser(), ignoreBots: boolean = false) {
     const guild = this.getGuild()
     if (!guild || !user)
       return undefined
+    if (ignoreBots && user.bot)
+      return undefined
     try {
-      const member = await guild.members.fetch({ user, force: true })
-      return member
+      return await guild.members.fetch({ user })
     }
     catch {
       return undefined
@@ -197,6 +198,13 @@ export class Reply extends CommandInteraction {
     return this
   }
 
+  async defer() {
+    const _i = this.getInteraction()
+    if (_i)
+      await _i.deferReply()
+    return this
+  }
+
   async send(response: string, options = defaultOptions): MessageSend {
     const _i = this.getInteraction()
     const message = this.getMessage()!
@@ -232,7 +240,7 @@ export class Reply extends CommandInteraction {
           return await _i.editReply(re)
         }
         else {
-          return await _i.reply({ embeds: [embed], ephemeral: !!settings.ephemeral })
+          return await _i.reply(re)
         }
       }
       else {
@@ -241,18 +249,18 @@ export class Reply extends CommandInteraction {
     }
     catch (eInfo) {
       // TODO: Add a "console" channel to catch errors etc.
-      if (!message) {
-        logger.error('Expected a valid Message object got null or undefined.')
+      if (_i && (eInfo as any).code === 10062) {
+        logger.error('Expected reply took too long, try a defer.')
         return
       }
-      const ch = message.channel || (await message.fetch(true)).channel
+
+      const ch = message && (message.channel || (await message.fetch(true)).channel)
       if (ch && ch.isSendable()) {
         ch.send({ embeds: [embed], flags: options.flags })
       }
-      else {
-        logger.error('Could not find a valid channel to post in.')
-        console.log(eInfo)
-      }
+
+      logger.error('Could not find a valid channel to post in.')
+      console.log(eInfo)
     }
   }
 }

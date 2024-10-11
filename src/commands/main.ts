@@ -1,4 +1,6 @@
 import type { Guild, User } from 'discord.js'
+import process from 'node:process'
+import { msCompare } from '@utils/dayjs'
 import { MessageFlags } from 'discord.js'
 import { t as $t } from 'i18next'
 import { GuildDBController } from '~/controllers/guild'
@@ -150,14 +152,31 @@ export class SimulateCommand {
 }
 
 @Factory.setContexts(ICT.Guild)
-@Factory.setPermissions([Discord.PFlags.Administrator])
-@CommandFactory('leave', 'leave the current guild.')
-export class LeaveCommand {
+@Factory.setPermissions([Discord.PFlags.BanMembers])
+@CommandFactory('ping', 'Ping the bot.')
+export class PingCommand {
   // This should be defined as the base function to call.
   @Options.slashOnly()
   public static async main(ci: DT.ChatInteraction) {
-    const reply = new DiscordInteraction.Reply(ci)
-    await reply.send(`Goodbye~ %username%`)
-    reply.getGuild()!.leave()
+    let timestamp = new Date()
+    const reply = await new DiscordInteraction.Reply(ci).defer()
+
+    await new Promise((re) => {
+      process.nextTick(() => {
+        re(undefined)
+      })
+    })
+
+    const tickRate = msCompare(timestamp, new Date())
+    timestamp = new Date()
+
+    await GuildDBController.ping()
+    const dbMs = msCompare(timestamp, new Date())
+    timestamp = new Date()
+
+    await Discord.Client.application!.fetch()
+    const discordMs = msCompare(timestamp, new Date())
+
+    reply.send(`🏓 [PONG!] Discord: \`${discordMs}ms\` | TickRate: \`${tickRate}ms\` | DB: \`${dbMs}ms\` `)
   }
 }
