@@ -1,6 +1,6 @@
 import type { Guild, User } from 'discord.js'
-import process from 'node:process'
-import { msCompare } from '@utils/dayjs'
+import { hrtime, nextTick } from 'node:process'
+import { nsArrayToReadable } from '@utils/dayjs'
 import { MessageFlags } from 'discord.js'
 import { t as $t } from 'i18next'
 import { GuildDBController } from '~/controllers/guild'
@@ -158,25 +158,34 @@ export class PingCommand {
   // This should be defined as the base function to call.
   @Options.slashOnly()
   public static async main(ci: DT.ChatInteraction) {
-    let timestamp = new Date()
+    const debug = {
+      rate: BigInt(0),
+      discord: BigInt(0),
+      database: BigInt(0),
+    }
+
+    let startTime = hrtime.bigint()
     const reply = await new DiscordInteraction.Reply(ci).defer()
+    debug.discord = hrtime.bigint() - startTime
 
-    await new Promise((re) => {
-      process.nextTick(() => {
-        re(undefined)
-      })
-    })
+    startTime = hrtime.bigint()
+    await new Promise(nextTick)
+    debug.rate = hrtime.bigint() - startTime
 
-    const tickRate = msCompare(timestamp, new Date())
-    timestamp = new Date()
-
+    startTime = hrtime.bigint()
     await GuildDBController.ping()
-    const dbMs = msCompare(timestamp, new Date())
-    timestamp = new Date()
+    debug.database = hrtime.bigint() - startTime
 
-    await Discord.Client.application!.fetch()
-    const discordMs = msCompare(timestamp, new Date())
-
-    reply.send(`🏓 [PONG!] Discord: \`${discordMs}ms\` | TickRate: \`${tickRate}ms\` | DB: \`${dbMs}ms\` `)
+    const output = nsArrayToReadable(debug)
+    reply.setTitle('🏓 [ PONG! ]').send(`
+      Timing Results:
+      %%
+      Discord: ${output.discord}
+      %%%%
+      Tick Rate: ${output.rate}
+      %%%%
+      Database: ${output.database}
+      %%
+    `, { unwrap: true })
   }
 }

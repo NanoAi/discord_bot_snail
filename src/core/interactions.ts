@@ -30,13 +30,15 @@ export const Styles = {
 }
 
 const defaultOptions: {
+  useQuote?: boolean
   noReplace?: boolean
+  unwrap?: boolean
   flags?:
   BitFieldResolvable<
       'SuppressEmbeds' | 'SuppressNotifications',
       MessageFlags.SuppressEmbeds | MessageFlags.SuppressNotifications
   >
-} = { noReplace: false, flags: undefined }
+} = { useQuote: false, noReplace: false, unwrap: false, flags: undefined }
 
 /**
  * enum LabelKeys
@@ -44,6 +46,49 @@ const defaultOptions: {
 export enum LabelKeys {
   ID = 'ID',
   GUILD = 'GU',
+  NONE = '_',
+}
+
+function attachEmbed(
+  _class: Reply | DirectMessage,
+  response: Maybe<string>,
+  prefix: string,
+  suffix: string,
+  options = defaultOptions,
+) {
+  const _i = _class.getInteraction()
+  const message = _class.getMessage()!
+  const settings = _class.settings
+  const embed = _class.embed
+
+  if (!response)
+    return
+
+  if (!options.noReplace) {
+    response = response.replaceAll('%username%', (_i && _i.user.username) || message.author.username)
+    response = response.replaceAll('%%', '```')
+  }
+
+  const data = {
+    title: settings.useTitle ? `${prefix}${_class.title}${suffix}` : undefined,
+    response: '',
+  }
+
+  if (options.unwrap) {
+    response = response
+      .replaceAll(/\t+| {3,}/g, '')
+      .replaceAll(/^\n|\n$|^[^\S\n]+|[^\S\n]+$/g, '')
+      .replaceAll(/\n{2,}/g, '')
+  }
+
+  data.response = options.useQuote ? `<:quote:1295782463536365578> **${response}**` : `**${response}**`
+
+  // embed.setDescription(`### ${this.title}\n<:quote:1285270560967753849> **${response}**`)
+  // embed.setDescription(`### ${this.title}\n\`-\` **${message}**`)
+  if (settings.useTitle)
+    embed.setDescription(`${data.title}${data.response}`)
+  else
+    embed.setDescription(`${data.response}`)
 }
 
 class CommandInteractionCallback {
@@ -205,7 +250,7 @@ export class Reply extends CommandInteraction {
     return this
   }
 
-  async send(response: string, options = defaultOptions): MessageSend {
+  async send(response?: string, options = defaultOptions): MessageSend {
     const _i = this.getInteraction()
     const message = this.getMessage()!
     const settings = this.settings
@@ -221,15 +266,7 @@ export class Reply extends CommandInteraction {
     else
       this.embed.setFooter({ iconURL: settings.style.icon, text: `GU: ${this.getBoth().guildId}` })
 
-    if (!options.noReplace) {
-      response = response.replaceAll('%username%', (_i && _i.user.username) || message.author.username)
-
-      if (!settings.useTitle)
-        embed.setDescription(`**${response}**`)
-      else
-        embed.setDescription(`### ${this.title}\n<:quote:1285270560967753849> **${response}**`)
-    }
-
+    attachEmbed(this, response, '### ', '\n', options)
     try {
       if (_i) {
         if (_i.replied)
@@ -250,7 +287,7 @@ export class Reply extends CommandInteraction {
     catch (eInfo) {
       // TODO: Add a "console" channel to catch errors etc.
       if (_i && (eInfo as any).code === 10062) {
-        logger.error('Expected reply took too long, try a defer.')
+        logger.error('[10062] Expected reply took too long.')
         return
       }
 
@@ -309,14 +346,7 @@ export class DirectMessage extends Reply {
       this.actionRow = new ActionRowBuilder().addComponents(source)
     }
 
-    if (!options.noReplace) {
-      message = message.replaceAll('%username%', this.user.username)
-      if (!settings.useTitle)
-        embed.setDescription(`**${message}**`)
-      else
-        embed.setDescription(`### ${this.title}\n\`-\` **${message}**`)
-    }
-
+    attachEmbed(this, message, '### ', '\n\`-\` ', options)
     return await this.user.send({
       embeds: [embed],
       flags: options.flags,

@@ -166,10 +166,13 @@ export class WarnCommand {
     try {
       const dm = new DiscordInteraction.DirectMessage(ci)
       const warnMessage = `
-        [Case #\`${caseFile.id}\`] <:warn:1276566769867423848> User Warned @ <t:${timestamp}:f>
+        [Case #\`${caseFile.id}\`] <:warn:1276566769867423848> User Warned [<t:${timestamp}:t>]
         \`\`\`${reason}\`\`\`
-      `.replaceAll(/\t| {3,}/g, '')
-      await dm.label(LK.ID, member.user.id).style(Styles.Warn).to(member.user).send(warnMessage)
+      `
+      await dm.label(LK.ID, member.user.id)
+        .style(Styles.Warn)
+        .to(member.user)
+        .send(warnMessage, { unwrap: true })
     }
     catch {
       await reply.label(LK.ID, member.user.id).style(Styles.Error).send($t('command.error.noDM', { user: user.username }))
