@@ -11,17 +11,9 @@ import type { ForumDB } from '~/types/controllers'
 
 const allowedURLS = [
   'tenor.com',
-  'imgur.com',
-  'reddit.com',
-  'youtube.com',
-  'twitch.tv',
   'example.com',
-  'twitter.com',
-  'x.com',
-  'fxtwitter.com',
-  'fixupx.com',
-  'twittpr.com',
   'cdn.discordapp.com',
+  'media.discordapp.net',
 ]
 
 const forumController = new ForumController()
@@ -50,11 +42,14 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
         member.disableCommunicationUntil(dayjs(date).add(48, 'h').toDate(), 'Mention spam in initial message.')
       }
       else {
-        if ((urls && urls.length > 0) && (urls[0].length > 1 && urls[0][1])) {
-          const url = String(urls[0][1]).toLowerCase()
-          if (!allowedURLS.includes(url) && message.deletable) {
-            await message.delete()
-            member.disableCommunicationUntil(dayjs(date).add(3, 'h').toDate(), 'Unrecognized link in initial message.')
+        if ((urls && urls.length > 0) && urls[0].length) {
+          for (const v of urls[0]) {
+            const url = String(v).toLowerCase()
+            if (!allowedURLS.includes(url) && message.deletable) {
+              await message.delete()
+              member.disableCommunicationUntil(dayjs(date).add(3, 'h').toDate(), 'Unrecognized link in initial message.')
+              break
+            }
           }
         }
       }
