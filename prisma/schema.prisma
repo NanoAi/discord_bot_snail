@@ -42,6 +42,7 @@ model Case {
   id          Int      @id @default(autoincrement())
   guildId     String
   userId      String
+  actorId     String
   description String   @default("")
   actions     Action[] // Relation to Actions
   tickets     Ticket[] // Relation to Tickets

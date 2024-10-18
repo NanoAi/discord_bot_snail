@@ -12,6 +12,40 @@ const pool = new Pool({
   ssl: false,
 })
 
+export class Utils {
+  static cast<T>(value: unknown) {
+    return value as T
+  }
+
+  /**
+   * Unionize a table into a new user defined key.
+   * @param selections The base selection.
+   * @param mergeTo The key to merge to.
+   * @param mergeFrom The key to merge from.
+   * @param key They key to introduce to the selections.
+   * @returns The unionized table data.
+   */
+  static unionize<T, V extends any[]>(
+    selections: V,
+    mergeTo: keyof typeof selections[0],
+    mergeFrom: keyof typeof selections[0],
+    key: string,
+  ): T[] {
+    const map = new Map<number, T>()
+    for (const selection of selections) {
+      const k = (selection[mergeTo] as any).id // Assume that 'id' exists.
+      if (selection[mergeFrom] && !map.has(k)) {
+        map.set(k, { ...selection[mergeTo], [key]: [selection[mergeFrom]] } as T)
+      }
+      else {
+        const keyValue = (map.get(k) as any)[key] // selection[mergeFrom]
+        map.set(k, { ...selection[mergeTo], [key]: keyValue } as T)
+      }
+    }
+    return Array.from(map, ([_, value]) => value)
+  }
+}
+
 export class Drizzle {
   public static db = drizzle(pool)
 

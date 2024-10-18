@@ -4,7 +4,7 @@ import { t as $t } from 'i18next'
 import { CaseDBController } from '~/controllers/case'
 import { UserDBController } from '~/controllers/user'
 import { Command, CommandFactory, Factory } from '~/core/decorators'
-import { Client, InteractionContextType as ICT } from '~/core/discord'
+import { Client, CVar, InteractionContextType as ICT } from '~/core/discord'
 import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
 import type { Args, DT } from '~/types/discord'
 
@@ -129,6 +129,43 @@ export class BanCommand {
   }
 }
 
+function truncate(str: string, n: number) {
+  return (str.length > n) ? `${str.slice(0, n - 1)}…` : str
+}
+
+@CommandFactory('case', 'Review case files.')
+export class CaseCommand {
+  @Command.addUserOption('user', 'The user to review the case files of.', [CVar.Required])
+  @Command.addSubCommand('user', 'View cases by user.')
+  public static async user(ci: DT.ChatInteraction, args: DT.Args<[['user', User]]>) {
+    const reply = await new DiscordInteraction.Reply(ci).defer()
+    const user = args.user(undefined)
+    const guild = reply.getGuild()
+    const cases = await CaseDBController.getCasesByUser(user.id)
+
+    if (!guild) {
+      await reply.label(LK.ID, user.id).style(Styles.Error).send($t('command.error.noGuild'))
+      return
+    }
+
+    const output = []
+    if (cases) {
+      let i = 10
+      for (const v of cases) {
+        if (v.guildId !== guild.id)
+          continue
+        i--
+        if (i < 1)
+          break
+        const value = `**Creator:** <@${v.actorId}> (${v.actorId})\n**Reason:** \`${truncate(v.description, 25)}\``
+        output.push({ name: `Case #\`${v.id}\` ------`, value })
+      }
+    }
+
+    await reply.label(LK.GUILD, guild.id).style(Styles.Info).setFields(output).send()
+  }
+}
+
 @CommandFactory('warn', 'Warn a user for a reason.')
 export class WarnCommand {
   @Command.addNumberOption('case', 'The case number to attach this warning to.')
@@ -151,7 +188,7 @@ export class WarnCommand {
     if (!dbUser)
       return
 
-    const caseFile = await CaseDBController.upsertCase(args.case(0), member.guild.id, user.id, reason)
+    const caseFile = await CaseDBController.upsertCase(args.case(0), member.guild.id, user.id, reply.getAuthor().id, reason)
     CaseDBController.new({
       actionType: CaseDBController.ENUM.Action.WARN,
       timestamp: new Date(),

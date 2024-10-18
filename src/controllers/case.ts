@@ -1,6 +1,6 @@
-import { Action, Case, Ticket } from '@schema'
+import { Action, Case, CaseRelations, Ticket } from '@schema'
 import { eq, sql } from 'drizzle-orm'
-import { Drizzle } from '~/core/utils/drizzle'
+import { Drizzle, Utils } from '~/core/utils/drizzle'
 import { logger } from '~/core/utils/logger'
 import type { ActionDB, CaseDB } from '~/types/controllers'
 
@@ -12,6 +12,13 @@ function getEnumName(enumVar: typeof CaseDBController.ENUM.Ticket | typeof CaseD
       return k.toUpperCase()
   }
 }
+
+interface CaseData {
+  action: ActionDB['select']
+  case: CaseDB['select']
+}
+
+type CaseActionUnion = (CaseData['case'] & { actions: CaseData['action'][] })
 
 // Controller class to handle case-related database operations
 export class CaseDBController {
@@ -29,10 +36,7 @@ export class CaseDBController {
     },
   } as const
 
-  private data: {
-    action: ActionDB['select']
-    case: CaseDB['select']
-  }
+  private data: CaseData
 
   constructor(action: ActionDB['update'], caseVar: CaseDB['select']) {
     const actionInsert = {
@@ -55,24 +59,25 @@ export class CaseDBController {
   }
 
   // Create a new case
-  static async createCase(guildId: string, userId: string, description: string) {
+  static async createCase(guildId: string, userId: string, actorId: string, description: string) {
     const caseId = (await db.insert(Case).values({
       guildId,
       userId,
+      actorId,
       description,
     }).returning({ id: Case.id }))[0].id
     logger.info(`Case #${caseId} created successfully for User '${userId}' in Guild '${guildId}'!`)
-    return { id: caseId, guildId, userId, description }
+    return { id: caseId, guildId, userId, actorId, description }
   }
 
-  static async upsertCase(caseId: number, guildId: string, userId: string, description: string) {
+  static async upsertCase(caseId: number, guildId: string, userId: string, actorId: string, description: string) {
     let output
     if (caseId > 0) {
       output = await this.getCaseById(caseId)
       if (output && output.userId === userId)
         return output
     }
-    return this.createCase(guildId, userId, description)
+    return this.createCase(guildId, userId, actorId, description)
   }
 
   // Get a case by ID
@@ -153,8 +158,8 @@ export class CaseDBController {
   }
 
   // Get all cases for a specific user
-  static async getCasesByUser(userId: string) {
-    const cases = await db.select().from(Case).where(eq(Case.userId, userId))
-    return cases
+  static async getCasesByUser(userId: string): Promise<CaseActionUnion[]> {
+    const cases = await db.select().from(Case).leftJoin(Action, eq(Case.id, Action.caseId)).where(eq(Case.userId, userId))
+    return Utils.unionize<CaseActionUnion, typeof cases>(cases, 'Case', 'Action', 'actions')
   }
 }

@@ -37,6 +37,7 @@ export const Case = pgTable('Case', {
   id: serial('id').notNull().primaryKey(),
   guildId: text('guildId').notNull(),
   userId: text('userId').notNull(),
+  actorId: text('actorId').notNull(),
   description: text('description').notNull(),
 }, Case => ({
   Case_guild_fkey: foreignKey({
