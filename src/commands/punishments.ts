@@ -158,7 +158,7 @@ export class CaseCommand {
         if (i < 1)
           break
         const value = `**Creator:** <@${v.actorId}> (${v.actorId})\n**Reason:** \`${truncate(v.description, 25)}\``
-        output.push({ name: `Case #\`${v.id}\` ------`, value })
+        output.push({ name: `Case #\`${v.id}\` ⸻`, value })
       }
     }
 

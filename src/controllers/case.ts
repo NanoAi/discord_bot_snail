@@ -159,7 +159,12 @@ export class CaseDBController {
 
   // Get all cases for a specific user
   static async getCasesByUser(userId: string): Promise<CaseActionUnion[]> {
-    const cases = await db.select().from(Case).leftJoin(Action, eq(Case.id, Action.caseId)).where(eq(Case.userId, userId))
-    return Utils.unionize<CaseActionUnion, typeof cases>(cases, 'Case', 'Action', 'actions')
+    const cases = await db.query.Case.findMany({
+      where: eq(Case.userId, userId),
+      with: {
+        actions: true,
+      },
+    })
+    return cases
   }
 }

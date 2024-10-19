@@ -1,3 +1,4 @@
+import * as schema from '@schema'
 import { sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
@@ -47,7 +48,7 @@ export class Utils {
 }
 
 export class Drizzle {
-  public static db = drizzle(pool)
+  public static db = drizzle(pool, { schema })
 
   static async version() {
     try {
