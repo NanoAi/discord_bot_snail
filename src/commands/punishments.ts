@@ -1,12 +1,16 @@
 import type { GuildMember, User } from 'discord.js'
 import dayjs from '@utils/dayjs'
 import { t as $t } from 'i18next'
+import NodeCache from 'node-cache'
 import { CaseDBController } from '~/controllers/case'
 import { UserDBController } from '~/controllers/user'
-import { Command, CommandFactory, Factory } from '~/core/decorators'
+import { Command, CommandFactory, Factory, Options } from '~/core/decorators'
 import { Client, CVar, InteractionContextType as ICT } from '~/core/discord'
 import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
+import type { CaseDB } from '~/types/controllers'
 import type { Args, DT } from '~/types/discord'
+
+const commandMemory = new NodeCache({ stdTTL: 180, checkperiod: 120 })
 
 @Factory.setContexts(ICT.Guild)
 @CommandFactory('softban', 'Ban then immediately unban a user.')
@@ -135,13 +139,16 @@ function truncate(str: string, n: number) {
 
 @CommandFactory('case', 'Review case files.')
 export class CaseCommand {
+  @Options.number(number => number.setMinValue(0))
+  @Command.addNumberOption('from', 'Starting from this Case ID.')
   @Command.addUserOption('user', 'The user to review the case files of.', [CVar.Required])
   @Command.addSubCommand('user', 'View cases by user.')
-  public static async user(ci: DT.ChatInteraction, args: DT.Args<[['user', User]]>) {
+  public static async user(ci: DT.ChatInteraction, args: DT.Args<[['user', User], ['from', number]]>) {
     const reply = await new DiscordInteraction.Reply(ci).defer()
     const user = args.user(undefined)
+    const from = Math.max(Number(args.from(0)), 0)
     const guild = reply.getGuild()
-    const cases = await CaseDBController.getCasesByUser(user.id)
+    const cases = await CaseDBController.getCasesByUser(user.id, from)
 
     if (!guild) {
       await reply.label(LK.ID, user.id).style(Styles.Error).send($t('command.error.noGuild'))
@@ -150,19 +157,91 @@ export class CaseCommand {
 
     const output = []
     if (cases) {
-      let i = 10
+      let i = 5
       for (const v of cases) {
         if (v.guildId !== guild.id)
           continue
-        i--
-        if (i < 1)
+        if (i-- < 1)
           break
-        const value = `**Creator:** <@${v.actorId}> (${v.actorId})\n**Reason:** \`${truncate(v.description, 25)}\``
-        output.push({ name: `Case #\`${v.id}\` ⸻`, value })
+
+        const txt = [
+          `⚖️ **.Actor:** <@${v.actorId}> (\`${v.actorId}\`)`,
+          `🎯 **Target:** <@${v.userId}> (\`${v.userId}\`)`,
+          `📝 **Reason ⸺**\n\`\`\`${truncate(v.description, 32)}\`\`\``,
+        ]
+
+        output.push({ name: `| 💼 Case #\`${v.id}\`\_`, value: txt.join('\n') })
       }
     }
 
     await reply.label(LK.GUILD, guild.id).style(Styles.Info).setFields(output).send()
+  }
+
+  @Command.addIntegerOption('case', 'The case ID to open.')
+  @Command.addSubCommand('open', 'Open a case to append or edit.')
+  public static async open(ci: DT.ChatInteraction, args: DT.Args<[['case', number]]>) {
+    const reply = new DiscordInteraction.Reply(ci)
+    const caseId = args.case(0)
+    const caseFile = await CaseDBController.getCaseById(caseId) as CaseDB['select'] | undefined
+
+    if (caseFile) {
+      commandMemory.set(reply.getAuthor().id, caseFile)
+      let re = `Case File #\`${caseFile.id}\` opened for ${reply.getAuthor()} \`${reply.getAuthor().id}\`.`
+      re = `${re}**\n⸺ Will close <t:${dayjs().add(3, 'minutes').unix()}:R>**.`
+      await reply.style(Styles.Success).send(re)
+    }
+    else {
+      await reply.style(Styles.Error).send('Case not found.')
+    }
+  }
+
+  @Command.addSubCommand('close', 'Close a case that was being edited.')
+  public static async close(ci: DT.ChatInteraction) {
+    const reply = new DiscordInteraction.Reply(ci)
+    const author = reply.getAuthor()
+    const caseFile = commandMemory.get(author.id) as CaseDB['select'] | undefined
+
+    if (caseFile) {
+      commandMemory.del(author.id)
+      await reply.send(`Case File #\`${caseFile.id}\` has been closed.`)
+    }
+    else {
+      await reply.style(Styles.Error).send('Case not found. Try opening one first.')
+    }
+  }
+
+  @Command.addStringOption('reason', 'The new case reason.')
+  @Command.addSubCommand('update', 'Update case data.')
+  public static async update(ci: DT.ChatInteraction, args: DT.Args<[['reason', string]]>) {
+    const reply = await new DiscordInteraction.Reply(ci).defer()
+    const guild = reply.getGuild()!
+    const authorId = reply.getAuthor().id
+    const caseFile = commandMemory.get(authorId) as CaseDB['select'] | undefined
+
+    if (!guild) {
+      await reply.label(LK.ID, reply.getAuthor().id).style(Styles.Error).send($t('command.error.noGuild'))
+      return
+    }
+
+    if (caseFile) {
+      const update = await CaseDBController.updateCase(
+        caseFile.id,
+        guild.id,
+        authorId,
+        args.reason('undefined'),
+      )
+
+      if (!update) {
+        await reply.style(Styles.Error).send('Failed to update the specified case file.')
+        return
+      }
+
+      commandMemory.set(authorId, update)
+      await reply.style(Styles.Success).send(`Case File #\`${caseFile.id}\` updated.`)
+    }
+    else {
+      await reply.style(Styles.Error).send('Case not found. Try opening one first.')
+    }
   }
 }
 
@@ -175,6 +254,7 @@ export class WarnCommand {
     const timestamp = dayjs().unix()
     const reply = await new DiscordInteraction.Reply(ci).defer()
     const user = args.user(undefined)
+    const authorId = reply.getAuthor().id
     const reason = args.reason('unspecified').replaceAll('`', '')
     const member = (await reply.getGuildMember(user, true)) as GuildMember
 
@@ -188,12 +268,12 @@ export class WarnCommand {
     if (!dbUser)
       return
 
-    const caseFile = await CaseDBController.upsertCase(args.case(0), member.guild.id, user.id, reply.getAuthor().id, reason)
+    const caseFile = await CaseDBController.upsertCase(args.case(0), member.guild.id, user.id, authorId, reason)
     CaseDBController.new({
       actionType: CaseDBController.ENUM.Action.WARN,
       timestamp: new Date(),
       userId: user.id,
-      actorId: reply.getAuthor().id,
+      actorId: authorId,
       reason,
     }, caseFile).upsertAction()
 

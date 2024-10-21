@@ -16,6 +16,7 @@ export const User = pgTable('User', {
   id: text('id').notNull().primaryKey(),
   guildId: text('guildId').notNull(),
   username: text('username').notNull(),
+  nickname: text('nickname').notNull(),
   xp: integer('xp').notNull(),
   heat: integer('heat').notNull(),
   level: integer('level').notNull(),

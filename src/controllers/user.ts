@@ -19,6 +19,7 @@ export class UserDBController {
       lastMessageDate: assign.lastMessageDate || nullDate(),
       roles: assign.roles || member.roles.cache || {},
       username: assign.username || member.user.username,
+      nickname: assign.nickname || member.nickname || '',
       heat: assign.heat || 0,
       xp: assign.xp || 0,
       level: assign.level || 0,
@@ -44,6 +45,11 @@ export class UserDBController {
       return await this.getUser()
     }
     return dbUser
+  }
+
+  static async getUserById(id: string) {
+    const result = await db.select().from(User).where(eq(User.id, id))
+    return result ? result[0] : undefined
   }
 
   // Get a user by ID

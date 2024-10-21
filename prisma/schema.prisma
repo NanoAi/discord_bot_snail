@@ -26,6 +26,7 @@ model User {
   id              String   @id
   guildId         String
   username        String
+  nickname        String
   xp              Int      @default(0)
   heat            Int      @default(0)
   level           Int      @default(0)

@@ -1,5 +1,5 @@
 import { Action, Case, CaseRelations, Ticket } from '@schema'
-import { eq, sql } from 'drizzle-orm'
+import { and, eq, gt, sql } from 'drizzle-orm'
 import { Drizzle, Utils } from '~/core/utils/drizzle'
 import { logger } from '~/core/utils/logger'
 import type { ActionDB, CaseDB } from '~/types/controllers'
@@ -60,12 +60,15 @@ export class CaseDBController {
 
   // Create a new case
   static async createCase(guildId: string, userId: string, actorId: string, description: string) {
-    const caseId = (await db.insert(Case).values({
+    const caseFiles = await db.insert(Case).values({
       guildId,
       userId,
       actorId,
       description,
-    }).returning({ id: Case.id }))[0].id
+    }).returning({ id: Case.id })
+
+    const caseId = caseFiles[0].id
+
     logger.info(`Case #${caseId} created successfully for User '${userId}' in Guild '${guildId}'!`)
     return { id: caseId, guildId, userId, actorId, description }
   }
@@ -74,10 +77,35 @@ export class CaseDBController {
     let output
     if (caseId > 0) {
       output = await this.getCaseById(caseId)
-      if (output && output.userId === userId)
-        return output
+      if (output && output.userId === userId) {
+        const caseUpdate = await db.update(Case).set({
+          id: output.id,
+          guildId,
+          userId,
+          actorId,
+          description,
+        }).where(eq(Case.id, caseId)).returning()
+        return caseUpdate[0]
+      }
     }
     return this.createCase(guildId, userId, actorId, description)
+  }
+
+  static async updateCase(caseId: number, guildId: string, actorId?: string, description?: string) {
+    const caseFile = await this.getCaseById(caseId)
+
+    if (!caseFile)
+      return undefined
+
+    if (caseFile.guildId !== guildId)
+      return undefined
+
+    const caseUpdate = await db.update(Case).set({
+      actorId: actorId || caseFile.actorId,
+      description: description || caseFile.description,
+    }).where(and(eq(Case.id, caseId), eq(Case.guildId, guildId))).returning()
+
+    return caseUpdate && caseUpdate.length > 0 ? caseUpdate[0] : undefined
   }
 
   // Get a case by ID
@@ -158,13 +186,14 @@ export class CaseDBController {
   }
 
   // Get all cases for a specific user
-  static async getCasesByUser(userId: string): Promise<CaseActionUnion[]> {
+  static async getCasesByUser(userId: string, from: number = 0): Promise<CaseActionUnion[]> {
     const cases = await db.query.Case.findMany({
-      where: eq(Case.userId, userId),
+      where: and(eq(Case.userId, userId), gt(Case.id, from)),
       with: {
         actions: true,
       },
+      limit: 5,
     })
-    return cases
+    return cases.sort((a, b) => +(a.id > b.id) || -(a.id < b.id))
   }
 }
