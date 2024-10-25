@@ -10,7 +10,7 @@ import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions
 import type { CaseDB } from '~/types/controllers'
 import type { Args, DT } from '~/types/discord'
 
-const commandMemory = new NodeCache({ stdTTL: 180, checkperiod: 120 })
+const caseMem = new NodeCache({ stdTTL: 180, checkperiod: 120 })
 
 @Factory.setContexts(ICT.Guild)
 @CommandFactory('softban', 'Ban then immediately unban a user.')
@@ -34,6 +34,21 @@ export class SoftBanCommand {
       return
     }
 
+    const authorId = reply.getAuthor().id
+    const getCase = caseMem.get<CaseDB['select']>(authorId)
+    const reason = args.reason(undefined)
+
+    if (getCase) {
+      const caseFile = await CaseDBController.upsertCase(getCase.id, member.guild.id, user.id, authorId, reason)
+      CaseDBController.new({
+        actionType: CaseDBController.ENUM.Action.SOFTBAN,
+        timestamp: new Date(),
+        userId: user.id,
+        actorId: authorId,
+        reason,
+      }, caseFile).upsertAction()
+    }
+
     try {
       const directMessage = new DiscordInteraction.DirectMessage(ci)
       await directMessage
@@ -47,7 +62,7 @@ export class SoftBanCommand {
     }
 
     try {
-      await member.ban({ reason: args.reason(undefined), deleteMessageSeconds: 604800 })
+      await member.ban({ reason, deleteMessageSeconds: 604800 })
       await reply.label(LK.ID, member.user.id).style(Styles.Error).send(`${member} was banned.`)
       await guild.bans.remove(member.user, 'softban')
     }
@@ -75,6 +90,21 @@ export class KickCommand {
     if (!member.kickable) {
       await reply.label(LK.ID, member.user.id).style(Styles.Error).send(`I could not kick ${member}.`)
       return
+    }
+
+    const authorId = reply.getAuthor().id
+    const getCase = caseMem.get<CaseDB['select']>(authorId)
+    const reason = args.reason(undefined)
+
+    if (getCase) {
+      const caseFile = await CaseDBController.upsertCase(getCase.id, member.guild.id, user.id, authorId, reason)
+      CaseDBController.new({
+        actionType: CaseDBController.ENUM.Action.KICK,
+        timestamp: new Date(),
+        userId: user.id,
+        actorId: authorId,
+        reason,
+      }, caseFile).upsertAction()
     }
 
     try {
@@ -113,6 +143,21 @@ export class BanCommand {
     if (!member.bannable) {
       await reply.label(LK.ID, member.user.id).style(Styles.Error).send(`${$t('command.error.noBan')} ${member}.`)
       return
+    }
+
+    const authorId = reply.getAuthor().id
+    const getCase = caseMem.get<CaseDB['select']>(authorId)
+    const reason = args.reason(undefined)
+
+    if (getCase) {
+      const caseFile = await CaseDBController.upsertCase(getCase.id, member.guild.id, user.id, authorId, reason)
+      CaseDBController.new({
+        actionType: CaseDBController.ENUM.Action.BAN,
+        timestamp: new Date(),
+        userId: user.id,
+        actorId: authorId,
+        reason,
+      }, caseFile).upsertAction()
     }
 
     try {
@@ -185,7 +230,7 @@ export class CaseCommand {
     const caseFile = await CaseDBController.getCaseById(caseId) as CaseDB['select'] | undefined
 
     if (caseFile) {
-      commandMemory.set(reply.getAuthor().id, caseFile)
+      caseMem.set(reply.getAuthor().id, caseFile)
       let re = `Case File #\`${caseFile.id}\` opened for ${reply.getAuthor()} \`${reply.getAuthor().id}\`.`
       re = `${re}**\n⸺ Will close <t:${dayjs().add(3, 'minutes').unix()}:R>**.`
       await reply.style(Styles.Success).send(re)
@@ -199,10 +244,10 @@ export class CaseCommand {
   public static async close(ci: DT.ChatInteraction) {
     const reply = new DiscordInteraction.Reply(ci)
     const author = reply.getAuthor()
-    const caseFile = commandMemory.get(author.id) as CaseDB['select'] | undefined
+    const caseFile = caseMem.get(author.id) as CaseDB['select'] | undefined
 
     if (caseFile) {
-      commandMemory.del(author.id)
+      caseMem.del(author.id)
       await reply.send(`Case File #\`${caseFile.id}\` has been closed.`)
     }
     else {
@@ -216,7 +261,7 @@ export class CaseCommand {
     const reply = await new DiscordInteraction.Reply(ci).defer()
     const guild = reply.getGuild()!
     const authorId = reply.getAuthor().id
-    const caseFile = commandMemory.get(authorId) as CaseDB['select'] | undefined
+    const caseFile = caseMem.get(authorId) as CaseDB['select'] | undefined
 
     if (!guild) {
       await reply.label(LK.ID, reply.getAuthor().id).style(Styles.Error).send($t('command.error.noGuild'))
@@ -236,7 +281,7 @@ export class CaseCommand {
         return
       }
 
-      commandMemory.set(authorId, update)
+      caseMem.set(authorId, update)
       await reply.style(Styles.Success).send(`Case File #\`${caseFile.id}\` updated.`)
     }
     else {

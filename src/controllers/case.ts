@@ -33,6 +33,7 @@ export class CaseDBController {
       BAN: 1,
       WARN: 2,
       MUTE: 3,
+      SOFTBAN: 4,
     },
   } as const
 
