@@ -17,7 +17,7 @@ import * as Discord from './discord'
 import { CommandSettings, CommandVarSettings, SubCommandType as SCT } from './discord'
 import { Metadata } from './metadata'
 import Deferrer from './utils/deferrer'
-import getMethods from './utils/method'
+import { getMethods } from './utils/utils'
 // import 'reflect-metadata'
 
 const defer = new Deferrer()

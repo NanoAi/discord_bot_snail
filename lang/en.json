@@ -20,5 +20,8 @@
         "expected": "The argument \"{{argument}}\" expected a \"${{expected}}.\""
       }
     }
+  },
+  "action": {
+    "made": "{{action}}_\nTarget: {{target}}\nModerator: {{user}}"
   }
 }

@@ -28,4 +28,6 @@ export function getMethods(
   return output
 }
 
-export default getMethods
+export function useWith<T extends any[]>(callback: (...args: T) => void, ...args: T) {
+  return callback(...args)
+}

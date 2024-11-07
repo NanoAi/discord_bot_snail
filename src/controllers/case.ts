@@ -59,6 +59,14 @@ export class CaseDBController {
     return new this(action, caseVar)
   }
 
+  static enumTicket(e: number) {
+    return getEnumName(this.ENUM.Ticket, e)
+  }
+
+  static enumAction(e: number) {
+    return getEnumName(this.ENUM.Action, e)
+  }
+
   // Create a new case
   static async createCase(guildId: string, userId: string, actorId: string, description: string) {
     const caseFiles = await db.insert(Case).values({

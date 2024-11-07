@@ -231,8 +231,10 @@ export class CaseCommand {
 
     if (caseFile) {
       caseMem.set(reply.getAuthor().id, caseFile)
-      let re = `Case File #\`${caseFile.id}\` opened for ${reply.getAuthor()} \`${reply.getAuthor().id}\`.`
-      re = `${re}**\n⸺ Will close <t:${dayjs().add(3, 'minutes').unix()}:R>**.`
+      const re = [
+        `Case File #\`${caseFile.id}\` opened for ${reply.getAuthor()} \`${reply.getAuthor().id}\`.`,
+        `**\n⸺ Will close <t:${dayjs().add(3, 'minutes').unix()}:R>**.`,
+      ].join('')
       await reply.style(Styles.Success).send(re)
     }
     else {
@@ -249,6 +251,38 @@ export class CaseCommand {
     if (caseFile) {
       caseMem.del(author.id)
       await reply.send(`Case File #\`${caseFile.id}\` has been closed.`)
+    }
+    else {
+      await reply.style(Styles.Error).send('Case not found. Try opening one first.')
+    }
+  }
+
+  @Command.addSubCommand('view', 'View the actions within a case.')
+  public static async view(ci: DT.ChatInteraction) {
+    const reply = new DiscordInteraction.Reply(ci)
+    const author = reply.getAuthor()
+    const caseFile = caseMem.get(author.id) as CaseDB['select'] | undefined
+
+    if (caseFile) {
+      const output = []
+      const actions = await CaseDBController.getActionsByCase(caseFile.id)
+      for (const v of actions) {
+        const userUser = await UserDBController.resolveID(v.userId)
+        const userActor = await UserDBController.resolveID(v.actorId)
+        output.push(
+          [
+            $t('action.made', {
+              action: CaseDBController.enumAction(v.actionType),
+              target: `\`${userUser && userUser.username || '???'}\`\u200A\`${v.userId}\``,
+              user: `\`${userActor && userActor.username || '???'}\`\u200A\`${v.actorId}\``,
+            }),
+            `\n\`\`\`${v.reason}\`\`\``,
+            `@ <t:${dayjs(v.timestamp).unix()}>`,
+          ].join(''),
+        )
+      }
+      console.log('\n', output.join(''), '\n')
+      await reply.style(Styles.Info).send(output.join(''))
     }
     else {
       await reply.style(Styles.Error).send('Case not found. Try opening one first.')
