@@ -6,7 +6,7 @@ import { CaseDBController } from '~/controllers/case'
 import { UserDBController } from '~/controllers/user'
 import { Command, CommandFactory, Factory, Options } from '~/core/decorators'
 import { Client, CVar, InteractionContextType as ICT } from '~/core/discord'
-import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
+import { CommandInteraction, DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
 import type { CaseDB } from '~/types/controllers'
 import type { Args, DT } from '~/types/discord'
 
@@ -257,11 +257,15 @@ export class CaseCommand {
     }
   }
 
+  @Command.addIntegerOption('case', 'The case ID to view.')
   @Command.addSubCommand('view', 'View the actions within a case.')
-  public static async view(ci: DT.ChatInteraction) {
-    const reply = new DiscordInteraction.Reply(ci)
+  public static async view(ci: DT.ChatInteraction, args: DT.Args<[['case', number]]>) {
+    const reply = await new CommandInteraction(ci).defer()
     const author = reply.getAuthor()
-    const caseFile = caseMem.get(author.id) as CaseDB['select'] | undefined
+
+    const caseId = args.case(0)
+    const mem = caseMem.get(author.id) as CaseDB['select'] | undefined
+    const caseFile = mem || (await CaseDBController.getCaseById(caseId) as CaseDB['select'] | undefined)
 
     if (caseFile) {
       const output = []
@@ -277,15 +281,16 @@ export class CaseCommand {
               user: `\`${userActor && userActor.username || '???'}\`\u200A\`${v.actorId}\``,
             }),
             `\n\`\`\`${v.reason}\`\`\``,
-            `@ <t:${dayjs(v.timestamp).unix()}>`,
+            `⌛ <t:${dayjs(v.timestamp).unix()}>`,
           ].join(''),
         )
       }
       console.log('\n', output.join(''), '\n')
-      await reply.style(Styles.Info).send(output.join(''))
+      await reply.getBoth().reply(output.join(''))
     }
     else {
-      await reply.style(Styles.Error).send('Case not found. Try opening one first.')
+      const eReply = new DiscordInteraction.Reply(ci)
+      await eReply.style(Styles.Error).send('Case not found. Try opening one first.')
     }
   }
 
