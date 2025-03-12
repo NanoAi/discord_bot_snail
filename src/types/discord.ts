@@ -28,9 +28,11 @@ export type CommandOption = ApplicationCommandOptionBase
 export interface SubCommandMeta { value?: any, name: string, type: SubCommandType, settings: CommandVarSettings[] }
 export type Permissions = DPermissions | bigint | number | null | undefined
 export type Interaction = DInteraction<CacheType>
-export type CommandMember = GuildMember | APIInteractionGuildMember | null
-export type CommandValidator = (isOP: boolean, user: User, member: CommandMember) => boolean
+export type CommandMember = GuildMember | APIInteractionGuildMember | null | undefined
+export type CommandValidator = (isOP: boolean, user: User | undefined, member: CommandMember) => boolean
 export type UserLike = User | ClientUser
+export type InteractionInit = ChatInputCommandInteraction | Message | undefined
+export type InteractionAuthor = User | CommandMember
 
 export interface ChatInteractionAssert {
   author: User

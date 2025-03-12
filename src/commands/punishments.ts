@@ -1,4 +1,6 @@
 import type { GuildMember, User } from 'discord.js'
+import type { CaseDB } from '~/types/controllers'
+import type { Args, DT } from '~/types/discord'
 import dayjs from '@utils/dayjs'
 import { t as $t } from 'i18next'
 import NodeCache from 'node-cache'
@@ -7,8 +9,6 @@ import { UserDBController } from '~/controllers/user'
 import { Command, CommandFactory, Factory, Options } from '~/core/decorators'
 import { Client, CVar, InteractionContextType as ICT } from '~/core/discord'
 import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
-import type { CaseDB } from '~/types/controllers'
-import type { Args, DT } from '~/types/discord'
 
 const commandMemory = new NodeCache({ stdTTL: 180, checkperiod: 120 })
 
@@ -20,9 +20,14 @@ export class SoftBanCommand {
   @Command.addUserOption('user', 'The user to kick from the guild.')
   public static async main(ci: DT.ChatInteraction, args: Args<[['user', User], ['kick', boolean], ['reason', string]]>) {
     const reply = new DiscordInteraction.Reply(ci)
-    const guild = reply.getGuild()!
+    const guild = reply.getGuild()
     const user: User = args.user(undefined)
     const member: GuildMember | undefined = await reply.getGuildMember(user)
+
+    if (!guild) {
+      await reply.label(LK.ID, reply.getAuthor().id).style(Styles.Error).send($t('command.error.noGuild'))
+      return
+    }
 
     if (!member || user === Client.user) {
       await reply.style(Styles.Error).send(`Could not find ${user} in the guild.`)
@@ -214,7 +219,7 @@ export class CaseCommand {
   @Command.addSubCommand('update', 'Update case data.')
   public static async update(ci: DT.ChatInteraction, args: DT.Args<[['reason', string]]>) {
     const reply = await new DiscordInteraction.Reply(ci).defer()
-    const guild = reply.getGuild()!
+    const guild = reply.getGuild()
     const authorId = reply.getAuthor().id
     const caseFile = commandMemory.get(authorId) as CaseDB['select'] | undefined
 

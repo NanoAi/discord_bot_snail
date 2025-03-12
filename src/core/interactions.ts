@@ -1,16 +1,20 @@
-import type {
+import {
   APIEmbedField,
   BitFieldResolvable,
   ColorResolvable,
+  Guild,
+  InteractionEditReplyOptions,
+  InteractionReplyOptions,
   InteractionResponse,
   Message,
   MessageFlags,
   RestOrArray,
   User,
 } from 'discord.js'
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, GuildMember } from 'discord.js'
-import type { ChatInteraction, ChatInteractionAssert, UserLike } from '~/types/discord'
+import type { ChatInteraction, ChatInteractionAssert, InteractionInit, UserLike } from '~/types/discord'
 import type { Maybe } from '~/types/util'
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, GuildMember } from 'discord.js'
+import { assertAs, CheckAs, isDefinedAs, validateAs } from './utils/assert'
 import { logger } from './utils/logger'
 
 export function getChatInteraction(ci: ChatInteraction) {
@@ -129,9 +133,9 @@ export class CommandInteraction {
     return this.ci.author
   }
 
-  getBoth() {
+  getInitializer() {
     const ci = this.ci
-    return (ci.interaction || ci.message)!
+    return assertAs<InteractionInit>((ci.interaction || ci.message), CheckAs.InteractionInit)
   }
 
   getInteraction() {
@@ -145,12 +149,17 @@ export class CommandInteraction {
   getGuild() {
     const ci = this.ci
     const guild = (ci.interaction && ci.interaction.guild) || (ci.message && ci.message.guild) || undefined
-    return guild
+    return isDefinedAs<Guild>(guild, CheckAs.Guild)
+  }
+
+  getGuildAsync() {
+    return validateAs<Guild>(this.getGuild(), CheckAs.Guild)
   }
 
   getUser() {
     const ci = this.ci
-    return (ci.interaction && ci.interaction.user) || (ci.message && ci.message.author) || undefined
+    const user = (ci.interaction && ci.interaction.user) || (ci.message && ci.message.author) || undefined
+    return isDefinedAs<User>(user, CheckAs.User)
   }
 
   async getGuildMember(user: Maybe<UserLike> = this.getUser(), ignoreBots: boolean = false) {
@@ -264,7 +273,7 @@ export class Reply extends CommandInteraction {
     if (settings.label)
       this.embed.setFooter({ iconURL: settings.style.icon, text: `${settings.label.key}: ${settings.label.value}` })
     else
-      this.embed.setFooter({ iconURL: settings.style.icon, text: `GU: ${this.getBoth().guildId}` })
+      this.embed.setFooter({ iconURL: settings.style.icon, text: `GU: ${this.getInitializer().guildId}` })
 
     attachEmbed(this, response, '### ', '\n', options)
     try {
@@ -272,12 +281,15 @@ export class Reply extends CommandInteraction {
         if (_i.replied)
           return
 
-        const re = { embeds: [embed], fetchReply: true, ephemeral: !!settings.ephemeral }
+        const re = { embeds: [embed], withResponse: true } as InteractionReplyOptions | InteractionEditReplyOptions
+        if (settings.ephemeral) {
+          re.flags = MessageFlags.Ephemeral
+        }
         if (_i.deferred) {
-          return await _i.editReply(re)
+          return await _i.editReply(re as InteractionEditReplyOptions)
         }
         else {
-          return await _i.reply(re)
+          return await _i.reply(re as InteractionReplyOptions)
         }
       }
       else {
@@ -322,7 +334,7 @@ export class DirectMessage extends Reply {
   }
 
   async send(message: string, options = defaultOptions): MessageSend {
-    const component = this.getBoth()
+    const component = this.getInitializer()
     const settings = this.settings
     const embed = this.embed
 

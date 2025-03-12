@@ -7,6 +7,7 @@ import type {
   GuildResolvable,
   Message,
 } from 'discord.js'
+import type * as DT from '~/types/discord'
 import {
   ApplicationIntegrationType as _AIT,
   InteractionContextType as _ICT,
@@ -24,12 +25,12 @@ import {
 } from 'discord.js'
 import NodeCache from 'node-cache'
 import { Convert } from '~/core/convert'
-import type * as DT from '~/types/discord'
 import { operators } from '../../admins.json'
 import { SystemCache } from './cache'
 import { CommandMeta } from './decorators'
 import { Metadata } from './metadata'
 import { logger } from './utils/logger'
+import { assertAs, CheckAs } from './utils/assert'
 
 const intents: ClientOptions['intents'] = [
   GatewayIntentBits.Guilds,
@@ -322,12 +323,21 @@ async function getMessageOptions(func: any, args: string[], ci: DT.ChatInteracti
   return options as { [key: string]: () => any }
 }
 
+function getUserInteraction(ci: DT.ChatInteraction) {
+  return (ci.interaction && ci.interaction.user) || (ci.message && ci.message.author)
+}
+
+function getCommandMemberInteraction(ci: DT.ChatInteraction) {
+  return (ci.interaction && ci.interaction.member) || (ci.message && ci.message.member)
+}
+
 function commandValidate(ci: DT.ChatInteraction, func: any) {
   const validator: DT.CommandValidator = func.validator
   if (validator) {
-    const user = (ci.interaction && ci.interaction.user) || ci.message!.author
-    const member = (ci.interaction && ci.interaction.member) || ci.message!.member
-    return validator(operators.includes(user.id), user, member)
+    const user = assertAs<User>(getUserInteraction(ci), CheckAs.User)
+    const member = assertAs<DT.CommandMember>(getCommandMemberInteraction(ci), CheckAs.GuildMemberAPI)
+    const isOP = operators.includes(user.id)
+    return validator(isOP, user, member)
   }
   return true
 }
@@ -342,6 +352,9 @@ class CommandProcessor {
     subId?: string,
   ) {
     let output = false
+
+    if (!ci)
+      return false
 
     if (command.main) {
       const settings = CommandMeta.getParentMeta(command.main)

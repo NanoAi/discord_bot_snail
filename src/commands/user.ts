@@ -1,4 +1,5 @@
 import type { GuildMember, User } from 'discord.js'
+import type { Args, DT } from '~/types/discord'
 import { t as $t } from 'i18next'
 import { UserDBController } from '~/controllers/user'
 import { Command, CommandFactory, Factory, Options } from '~/core/decorators'
@@ -6,7 +7,6 @@ import { CVar, InteractionContextType as ICT, PFlags } from '~/core/discord'
 import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
 import dayjs from '~/core/utils/dayjs'
 import { xpToLevel } from '~/core/utils/levels'
-import type { Args, DT } from '~/types/discord'
 
 async function giveKudos(
   reply: DiscordInteraction.Reply,

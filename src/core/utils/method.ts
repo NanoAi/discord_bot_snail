@@ -27,5 +27,3 @@ export function getMethods(
 
   return output
 }
-
-export default getMethods

@@ -1,10 +1,11 @@
-import { BaseGuildTextChannel, type Channel, ForumChannel, type GuildMember, type Message, type User } from 'discord.js'
+import type { Channel, GuildMember, Message, User } from 'discord.js'
+import type { DT } from '~/types/discord'
+import { BaseGuildTextChannel, ForumChannel } from 'discord.js'
 import { t as $t } from 'i18next'
 import { ForumController } from '~/controllers/forum'
 import { Command, CommandFactory, Factory, Options } from '~/core/decorators'
 import { CVar, InteractionContextType as ICT, PFlags } from '~/core/discord'
 import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
-import type { DT } from '~/types/discord'
 
 type bulkDeleteArgs = DT.Args<[
   ['channel', Channel],
@@ -109,15 +110,17 @@ export class ThreadCommand {
       return
     }
 
-    const controller = new ForumController()
-    await controller.upsertForum({
-      forumId: forum.id,
-      guildId: reply.getGuild()!.id,
-      managed: args.managed(false),
-      bump: args.bumps(300),
-    })
+    reply.getGuildAsync().then(async (guild) => {
+      const controller = new ForumController()
+      await controller.upsertForum({
+        forumId: forum.id,
+        guildId: guild.id,
+        managed: args.managed(false),
+        bump: args.bumps(300),
+      })
 
-    await reply.label(LK.ID, callerId).style(Styles.Success).ephemeral(true).send(`Thread Settings Created for ${forum}.`)
+      await reply.label(LK.ID, callerId).style(Styles.Success).ephemeral(true).send(`Thread Settings Created for ${forum}.`)
+    })
   }
 
   @Command.addChannelOption('channel', 'The channel to target.', [CVar.Required])

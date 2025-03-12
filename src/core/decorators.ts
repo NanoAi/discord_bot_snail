@@ -7,17 +7,17 @@ import type {
   SlashCommandOptionsOnlyBuilder,
   SlashCommandSubcommandsOnlyBuilder,
 } from 'discord.js'
+import type * as DT from '~/types/discord'
 import {
   SlashCommandBuilder,
   SlashCommandSubcommandBuilder,
 } from 'discord.js'
-import type * as DT from '~/types/discord'
 
 import * as Discord from './discord'
 import { CommandSettings, CommandVarSettings, SubCommandType as SCT } from './discord'
 import { Metadata } from './metadata'
 import Deferrer from './utils/deferrer'
-import getMethods from './utils/method'
+import { getMethods } from './utils/method'
 // import 'reflect-metadata'
 
 const defer = new Deferrer()

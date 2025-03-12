@@ -24,15 +24,15 @@ export const User = pgTable('User', {
   lastKudosDate: timestamp('lastKudosDate', { precision: 3 }).notNull().defaultNow(),
   createdAt: timestamp('createdAt', { precision: 3 }).notNull().defaultNow(),
   roles: jsonb('roles').notNull(),
-}, User => ({
-  User_guild_fkey: foreignKey({
+}, User => ([
+  foreignKey({
     name: 'User_guild_fkey',
     columns: [User.guildId],
     foreignColumns: [Guild.id],
   })
     .onDelete('cascade')
     .onUpdate('cascade'),
-}))
+]))
 
 export const Case = pgTable('Case', {
   id: serial('id').notNull().primaryKey(),
@@ -40,22 +40,22 @@ export const Case = pgTable('Case', {
   userId: text('userId').notNull(),
   actorId: text('actorId').notNull(),
   description: text('description').notNull(),
-}, Case => ({
-  Case_guild_fkey: foreignKey({
+}, Case => ([
+  foreignKey({
     name: 'Case_guild_fkey',
     columns: [Case.guildId],
     foreignColumns: [Guild.id],
   })
     .onDelete('cascade')
     .onUpdate('cascade'),
-  Case_user_fkey: foreignKey({
+  foreignKey({
     name: 'Case_user_fkey',
     columns: [Case.userId],
     foreignColumns: [User.id],
   })
     .onDelete('cascade')
     .onUpdate('cascade'),
-}))
+]))
 
 export const Action = pgTable('Action', {
   id: serial('id').notNull().primaryKey(),
@@ -65,15 +65,15 @@ export const Action = pgTable('Action', {
   userId: text('userId').notNull(),
   actorId: text('actorId').notNull(),
   timestamp: timestamp('timestamp', { precision: 3 }).notNull().defaultNow(),
-}, Action => ({
-  Action_case_fkey: foreignKey({
+}, Action => ([
+  foreignKey({
     name: 'Action_case_fkey',
     columns: [Action.caseId],
     foreignColumns: [Case.id],
   })
     .onDelete('cascade')
     .onUpdate('cascade'),
-}))
+]))
 
 export const Ticket = pgTable('Ticket', {
   id: serial('id').notNull().primaryKey(),
@@ -81,30 +81,30 @@ export const Ticket = pgTable('Ticket', {
   status: integer('status').notNull(),
   issue: text('issue').notNull(),
   createdAt: timestamp('createdAt', { precision: 3 }).notNull().defaultNow(),
-}, Ticket => ({
-  Ticket_case_fkey: foreignKey({
+}, Ticket => ([
+  foreignKey({
     name: 'Ticket_case_fkey',
     columns: [Ticket.caseId],
     foreignColumns: [Case.id],
   })
     .onDelete('cascade')
     .onUpdate('cascade'),
-}))
+]))
 
 export const Forum = pgTable('Forum', {
   id: text('id').notNull().primaryKey(),
   guildId: text('guildId').notNull(),
   managed: boolean('managed').notNull(),
   bump: integer('bump').notNull(),
-}, Forum => ({
-  Forum_guild_fkey: foreignKey({
+}, Forum => ([
+  foreignKey({
     name: 'Forum_guild_fkey',
     columns: [Forum.guildId],
     foreignColumns: [Guild.id],
   })
     .onDelete('cascade')
     .onUpdate('cascade'),
-}))
+]))
 
 export const GuildRelations = relations(Guild, ({ many }) => ({
   users: many(User, {
