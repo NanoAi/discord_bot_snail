@@ -1,9 +1,10 @@
+import type { APIInteractionGuildMember } from 'discord.js'
 import type { InteractionInit } from '~/types/discord'
 import { ok as assert } from 'node:assert/strict'
-import { APIInteractionGuildMember, ChatInputCommandInteraction, Guild, GuildMember, Message, User } from 'discord.js'
+import { ChatInputCommandInteraction, Guild, GuildMember, Message, User } from 'discord.js'
 import { logger } from './logger'
 
-interface typeCheckSettings {
+interface checkAsType {
   check: (value: any) => boolean
   name: string
 }
@@ -13,29 +14,34 @@ function instanceOfAPIInteractionGuildMember(object: any): object is APIInteract
 }
 
 export class CheckAs {
-  static readonly Guild: Readonly<typeCheckSettings> = Object.freeze({
+  static readonly Guild: Readonly<checkAsType> = Object.freeze({
     check: (value: Guild) => (value && value instanceof Guild),
     name: 'Guild' as const,
   })
 
-  static readonly GuildMember: Readonly<typeCheckSettings> = Object.freeze({
+  static readonly GuildMember: Readonly<checkAsType> = Object.freeze({
     check: (value: GuildMember) => (value && value instanceof GuildMember),
     name: 'GuildMember' as const,
   })
 
-  static readonly GuildMemberAPI: Readonly<typeCheckSettings> = Object.freeze({
+  static readonly GuildMemberAPI: Readonly<checkAsType> = Object.freeze({
     check: (value: GuildMember) => {
       return (value && (value instanceof GuildMember || instanceOfAPIInteractionGuildMember(value)))
     },
-    name: 'GuildMemberAPI' as const
+    name: 'GuildMemberAPI' as const,
   })
 
-  static readonly User: Readonly<typeCheckSettings> = Object.freeze({
+  static readonly User: Readonly<checkAsType> = Object.freeze({
     check: (value: User) => (value && value instanceof User),
     name: 'User' as const,
   })
 
-  static readonly InteractionInit: Readonly<typeCheckSettings> = Object.freeze({
+  static readonly Message: Readonly<checkAsType> = Object.freeze({
+    check: (value: Message) => (value && value instanceof Message),
+    name: 'Message' as const,
+  })
+
+  static readonly InteractionInit: Readonly<checkAsType> = Object.freeze({
     check: (value: InteractionInit) => {
       return !!(value && (value instanceof ChatInputCommandInteraction || value instanceof Message))
     },
@@ -43,7 +49,7 @@ export class CheckAs {
   })
 }
 
-export function validateAs<T>(value: unknown, typeCheck: typeCheckSettings): Promise<NonNullable<T>> {
+export function validateAs<T>(value: unknown, typeCheck: checkAsType): Promise<NonNullable<T>> {
   return new Promise((resolve, reject) => {
     if (!typeCheck.check(value)) {
       const err = new Error(`Validation Failed: Expected an instance of "${typeCheck.name}".`)
@@ -54,14 +60,14 @@ export function validateAs<T>(value: unknown, typeCheck: typeCheckSettings): Pro
   })
 }
 
-export function assertAs<T>(value: unknown, typeCheck: typeCheckSettings): NonNullable<T> {
+export function assertAs<T>(value: unknown, typeCheck: checkAsType): NonNullable<T> {
   assert(value)
   if (!typeCheck.check(value))
     throw new Error(`Validation Failed: Expected an instance of "${typeCheck.name}".`)
   return value as NonNullable<T>
 }
 
-export function isDefinedAs<T>(value: unknown, typeCheck: typeCheckSettings): T | undefined {
+export function isDefinedAs<T>(value: unknown, typeCheck: checkAsType): T | undefined {
   return typeCheck.check(value) ? value as T : undefined
 }
 

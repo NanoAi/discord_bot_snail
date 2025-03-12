@@ -1,4 +1,4 @@
-import {
+import type {
   APIEmbedField,
   BitFieldResolvable,
   ColorResolvable,
@@ -7,13 +7,19 @@ import {
   InteractionReplyOptions,
   InteractionResponse,
   Message,
-  MessageFlags,
   RestOrArray,
   User,
 } from 'discord.js'
 import type { ChatInteraction, ChatInteractionAssert, InteractionInit, UserLike } from '~/types/discord'
 import type { Maybe } from '~/types/util'
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, GuildMember } from 'discord.js'
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder,
+  GuildMember,
+  MessageFlags,
+} from 'discord.js'
 import { assertAs, CheckAs, isDefinedAs, validateAs } from './utils/assert'
 import { logger } from './utils/logger'
 
@@ -37,11 +43,7 @@ const defaultOptions: {
   useQuote?: boolean
   noReplace?: boolean
   unwrap?: boolean
-  flags?:
-  BitFieldResolvable<
-      'SuppressEmbeds' | 'SuppressNotifications',
-      MessageFlags.SuppressEmbeds | MessageFlags.SuppressNotifications
-  >
+  flags?: BitFieldResolvable<any, any>
 } = { useQuote: false, noReplace: false, unwrap: false, flags: undefined }
 
 /**
@@ -61,7 +63,7 @@ function attachEmbed(
   options = defaultOptions,
 ) {
   const _i = _class.getInteraction()
-  const message = _class.getMessage()!
+  const message = _class.getMessage()
   const settings = _class.settings
   const embed = _class.embed
 
@@ -69,7 +71,7 @@ function attachEmbed(
     return
 
   if (!options.noReplace) {
-    response = response.replaceAll('%username%', (_i && _i.user.username) || message.author.username)
+    response = response.replaceAll('%username%', (_i && _i.user.username) || message?.author.username || 'User')
     response = response.replaceAll('%%', '```')
   }
 
@@ -93,6 +95,70 @@ function attachEmbed(
     embed.setDescription(`${data.title}${data.response}`)
   else
     embed.setDescription(`${data.response}`)
+}
+
+async function sendMessagePayload(
+  _class: Reply | DirectMessage | CommandInteraction,
+  ephemeral: boolean,
+  options = defaultOptions,
+  payload: {
+    content?: string
+    embeds?: EmbedBuilder[]
+  } = {},
+) {
+  const _i = _class.getInteraction()
+  const message = isDefinedAs<Message>(_class.getMessage(), CheckAs.Message)
+
+  if (!payload.content && !payload.embeds)
+    throw new Error('Data must be provided to send a message payload.')
+
+  try {
+    if (_i) {
+      if (_i.replied)
+        return
+
+      const re = {
+        content: payload.content,
+        embeds: payload.embeds,
+        withResponse: true,
+        flags: options.flags,
+      } as InteractionReplyOptions | InteractionEditReplyOptions
+
+      if (ephemeral)
+        re.flags = options.flags | MessageFlags.Ephemeral
+
+      if (_i.deferred) {
+        return await _i.editReply(re as InteractionEditReplyOptions)
+      }
+      else {
+        return await _i.reply(re as InteractionReplyOptions)
+      }
+    }
+    else {
+      if (!message)
+        throw new Error('No message data to process, is there a message to attach to?')
+      await message.reply({ content: payload.content, embeds: payload.embeds, flags: options.flags })
+    }
+  }
+  catch (eInfo) {
+    // TODO: Add a "console" channel to catch errors etc.
+    if (_i && (eInfo as any).code === 10062) {
+      logger.error('[10062] Expected reply took too long.')
+      return
+    }
+
+    const channel = message
+      ? message.channel ?? (await message.fetch(true)).channel
+      : null
+
+    if (!channel?.isSendable()) {
+      logger.error('Could not find a valid channel to post in.')
+      console.log(eInfo)
+      return
+    }
+
+    await channel.send({ content: payload.content, embeds: payload.embeds, flags: options.flags })
+  }
 }
 
 class CommandInteractionCallback {
@@ -167,6 +233,10 @@ export class CommandInteraction {
     if (_i)
       await _i.deferReply()
     return this
+  }
+
+  send(response?: string, options = defaultOptions) {
+    return sendMessagePayload(this, false, options, { content: response })
   }
 
   async getGuildMember(user: Maybe<UserLike> = this.getUser(), ignoreBots: boolean = false) {
@@ -260,8 +330,6 @@ export class Reply extends CommandInteraction {
   }
 
   async send(response?: string, options = defaultOptions): MessageSend {
-    const _i = this.getInteraction()
-    const message = this.getMessage()!
     const settings = this.settings
     const embed = this.embed
 
@@ -276,41 +344,7 @@ export class Reply extends CommandInteraction {
       this.embed.setFooter({ iconURL: settings.style.icon, text: `GU: ${this.getInitializer().guildId}` })
 
     attachEmbed(this, response, '### ', '\n', options)
-    try {
-      if (_i) {
-        if (_i.replied)
-          return
-
-        const re = { embeds: [embed], withResponse: true } as InteractionReplyOptions | InteractionEditReplyOptions
-        if (settings.ephemeral) {
-          re.flags = MessageFlags.Ephemeral
-        }
-        if (_i.deferred) {
-          return await _i.editReply(re as InteractionEditReplyOptions)
-        }
-        else {
-          return await _i.reply(re as InteractionReplyOptions)
-        }
-      }
-      else {
-        return await message.reply({ embeds: [embed], flags: options.flags })
-      }
-    }
-    catch (eInfo) {
-      // TODO: Add a "console" channel to catch errors etc.
-      if (_i && (eInfo as any).code === 10062) {
-        logger.error('[10062] Expected reply took too long.')
-        return
-      }
-
-      const ch = message && (message.channel || (await message.fetch(true)).channel)
-      if (ch && ch.isSendable()) {
-        ch.send({ embeds: [embed], flags: options.flags })
-      }
-
-      logger.error('Could not find a valid channel to post in.')
-      console.log(eInfo)
-    }
+    return sendMessagePayload(this, !!settings.ephemeral, options, { embeds: [embed] })
   }
 }
 
