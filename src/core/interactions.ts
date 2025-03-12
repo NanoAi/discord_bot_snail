@@ -162,6 +162,13 @@ export class CommandInteraction {
     return isDefinedAs<User>(user, CheckAs.User)
   }
 
+  async defer() {
+    const _i = this.getInteraction()
+    if (_i)
+      await _i.deferReply()
+    return this
+  }
+
   async getGuildMember(user: Maybe<UserLike> = this.getUser(), ignoreBots: boolean = false) {
     const guild = this.getGuild()
     if (!guild || !user)
@@ -249,13 +256,6 @@ export class Reply extends CommandInteraction {
 
   setFields(...fields: RestOrArray<APIEmbedField>) {
     this.fields = fields
-    return this
-  }
-
-  async defer() {
-    const _i = this.getInteraction()
-    if (_i)
-      await _i.deferReply()
     return this
   }
 

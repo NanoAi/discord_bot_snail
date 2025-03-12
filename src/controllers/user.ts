@@ -30,6 +30,16 @@ export class UserDBController {
     return new UserDBController(member, assign)
   }
 
+  static async resolveID(userId: string) {
+    return await db.query.User.findFirst({
+      where: eq(User.id, userId),
+    })
+  }
+
+  static query() {
+    return db.query.User
+  }
+
   // Get a user by ID, if user doesn't exist create it.
   async getOrCreateUser() {
     const dbUser = await this.getUser()

@@ -33,6 +33,7 @@ export class CaseDBController {
       BAN: 1,
       WARN: 2,
       MUTE: 3,
+      SOFTBAN: 4,
     },
   } as const
 
@@ -56,6 +57,14 @@ export class CaseDBController {
 
   static new(action: ActionDB['update'], caseVar: CaseDB['select']) {
     return new this(action, caseVar)
+  }
+
+  static enumTicket(e: number) {
+    return getEnumName(this.ENUM.Ticket, e)
+  }
+
+  static enumAction(e: number) {
+    return getEnumName(this.ENUM.Action, e)
   }
 
   // Create a new case
