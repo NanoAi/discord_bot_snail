@@ -291,7 +291,7 @@ export class CaseCommand {
         )
       }
       console.log('\n', output.join(''), '\n')
-      await reply.getBoth().reply(output.join(''))
+      await reply.getInitializer().reply(output.join(''))
     }
     else {
       const eReply = new DiscordInteraction.Reply(ci)
