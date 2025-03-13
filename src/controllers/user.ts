@@ -19,7 +19,7 @@ export class UserDBController {
       lastMessageDate: assign.lastMessageDate || nullDate(),
       roles: assign.roles || member.roles.cache || {},
       username: assign.username || member.user.username,
-      nickname: assign.nickname || member.nickname || '',
+      nickname: assign.nickname || member.nickname || member.displayName || '',
       heat: assign.heat || 0,
       xp: assign.xp || 0,
       level: assign.level || 0,

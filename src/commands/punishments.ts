@@ -8,6 +8,7 @@ import { CaseDBController } from '~/controllers/case'
 import { UserDBController } from '~/controllers/user'
 import { Command, CommandFactory, Factory, Options } from '~/core/decorators'
 import { Client, CVar, InteractionContextType as ICT } from '~/core/discord'
+import { $f } from '~/core/formatters'
 import { CommandInteraction, DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
 
 const caseMem = new NodeCache({ stdTTL: 180, checkperiod: 120 })
@@ -224,7 +225,7 @@ export class CaseCommand {
       }
     }
 
-    await reply.label(LK.GUILD, guild.id).style(Styles.Info).setFields(output).send()
+    await reply.label(LK.GUILD, guild.id).style(Styles.Info).silence(true).setFields(output).send()
   }
 
   @Command.addIntegerOption('case', 'The case ID to open.')
@@ -277,20 +278,27 @@ export class CaseCommand {
       const actions = await CaseDBController.getActionsByCase(caseFile.id)
       for (const v of actions) {
         const userUser = await UserDBController.resolveID(v.userId)
+        const userName = userUser && $f.escape(userUser.nickname)
+
         const userActor = await UserDBController.resolveID(v.actorId)
+        const actorName = userActor && $f.escape(userActor.nickname)
+        const footnote = `[${userName}](${v.userId}) by [${actorName}](${v.actorId})`
+
         output.push(
           [
             $t('action.made', {
               action: CaseDBController.enumAction(v.actionType),
-              target: `\`${userUser && userUser.username || '???'}\`\u200A\`${v.userId}\``,
-              user: `\`${userActor && userActor.username || '???'}\`\u200A\`${v.actorId}\``,
+              target: `<@${v.userId}>`,
+              user: `<@${v.actorId}>`,
+              interpolation: { escapeValue: false },
             }),
-            `\n\`\`\`${v.reason}\`\`\``,
-            `⌛ <t:${dayjs(v.timestamp).unix()}>`,
+            `\n\`\`\`| ${v.reason}\`\`\``,
+            `⌛ <t:${dayjs(v.timestamp).unix()}>\n`,
+            `-# **(**\`${caseFile.id}\`**)** Action executed on ${footnote} **|** **(**H\`${userUser?.heat || 0}\`**)**`,
           ].join(''),
         )
       }
-      await reply.send(output.join(''))
+      await reply.silence(true).send(output.join('\n'))
     }
     else {
       const eReply = new DiscordInteraction.Reply(ci)
@@ -345,6 +353,7 @@ export class WarnCommand {
     const authorId = reply.getAuthor().id
     const reason = args.reason('unspecified').replaceAll('`', '')
     const member = (await reply.getGuildMember(user, true)) as GuildMember
+    // const mem = caseMem.get(authorId) as CaseDB['select'] | undefined
 
     if (!member) {
       await reply.label(LK.ID, user.id).style(Styles.Error).send($t('user.noTarget', { user: user.username, id: user.id }))

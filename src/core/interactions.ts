@@ -7,6 +7,8 @@ import type {
   InteractionReplyOptions,
   InteractionResponse,
   Message,
+  MessagePayload,
+  MessageReplyOptions,
   RestOrArray,
   User,
 } from 'discord.js'
@@ -43,8 +45,9 @@ const defaultOptions: {
   useQuote?: boolean
   noReplace?: boolean
   unwrap?: boolean
+  silence?: boolean
   flags?: BitFieldResolvable<any, any>
-} = { useQuote: false, noReplace: false, unwrap: false, flags: undefined }
+} = { useQuote: false, noReplace: false, unwrap: false, silence: false, flags: undefined }
 
 /**
  * enum LabelKeys
@@ -71,7 +74,7 @@ function attachEmbed(
     return
 
   if (!options.noReplace) {
-    response = response.replaceAll('%username%', (_i && _i.user.username) || message?.author.username || 'User')
+    response = response.replaceAll('%username%', (_i && _i.user.username) || message?.author.username || 'user')
     response = response.replaceAll('%%', '```')
   }
 
@@ -103,14 +106,21 @@ async function sendMessagePayload(
   options = defaultOptions,
   payload: {
     content?: string
+    data?: MessagePayload | MessageReplyOptions
     embeds?: EmbedBuilder[]
   } = {},
 ) {
   const _i = _class.getInteraction()
   const message = isDefinedAs<Message>(_class.getMessage(), CheckAs.Message)
+  payload.data = { content: payload.content, embeds: payload.embeds, flags: options.flags }
 
   if (!payload.content && !payload.embeds)
     throw new Error('Data must be provided to send a message payload.')
+
+  if (options.silence) {
+    options.flags = options.flags | MessageFlags.SuppressNotifications
+    payload.data.allowedMentions = { parse: [] }
+  }
 
   try {
     if (_i) {
@@ -123,6 +133,7 @@ async function sendMessagePayload(
         withResponse: true,
         flags: options.flags,
       } as InteractionReplyOptions | InteractionEditReplyOptions
+      re.allowedMentions = payload.data.allowedMentions
 
       if (ephemeral)
         re.flags = options.flags | MessageFlags.Ephemeral
@@ -137,7 +148,7 @@ async function sendMessagePayload(
     else {
       if (!message)
         throw new Error('No message data to process, is there a message to attach to?')
-      await message.reply({ content: payload.content, embeds: payload.embeds, flags: options.flags })
+      await message.reply(payload.data)
     }
   }
   catch (eInfo) {
@@ -157,7 +168,7 @@ async function sendMessagePayload(
       return
     }
 
-    await channel.send({ content: payload.content, embeds: payload.embeds, flags: options.flags })
+    await channel.send(payload.data)
   }
 }
 
@@ -189,6 +200,7 @@ class CommandInteractionCallback {
 
 export class CommandInteraction {
   private ci: ChatInteraction
+  private isSilent = false
 
   constructor(ci: ChatInteraction) {
     this.ci = ci
@@ -235,7 +247,18 @@ export class CommandInteraction {
     return this
   }
 
+  getSilent() {
+    return this.isSilent
+  }
+
+  silence(setSilent: boolean = true) {
+    this.isSilent = setSilent
+    return this
+  }
+
   send(response?: string, options = defaultOptions) {
+    if (this.isSilent)
+      options.silence = true
     return sendMessagePayload(this, false, options, { content: response })
   }
 
@@ -342,6 +365,9 @@ export class Reply extends CommandInteraction {
       this.embed.setFooter({ iconURL: settings.style.icon, text: `${settings.label.key}: ${settings.label.value}` })
     else
       this.embed.setFooter({ iconURL: settings.style.icon, text: `GU: ${this.getInitializer().guildId}` })
+
+    if (this.getSilent())
+      options.silence = true
 
     attachEmbed(this, response, '### ', '\n', options)
     return sendMessagePayload(this, !!settings.ephemeral, options, { embeds: [embed] })

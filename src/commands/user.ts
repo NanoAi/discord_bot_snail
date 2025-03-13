@@ -34,7 +34,12 @@ async function giveKudos(
   }
 
   const dbCallForCaller = (admin && undefined) || new UserDBController(caller)
-  const callerData = (admin && undefined) || await dbCallForCaller.getUser()
+  const callerData = (admin && undefined) || await dbCallForCaller.getOrCreateUser()
+
+  if (!callerData) {
+    await reply.label(LK.ID, caller.user.id).style(Styles.Error).send($t('command.error.database'))
+    return
+  }
 
   if (!admin) {
     if (Math.abs(dayjs(callerData.createdAt).diff(callerData.lastKudosDate, 'd')) < 1) {
@@ -51,7 +56,12 @@ async function giveKudos(
   }
 
   const dbCallForTarget = new UserDBController(target)
-  const dbTargetUser = await dbCallForTarget.getUser()
+  const dbTargetUser = await dbCallForTarget.getOrCreateUser()
+
+  if (!dbTargetUser) {
+    await reply.label(LK.ID, caller.user.id).style(Styles.Error).send($t('command.error.database'))
+    return
+  }
 
   const xp = { caller: callerData && callerData.xp, target: dbTargetUser.xp }
   const amountLeft = (xp.caller - amount)
@@ -73,14 +83,16 @@ async function giveKudos(
         .label(LK.ID, caller.user.id)
         .ephemeral(ephemeral)
         .style(Styles.Success)
-        .send(`${caller} has awarded ${amount} tokens to ${target}.`, { flags: 'SuppressNotifications' })
+        .silence(true)
+        .send(`${caller} has awarded ${amount} tokens to ${target}.`)
     }
     else {
       await reply
         .label(LK.ID, caller.user.id)
         .ephemeral(ephemeral)
         .style(Styles.Warn)
-        .send(`${caller} has removed ${Math.abs(amount)} tokens from ${target}.`, { flags: 'SuppressNotifications' })
+        .silence(true)
+        .send(`${caller} has removed ${Math.abs(amount)} tokens from ${target}.`)
     }
   }
   catch {

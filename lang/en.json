@@ -15,6 +15,7 @@
       "noBan": "I could not ban {{user}}.",
       "noDM": "I could not DM {{user}}.",
       "noGuild": "This command must be ran within a guild.",
+      "database": "There seems to have been an error in my brain. ^^;",
       "vars": {
         "notfound": "The argument \"{{argument}}\" was expected, got undefined.",
         "expected": "The argument \"{{argument}}\" expected a \"${{expected}}.\""
