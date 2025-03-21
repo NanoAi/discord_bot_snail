@@ -29,8 +29,9 @@ import { operators } from '../../admins.json'
 import { SystemCache } from './cache'
 import { CommandMeta } from './decorators'
 import { Metadata } from './metadata'
-import { assertAs, CheckAs } from './utils/assert'
+import { assertAs, CheckAs, isDefinedAs } from './utils/assert'
 import { logger } from './utils/logger'
+// import { shardManager } from './shards'
 
 const intents: ClientOptions['intents'] = [
   GatewayIntentBits.Guilds,
@@ -56,7 +57,8 @@ const CommandRunManager = new NodeCache({ stdTTL: 1, checkperiod: 1 })
 export const GuildPermsCache = SystemCache.global().getGuildPermissions()
 
 export const Routes = DRoutes
-export const Client = new DClient({ intents, partials })
+export const Client = new DClient({ intents, partials, shards: 'auto' })
+// export const Shards = new shardManager(Client)
 /** Permission Flags. */
 export const PFlags: typeof PermissionFlagsBits = PermissionFlagsBits
 export const PermissionBuilder: typeof PermissionsBitField = PermissionsBitField
@@ -155,6 +157,11 @@ function realmLoopHelper(realm: ApplicationCommandPermissions, caller: User, cha
 
 export function isUser(target: any) {
   return (target instanceof User || target instanceof ClientUser)
+}
+
+export function getInteractionGuild(ci: DT.ChatInteraction) {
+  const guild = (ci.interaction && ci.interaction.guild) || (ci.message && ci.message.guild) || undefined
+  return isDefinedAs<Guild>(guild, CheckAs.Guild)
 }
 
 export class SnowflakeRegex {

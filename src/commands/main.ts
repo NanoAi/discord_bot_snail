@@ -160,9 +160,10 @@ export class SimulateCommand {
 @Factory.setPermissions([Discord.PFlags.BanMembers])
 @CommandFactory('ping', 'Ping the bot.')
 export class PingCommand {
-  // This should be defined as the base function to call.
-  @Options.slashOnly()
   public static async main(ci: DT.ChatInteraction) {
+    const guildId = Discord.getInteractionGuild(ci)
+    const reply = await new DiscordInteraction.Reply(ci).defer()
+
     const debug = {
       rate: BigInt(0),
       discord: BigInt(0),
@@ -170,8 +171,10 @@ export class PingCommand {
     }
 
     let startTime = hrtime.bigint()
-    const reply = await new DiscordInteraction.Reply(ci).defer()
-    debug.discord = hrtime.bigint() - startTime
+    if (guildId) {
+      await Discord.Client.fetchGuildPreview(guildId.id)
+      debug.discord = hrtime.bigint() - startTime
+    }
 
     startTime = hrtime.bigint()
     await new Promise(nextTick)
@@ -191,6 +194,7 @@ export class PingCommand {
       %%%%
       Database: ${output.database}
       %%
+      -# @ ${ci.message ? 'Chat Command' : 'Slash Command'}
     `, { unwrap: true })
   }
 }

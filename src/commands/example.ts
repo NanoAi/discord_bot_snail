@@ -1,7 +1,7 @@
+import type { DT } from '~/types/discord'
 import { Command, CommandFactory, Factory, Options } from '~/core/decorators'
 import { ApplicationIntegrationType as AIT, InteractionContextType as ICT, PFlags } from '~/core/discord'
 import { DiscordInteraction } from '~/core/interactions'
-import type { DT } from '~/types/discord'
 
 @Factory.setContexts(ICT.Guild)
 @Factory.setPermissions([PFlags.Administrator])
@@ -10,6 +10,17 @@ export class TestCommand {
   @Command.addMentionableOption('mention', 'select a user.')
   public static async main(ci: DT.ChatInteraction, args: any) {
     await new DiscordInteraction.Reply(ci).ephemeral(true).send(`${args.mention()}`)
+  }
+}
+
+@Factory.setContexts(ICT.Guild)
+@Factory.setPermissions([PFlags.Administrator])
+@CommandFactory('slashOnly', 'Ping the bot.')
+export class slashOnlyCommand {
+  @Options.slashOnly()
+  public static async main(ci: DT.ChatInteraction) {
+    const reply = await new DiscordInteraction.Reply(ci).defer()
+    reply.setTitle('🏓 [ PONG! ]').send('Hello World!')
   }
 }
 

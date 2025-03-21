@@ -17,8 +17,8 @@ export function ms(date: Date) {
   return date.getMilliseconds()
 }
 
-export function nsArrayToReadable(data: {[key: string]: bigint}) {
-  const output: {[key: string]: string} = {}
+export function nsArrayToReadable(data: { [key: string]: bigint }) {
+  const output: { [key: string]: string } = {}
   for (const [k, v] of Object.entries(data)) {
     const us = (Number(v) / 1e3)
     const ms = (Number(v) / 1e6)
