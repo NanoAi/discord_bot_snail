@@ -29,8 +29,8 @@ import { operators } from '../../admins.json'
 import { SystemCache } from './cache'
 import { CommandMeta } from './decorators'
 import { Metadata } from './metadata'
-import { logger } from './utils/logger'
 import { assertAs, CheckAs } from './utils/assert'
+import { logger } from './utils/logger'
 
 const intents: ClientOptions['intents'] = [
   GatewayIntentBits.Guilds,

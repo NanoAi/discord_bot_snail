@@ -1,6 +1,6 @@
 import type { Channel } from 'discord.js'
-import * as DI from '~/core/interactions'
 import type { DT } from '~/types/discord'
+import * as DI from '~/core/interactions'
 import * as Discord from './discord'
 import { SubCommandType as SBT } from './discord'
 

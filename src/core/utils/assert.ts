@@ -1,4 +1,5 @@
 import type { APIInteractionGuildMember } from 'discord.js'
+import type { CaseDB } from '~/types/controllers'
 import type { InteractionInit } from '~/types/discord'
 import { ok as assert } from 'node:assert/strict'
 import { ChatInputCommandInteraction, Guild, GuildMember, Message, User } from 'discord.js'
@@ -9,8 +10,12 @@ interface checkAsType {
   name: string
 }
 
-function instanceOfAPIInteractionGuildMember(object: any): object is APIInteractionGuildMember {
+function isAPIInteractionGuildMember(object: any): object is APIInteractionGuildMember {
   return (object.permissions instanceof Permissions) && (object.user !== undefined)
+}
+
+function isCaseDBSelect(object: any): object is CaseDB['select'] {
+  return (typeof object.id === 'number' && typeof object.description === 'string')
 }
 
 export class CheckAs {
@@ -26,7 +31,7 @@ export class CheckAs {
 
   static readonly GuildMemberAPI: Readonly<checkAsType> = Object.freeze({
     check: (value: GuildMember) => {
-      return (value && (value instanceof GuildMember || instanceOfAPIInteractionGuildMember(value)))
+      return (value && (value instanceof GuildMember || isAPIInteractionGuildMember(value)))
     },
     name: 'GuildMemberAPI' as const,
   })
@@ -46,6 +51,11 @@ export class CheckAs {
       return !!(value && (value instanceof ChatInputCommandInteraction || value instanceof Message))
     },
     name: 'InteractionInitializer' as const,
+  })
+
+  static readonly CaseDBSelect: Readonly<checkAsType> = Object.freeze({
+    check: (value: CaseDB['select']) => (value && isCaseDBSelect(value)),
+    name: 'CaseDBSelect' as const,
   })
 }
 

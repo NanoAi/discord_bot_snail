@@ -23,6 +23,6 @@
     }
   },
   "action": {
-    "made": "㊗️ **[** {{action}} **]** ➡️ **{{target}}** ⚔️ **{{user}}**"
+    "made": "㊗️ **[** {{action}} **]** {{i.at}} **{{target}}** {{i.admin}} **{{user}}**"
   }
 }

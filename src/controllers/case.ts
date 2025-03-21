@@ -1,8 +1,8 @@
-import { Action, Case, CaseRelations, Ticket } from '@schema'
-import { and, eq, gt, sql } from 'drizzle-orm'
-import { Drizzle, Utils } from '~/core/utils/drizzle'
-import { logger } from '~/core/utils/logger'
 import type { ActionDB, CaseDB } from '~/types/controllers'
+import { Action, Case, Ticket } from '@schema'
+import { and, eq, gt, sql } from 'drizzle-orm'
+import { Drizzle } from '~/core/utils/drizzle'
+import { logger } from '~/core/utils/logger'
 
 const db = Drizzle.db
 

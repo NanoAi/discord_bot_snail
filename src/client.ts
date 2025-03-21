@@ -7,7 +7,7 @@ import langConfig from '~/core/utils/i18next.config'
 import { ENV } from '.'
 import * as Discord from './core/discord'
 import declare from './core/utils/declare'
-import { bindLogger, sLog } from './core/utils/logger'
+import { bindLogger, logger, sLog } from './core/utils/logger'
 
 // Create a new client instance
 
@@ -40,6 +40,16 @@ Discord.Client.once(Events.Error, (error) => {
 Discord.Global.REST = new DRestClient().setToken(ENV.DISCORD_TOKEN)
 const rest = Discord.Global.REST
 const sourceDir = './src'
+
+process.on('SIGINT', () => {
+  if (!Discord.Client) {
+    return process.exit()
+  }
+  Discord.Client.destroy().then(() => {
+    logger.info('Client has shutdown via "SIGINT".')
+    process.exit()
+  }).catch(logger.catchError)
+})
 
 ;(async () => {
   try {

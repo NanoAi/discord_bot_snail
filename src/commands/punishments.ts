@@ -8,8 +8,8 @@ import { CaseDBController } from '~/controllers/case'
 import { UserDBController } from '~/controllers/user'
 import { Command, CommandFactory, Factory, Options } from '~/core/decorators'
 import { Client, CVar, InteractionContextType as ICT } from '~/core/discord'
-import { $f } from '~/core/formatters'
 import { CommandInteraction, DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
+import { CheckAs, isDefinedAs } from '~/core/utils/assert'
 
 const caseMem = new NodeCache({ stdTTL: 180, checkperiod: 120 })
 
@@ -256,7 +256,7 @@ export class CaseCommand {
 
     if (caseFile) {
       caseMem.del(author.id)
-      await reply.send(`Case File #\`${caseFile.id}\` has been closed.`)
+      await reply.send(`Case File #\`${caseFile.id}\` closed for ${reply.getAuthor()} \`${reply.getAuthor().id}\`.`)
     }
     else {
       await reply.style(Styles.Error).send('Case not found. Try opening one first.')
@@ -277,24 +277,15 @@ export class CaseCommand {
       const output = []
       const actions = await CaseDBController.getActionsByCase(caseFile.id)
       for (const v of actions) {
-        const userUser = await UserDBController.resolveID(v.userId)
-        const userName = userUser && $f.escape(userUser.nickname)
-
-        const userActor = await UserDBController.resolveID(v.actorId)
-        const actorName = userActor && $f.escape(userActor.nickname)
-        const footnote = `[${userName}](${v.userId}) by [${actorName}](${v.actorId})`
-
         output.push(
           [
             $t('action.made', {
               action: CaseDBController.enumAction(v.actionType),
               target: `<@${v.userId}>`,
               user: `<@${v.actorId}>`,
-              interpolation: { escapeValue: false },
             }),
+            ` <:when:1352469790698115165> <t:${dayjs(v.timestamp).unix()}:d>`,
             `\n\`\`\`| ${v.reason}\`\`\``,
-            `⌛ <t:${dayjs(v.timestamp).unix()}>\n`,
-            `-# **(**\`${caseFile.id}\`**)** Action executed on ${footnote} **|** **(**H\`${userUser?.heat || 0}\`**)**`,
           ].join(''),
         )
       }
@@ -353,7 +344,8 @@ export class WarnCommand {
     const authorId = reply.getAuthor().id
     const reason = args.reason('unspecified').replaceAll('`', '')
     const member = (await reply.getGuildMember(user, true)) as GuildMember
-    // const mem = caseMem.get(authorId) as CaseDB['select'] | undefined
+    const mem = caseMem.get(authorId) as CaseDB['select'] | undefined
+    const targetCaseId = args.case() || (mem && mem.id) || 0
 
     if (!member) {
       await reply.label(LK.ID, user.id).style(Styles.Error).send($t('user.noTarget', { user: user.username, id: user.id }))
@@ -365,7 +357,13 @@ export class WarnCommand {
     if (!dbUser)
       return
 
-    const caseFile = await CaseDBController.upsertCase(args.case(0), member.guild.id, user.id, authorId, reason)
+    const caseFile = await CaseDBController.upsertCase(targetCaseId, member.guild.id, user.id, authorId, reason)
+
+    if (isDefinedAs<CaseDB['select']>(caseFile, CheckAs.CaseDBSelect) === undefined) {
+      await reply.style(Styles.Error).send(`Could not open or update case file: \`${targetCaseId}\`.`)
+      return
+    }
+
     CaseDBController.new({
       actionType: CaseDBController.ENUM.Action.WARN,
       timestamp: new Date(),
@@ -373,6 +371,9 @@ export class WarnCommand {
       actorId: authorId,
       reason,
     }, caseFile).upsertAction()
+
+    if (mem && mem.id)
+      caseMem.set(authorId, caseFile)
 
     const heatScore = dbUser.heat + 5
     userController.upsertUser({ heat: heatScore })

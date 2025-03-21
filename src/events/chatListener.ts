@@ -1,4 +1,5 @@
 import type { Message, OmitPartialGroupDMChannel } from 'discord.js'
+import type { ForumDB } from '~/types/controllers'
 import { UserDBController } from '@controllers/user'
 import { Collection, Events } from 'discord.js'
 import { ForumController } from '~/controllers/forum'
@@ -7,7 +8,6 @@ import * as Discord from '~/core/discord'
 import dayjs from '~/core/utils/dayjs'
 import { xpToLevel } from '~/core/utils/levels'
 import { logger } from '~/core/utils/logger'
-import type { ForumDB } from '~/types/controllers'
 
 const allowedURLS = [
   'tenor.com',
