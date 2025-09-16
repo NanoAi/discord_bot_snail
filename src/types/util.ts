@@ -11,3 +11,6 @@ export type KeyedFunction<T extends string, V> = {
 export type KeyedFunctionGroup<T extends [string, any][]> = {
   [K in T[number] as K[0]]: (value?: K[1]) => K[1];
 }
+
+export type AsyncFn<Args extends any[] = any[], R = any> =
+  (...args: Args) => Promise<R>;

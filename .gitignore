@@ -1,5 +1,6 @@
 .stfolder
 .stignore
 .env
+drizzle
 node_modules
 logs/**/*.log

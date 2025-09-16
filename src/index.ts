@@ -22,10 +22,8 @@ for (const [k, v] of Object.entries(ENV)) {
 }
 
 SystemCache.init({
-  guildForumsTTL: 60,
-  guildForumsCheckPeriod: 30,
-  guildPermissionsTTL: 300,
-  guildPermissionsCheckPeriod: 30,
+  guildTTL: 300,
+  guildCheckPeriod: 30,
 })
 
 import('./client')

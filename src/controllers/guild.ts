@@ -8,9 +8,11 @@ const db = Drizzle.db
 
 // Controller class to handle guild-related database operations
 export class GuildDBController {
+  private guild: DiscordGuild
   private data: GuildDB['insert']
 
   constructor(guild: DiscordGuild, assign: Partial<GuildDB['insert']> = {}) {
+    this.guild = guild
     this.data = {
       id: assign.id || guild.id,
       name: assign.name || guild.name,
@@ -43,6 +45,18 @@ export class GuildDBController {
       pruneWhen,
     })
     return `Guild '${name}' created successfully!`
+  }
+
+  async getGuild() {
+    const guildRecord =
+      await db.select().from(Guild).where(eq(Guild.id, this.guild.id)).limit(1)
+    return (guildRecord && guildRecord.length > 0) && guildRecord[0]
+      || undefined
+  }
+
+  async updateGuild(guildRecord: GuildDB['insert']) {
+    return await db.update(Guild).set(guildRecord)
+      .where(eq(Guild.id, guildRecord.id))
   }
 
   async upsertGuild() {

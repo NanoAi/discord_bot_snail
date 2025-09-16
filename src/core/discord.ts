@@ -63,6 +63,48 @@ export const Client = new DClient({ intents, partials, shards: 'auto' })
 export const PFlags: typeof PermissionFlagsBits = PermissionFlagsBits
 export const PermissionBuilder: typeof PermissionsBitField = PermissionsBitField
 
+class AwaitedUserCache {
+  private awaitedUsers
+
+  constructor() {
+    this.awaitedUsers = new NodeCache({ stdTTL: 300, checkperiod: 30 })
+  }
+
+  getAwaitedUsers(guild: Guild) {
+    return this.awaitedUsers.get<Set<string>>(guild.id)
+  }
+
+  async addAwaitedUser(guild: Guild, id: string) {
+    const snowflake = SnowflakeRegex.getSnowflake(id)
+    if (!snowflake) {
+      return false
+    }
+
+    const discordUser = await Client.users.fetch(snowflake, {force: true})
+    if (!discordUser) {
+      return false
+    }
+
+    let awaitedUsers: Set<string> | undefined = this.awaitedUsers.get<Set<string>>(guild.id)
+    if (awaitedUsers) {
+      awaitedUsers.add(snowflake)
+    }
+    else {
+      awaitedUsers = new Set<string>()
+      awaitedUsers.add(snowflake)
+    }
+
+    this.awaitedUsers.set(guild.id, awaitedUsers)
+    return discordUser
+  }
+
+  get() {
+    return this.awaitedUsers
+  }
+}
+
+export const awaitedUserCache = new AwaitedUserCache()
+
 /**
  * Context in Discord where an interaction can be used, or where it was triggered from.
  * Details about using interaction contexts for application commands are in the commands context documentation.

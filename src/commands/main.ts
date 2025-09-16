@@ -1,4 +1,4 @@
-import type { User } from 'discord.js'
+import type { Role, User } from 'discord.js'
 import type { DT } from '~/types/discord'
 import { hrtime, nextTick } from 'node:process'
 import { nsArrayToReadable } from '@utils/dayjs'
@@ -13,6 +13,8 @@ import { CVar, InteractionContextType as ICT } from '~/core/discord'
 import { $f } from '~/core/formatters'
 import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
 import { logger } from '~/core/utils/logger'
+import { readFile, writeFile } from 'fs/promises';
+import { join } from 'path'
 
 @CommandFactory('shutdown', 'shutdown the bot.')
 export class ShutdownCommand {
@@ -59,17 +61,6 @@ export class FlushCommand {
       await reply.label(LK.GUILD, guild.id).style(Styles.Success).send(`Cleared Permissions Cache for "\`${safeName}\`".`)
     })
   }
-
-  @Command.addSubCommand('forums', 'Flush the forums cache.')
-  public static async forums(ci: DT.ChatInteraction) {
-    const reply = new DiscordInteraction.Reply(ci)
-    reply.getGuildAsync().then(async (guild) => {
-      SystemCache.global().getGuildForums().del(guild.id)
-
-      const safeName = $f.clear(guild.name)
-      await reply.label(LK.GUILD, guild.id).style(Styles.Success).send(`Cleared Permissions Cache for "\`${safeName}\`".`)
-    })
-  }
 }
 
 @Factory.setContexts(ICT.Guild)
@@ -103,6 +94,37 @@ export class SendDM {
           .ephemeral(true)
           .send($t('command.error.noDM', { user: user.username }))
       }
+    })
+  }
+}
+
+@Factory.setContexts(ICT.Guild)
+@Factory.setPermissions([Discord.PFlags.Administrator])
+@CommandFactory('settings', 'Set the server settings.')
+export class ClassName {
+  @Command.addRoleOption('from', 'The role required to vouch for members.')
+  @Command.addRoleOption('to', 'The role a vouched member should have.')
+  @Command.addRoleOption('remove', 'The role to remove if any.')
+  @Command.addSubCommand('vouch', 'Set settings for vouching.')
+  public static async vouch(ci: DT.ChatInteraction, args: DT.Args<[['from', Role], ['to', Role], ['remove', Role]]>) {
+    const re = new DiscordInteraction.Reply(ci)
+    const guild = re.getGuild()!
+
+    const settings = await SystemCache.global().getGuildSettings(guild.id) || {}
+    if (settings) {
+      settings.vouch = {
+        remove: args.remove().id,
+        from: args.from().id,
+        to: args.to().id,
+      }
+    }
+
+    SystemCache.global().setGuildSettings(guild.id, settings).then(() => {
+      re.ephemeral(true).send('Settings updated!')
+    })
+    .catch((x) => {
+      re.ephemeral(true).style(Styles.Error).send($t('command.error.database'))
+      logger.catchError(x)
     })
   }
 }
