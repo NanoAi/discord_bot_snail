@@ -7,13 +7,14 @@ import NodeCache from 'node-cache'
 import { CaseDBController } from '~/controllers/case'
 import { UserDBController } from '~/controllers/user'
 import { Command, CommandFactory, Factory, Options } from '~/core/decorators'
-import { Client, CVar, InteractionContextType as ICT } from '~/core/discord'
+import { Client, CVar, ICT, AIT } from '~/core/discord'
 import { CommandInteraction, DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
 import { CheckAs, isDefinedAs } from '~/core/utils/assert'
 
 const caseMem = new NodeCache({ stdTTL: 180, checkperiod: 120 })
 
 @Factory.setContexts(ICT.Guild)
+@Factory.setIntegrations([AIT.GuildInstall])
 @CommandFactory('softban', 'Ban then immediately unban a user.')
 export class SoftBanCommand {
   @Command.addStringOption('reason', 'The reason for kicking the user.')
@@ -79,6 +80,7 @@ export class SoftBanCommand {
 }
 
 @Factory.setContexts(ICT.Guild)
+@Factory.setIntegrations([AIT.GuildInstall])
 @CommandFactory('kick', 'Kick a user from the guild.')
 export class KickCommand {
   @Command.addStringOption('reason', 'The reason for kicking the user.')
@@ -131,6 +133,8 @@ export class KickCommand {
   }
 }
 
+@Factory.setContexts(ICT.Guild)
+@Factory.setIntegrations([AIT.GuildInstall])
 @CommandFactory('ban', 'Ban a user from the guild.')
 export class BanCommand {
   @Command.addStringOption('reason', 'The reason for banning the user.')
@@ -188,6 +192,8 @@ function truncate(str: string, n: number) {
   return (str.length > n) ? `${str.slice(0, n - 1)}…` : str
 }
 
+@Factory.setContexts(ICT.Guild)
+@Factory.setIntegrations([AIT.GuildInstall])
 @CommandFactory('case', 'Review case files.')
 export class CaseCommand {
   @Options.number(number => number.setMinValue(0))
@@ -332,6 +338,8 @@ export class CaseCommand {
   }
 }
 
+@Factory.setContexts(ICT.Guild)
+@Factory.setIntegrations([AIT.GuildInstall])
 @CommandFactory('warn', 'Warn a user for a reason.')
 export class WarnCommand {
   @Command.addNumberOption('case', 'The case number to attach this warning to.')

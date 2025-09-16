@@ -7,14 +7,12 @@ import { t as $t } from 'i18next'
 import { GuildDBController } from '~/controllers/guild'
 import { UserDBController } from '~/controllers/user'
 import { SystemCache } from '~/core/cache'
-import { Command, CommandFactory, Factory, Options } from '~/core/decorators'
+import { Command, CommandFactory, Factory } from '~/core/decorators'
 import * as Discord from '~/core/discord'
-import { CVar, InteractionContextType as ICT } from '~/core/discord'
+import { AIT, CVar, ICT } from '~/core/discord'
 import { $f } from '~/core/formatters'
 import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
 import { logger } from '~/core/utils/logger'
-import { readFile, writeFile } from 'fs/promises';
-import { join } from 'path'
 
 @CommandFactory('shutdown', 'shutdown the bot.')
 export class ShutdownCommand {
@@ -48,6 +46,7 @@ export class ShutdownCommand {
 }
 
 @Factory.setContexts(ICT.Guild)
+@Factory.setIntegrations([AIT.GuildInstall])
 @Factory.setPermissions([Discord.PFlags.Administrator])
 @CommandFactory('flush', 'Flush the guilds cache settings. (Updates Settings.)')
 export class FlushCommand {
@@ -64,6 +63,7 @@ export class FlushCommand {
 }
 
 @Factory.setContexts(ICT.Guild)
+@Factory.setIntegrations([AIT.GuildInstall])
 @Factory.setPermissions([Discord.PFlags.KickMembers])
 @CommandFactory('msg', 'Send a Direct Message to a server member.')
 export class SendDM {
@@ -99,6 +99,7 @@ export class SendDM {
 }
 
 @Factory.setContexts(ICT.Guild)
+@Factory.setIntegrations([AIT.GuildInstall])
 @Factory.setPermissions([Discord.PFlags.Administrator])
 @CommandFactory('settings', 'Set the server settings.')
 export class ClassName {
@@ -130,6 +131,7 @@ export class ClassName {
 }
 
 @Factory.setContexts(ICT.Guild)
+@Factory.setIntegrations([AIT.GuildInstall])
 @Factory.setPermissions([Discord.PFlags.Administrator])
 @CommandFactory('simulate', 'Simulates events for the database.')
 export class SimulateCommand {

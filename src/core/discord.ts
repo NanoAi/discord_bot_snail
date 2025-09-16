@@ -139,6 +139,16 @@ export class ApplicationIntegrationType {
   ]
 }
 
+/**
+ * Alias for {@link InteractionContextType}
+ */
+export const ICT = InteractionContextType
+
+/**
+ * Alias for {@link ApplicationIntegrationType}.
+ */
+export const AIT = ApplicationIntegrationType
+
 export class SubCommandType {
   static readonly Attachment = 0
   static readonly Bool = 1
@@ -384,7 +394,7 @@ function commandValidate(ci: DT.ChatInteraction, func: any) {
   const validator: DT.CommandValidator = func.validator
   if (validator) {
     const user = assertAs<User>(getUserInteraction(ci), CheckAs.User)
-    const member = assertAs<DT.CommandMember>(getCommandMemberInteraction(ci), CheckAs.GuildMemberAPI)
+    const member = isDefinedAs<DT.CommandMember>(getCommandMemberInteraction(ci), CheckAs.GuildMemberAPI)
     const isOP = operators.includes(user.id)
     return validator(isOP, user, member)
   }

@@ -3,12 +3,11 @@ import type { Args, DT } from '~/types/discord'
 import { t as $t } from 'i18next'
 import { UserDBController } from '~/controllers/user'
 import { Command, CommandFactory, Factory, Options } from '~/core/decorators'
-import { awaitedUserCache, CVar, InteractionContextType as ICT, PFlags } from '~/core/discord'
+import { awaitedUserCache, CVar, ICT, AIT, PFlags } from '~/core/discord'
 import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
 import dayjs from '~/core/utils/dayjs'
 import { xpToLevel } from '~/core/utils/levels'
 import NodeCache from 'node-cache'
-import { GuildDBController } from '~/controllers/guild'
 import { logger } from '~/core/utils/logger'
 import { SystemCache } from '~/core/cache'
 
@@ -107,6 +106,7 @@ async function giveKudos(
 }
 
 @Factory.setContexts(ICT.Guild)
+@Factory.setIntegrations([AIT.GuildInstall])
 @Factory.setPermissions([PFlags.Administrator])
 @CommandFactory('kudosop', 'Admin commands for the Kudos system.')
 export class KudosAdmin {
@@ -139,6 +139,7 @@ export class KudosAdmin {
 }
 
 @Factory.setContexts(ICT.Guild)
+@Factory.setIntegrations([AIT.GuildInstall])
 @CommandFactory('vouch', 'Vouch for another user!')
 export class VouchCommand {
   @Command.addStringOption('id', 'The User ID to vouch for.')
@@ -208,6 +209,7 @@ export class VouchCommand {
 }
 
 @Factory.setContexts(ICT.Guild)
+@Factory.setIntegrations([AIT.GuildInstall])
 @CommandFactory('kudos', 'Give kudos to another user.')
 export class KudosCommand {
   // This should be defined as the base function to call.

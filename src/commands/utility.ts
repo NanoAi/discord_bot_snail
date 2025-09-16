@@ -3,7 +3,7 @@ import type { DT } from '~/types/discord'
 import { BaseGuildTextChannel } from 'discord.js'
 import { t as $t } from 'i18next'
 import { Command, CommandFactory, Factory } from '~/core/decorators'
-import { CVar, InteractionContextType as ICT, PFlags } from '~/core/discord'
+import { CVar, ICT, AIT, PFlags } from '~/core/discord'
 import { DiscordInteraction, LabelKeys as LK, Styles } from '~/core/interactions'
 
 type bulkDeleteArgs = DT.Args<[
@@ -15,6 +15,7 @@ type bulkDeleteArgs = DT.Args<[
 ]>
 
 @Factory.setContexts(ICT.Guild)
+@Factory.setIntegrations([AIT.GuildInstall])
 @Factory.setPermissions([PFlags.Administrator])
 @CommandFactory('bulk', 'Bulk commands for faster operations.')
 export class BulkCommands {
