@@ -55,7 +55,7 @@ async function giveKudos(
       return
     }
     if (dayjs().diff(callerData.lastKudosDate, 'd') < 1) {
-      await reply.label(LK.ID, caller.user.id).style(Styles.Error).send('You may only give `kudos` once a day, sorry.')
+      await reply.label(LK.ID, caller.user.id).style(Styles.Error).send('You must wait a day before you may give `kudos`, sorry.')
       return
     }
   }

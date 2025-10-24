@@ -37,7 +37,7 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
   }
 
   const inThreshold = (dbUser.lastMessageDate == null) ? true :
-    dayjs(dbUser.lastMessageDate).diff(now, 'm') < 35
+    dayjs(dbUser.lastMessageDate).diff(now, 's') < 15
 
   if (inThreshold) {
     const messageMembers = message.mentions.members || new Collection()
