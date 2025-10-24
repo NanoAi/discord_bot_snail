@@ -47,15 +47,11 @@ async function giveKudos(
   }
 
   if (!admin) {
-    if (Math.abs(dayjs(callerData.createdAt).diff(callerData.lastKudosDate, 'd')) < 1) {
+    if (dayjs().diff(callerData.lastKudosDate, 'h') > 12) {
       await reply
         .label(LK.ID, caller.user.id)
         .style(Styles.Error)
         .send('You must wait a day before you may give `kudos`, sorry.')
-      return
-    }
-    if (dayjs().diff(callerData.lastKudosDate, 'd') < 1) {
-      await reply.label(LK.ID, caller.user.id).style(Styles.Error).send('You must wait a day before you may give `kudos`, sorry.')
       return
     }
   }
@@ -74,15 +70,15 @@ async function giveKudos(
   const targetLevel = Math.max(dbTargetUser.level, xpToLevel(amountToSet))
 
   if (!admin && amountLeft < 0) {
-    await reply.label(LK.ID, caller.user.id).style(Styles.Error).send('You don\'t have enough points to give.')
+    await reply.label(LK.ID, caller.user.id).style(Styles.Error).send('You don\'t have enough tokens to give.')
     return
   }
 
   try {
     await dbCallForTarget.updateUser({ xp: amountToSet, level: targetLevel })
-    if (!admin)
+    if (!admin) {
       await dbCallForCaller.updateUser({ xp: amountLeft, lastKudosDate: new Date() })
-
+    }
     if (amount > 0) {
       await reply
         .label(LK.ID, caller.user.id)
@@ -169,7 +165,7 @@ export class VouchCommand {
       }
 
       if (!target || !target.roles) {
-        reply.style(Styles.Error).send('Role Manager Error.')
+        reply.style(Styles.Error).send($t('user.notFound'))
         return
       }
 

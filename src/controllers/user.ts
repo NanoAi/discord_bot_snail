@@ -23,6 +23,7 @@ export class UserDBController {
       xp: assign.xp || 0,
       level: assign.level || 0,
       createdAt: member.joinedAt || new Date(),
+      lastKudosDate: new Date(),
     }
   }
 
