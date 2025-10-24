@@ -1,4 +1,4 @@
-import type { Role, User } from 'discord.js'
+import type { Channel, Role, User } from 'discord.js'
 import type { DT } from '~/types/discord'
 import { hrtime, nextTick } from 'node:process'
 import { nsArrayToReadable } from '@utils/dayjs'
@@ -117,6 +117,33 @@ export class ClassName {
         remove: args.remove().id,
         from: args.from().id,
         to: args.to().id,
+      }
+    }
+
+    SystemCache.global().setGuildSettings(guild.id, settings).then(() => {
+      re.ephemeral(true).send('Settings updated!')
+    })
+    .catch((x) => {
+      re.ephemeral(true).style(Styles.Error).send($t('command.error.database'))
+      logger.catchError(x)
+    })
+  }
+
+  @Command.addChannelOption('channel', 'The channel to send private bot messages to.')
+  @Command.addSubCommand('console', 'Set settings for the bots console channel.')
+  public static async setConsole(ci: DT.ChatInteraction, args: DT.Args<[['channel', Channel]]>) {
+    const re = new DiscordInteraction.Reply(ci)
+    const guild = re.getGuild()!
+
+    if (!args.channel().isTextBased) {
+      re.ephemeral(true).style(Styles.Error).send("Channel must be text based.")
+      return
+    }
+
+    const settings = await SystemCache.global().getGuildSettings(guild.id) || {}
+    if (settings) {
+      settings.console = {
+        channel: args.channel().id
       }
     }
 

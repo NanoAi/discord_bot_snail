@@ -1,8 +1,7 @@
 import type { GuildMember } from 'discord.js'
 import type { UserDB } from '../types/controllers'
 import { Case, User } from '@schema'
-import { and, eq } from 'drizzle-orm'
-import { nullDate } from '~/core/utils/dayjs' // Import the Drizzle instance
+import { and, DrizzleQueryError, eq } from 'drizzle-orm'
 import { Drizzle } from '~/core/utils/drizzle'
 import { logger } from '~/core/utils/logger'
 
@@ -16,13 +15,14 @@ export class UserDBController {
     this.data = {
       guildId: assign.guildId || member.guild.id,
       id: assign.id || member.id,
-      lastMessageDate: assign.lastMessageDate || nullDate(),
+      lastMessageDate: assign.lastMessageDate || null,
       roles: assign.roles || member.roles.cache || {},
       username: assign.username || member.user.username,
       nickname: assign.nickname || member.nickname || member.displayName || '',
       heat: assign.heat || 0,
       xp: assign.xp || 0,
       level: assign.level || 0,
+      createdAt: member.joinedAt || new Date(),
     }
   }
 
@@ -48,8 +48,11 @@ export class UserDBController {
       try {
         await this.upsertUser()
       }
-      catch {
+      catch(e) {
         logger.error(`Error: Could not create entry for member (${this.data.id}) in guild (${this.data.guildId}).`)
+        if (e instanceof DrizzleQueryError) {
+          logger.error(e.message)
+        }
         return
       }
       return await this.getUser()

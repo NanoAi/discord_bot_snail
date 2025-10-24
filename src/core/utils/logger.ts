@@ -1,4 +1,4 @@
-import type { Guild } from 'discord.js'
+import type { Channel, Guild, TextChannel } from 'discord.js'
 import fs from 'node:fs'
 import dayjs from 'dayjs'
 import { Events } from 'discord.js'
@@ -6,6 +6,7 @@ import pino from 'pino'
 import pretty from 'pino-pretty'
 import { ENV } from '~/index'
 import * as Discord from '../discord'
+import { SystemCache } from '../cache'
 
 function pinoPath() {
   return `logs/${dayjs(new Date()).format('YYYY-MM-DD')}.log`
@@ -39,11 +40,11 @@ const _pino = pino(
   transport,
 )
 
-function sendToSystem(guild: Guild, info: string, msg?: string) {
+function sendToChannel(guild: Guild, info: string, msg?: string, channel?: TextChannel) {
   const t = '```'
-  const systemChannel = guild?.systemChannel
-  if (systemChannel)
-    systemChannel.send(`INFO <:info_snail:1276562523746865182> ${info}${t}${msg || 'undefined'}${t}`)
+  const outChannel = channel || guild?.systemChannel
+  if (outChannel && outChannel.isSendable())
+    outChannel.send(`INFO <:info_snail:1276562523746865182> ${info}${t}${msg || 'undefined'}${t}`)
 }
 
 const pinoErrorBound = _pino.error.bind(_pino)
@@ -59,16 +60,26 @@ function catchFatal(obj: object, msg?: string, ...args: any[]) {
   return pinoFatalBound(obj, msg, ...args)
 }
 
-function discordLog(guild: Guild, info: string, msg?: string) {
-  sendToSystem(guild, info, msg)
+function chatLog(guild: Guild, info: string, msg?: string) {
+  sendToChannel(guild, info, msg, undefined)
 }
 
-Reflect.defineProperty(_pino, 'discordLog', { value: discordLog, writable: false })
+function chatLogPrivate(guild: Guild, info: string, msg?: string) {
+  SystemCache.global().getGuildSettings(guild.id).then(async (settings) => {
+    if (settings.console && settings.console.channel) {
+      const channel = await guild.channels.fetch(settings.console.channel)
+      sendToChannel(guild, info, msg, channel as TextChannel)
+    }
+  })
+}
+
+Reflect.defineProperty(_pino, 'chatLog', { value: chatLog, writable: false })
 Reflect.defineProperty(_pino, 'catchError', { value: catchError, writable: false })
 Reflect.defineProperty(_pino, 'catchFatal', { value: catchFatal, writable: false })
+Reflect.defineProperty(_pino, 'chatLogPrivate', { value: chatLogPrivate, writable: false })
 
 export const logger: pino.Logger & {
-  discordLog: typeof discordLog
+  chatLog: typeof chatLog
   catchError: typeof catchError
   catchFatal: typeof catchFatal
 } = _pino as any

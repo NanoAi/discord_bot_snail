@@ -9,6 +9,8 @@ const allowedURLS = [
   'example.com',
   'cdn.discordapp.com',
   'media.discordapp.net',
+  'images-ext-1.discordapp.net',
+  'images-ext-2.discordapp.net',
 ]
 
 async function updateUser(
@@ -34,8 +36,10 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
     return
   }
 
-  if (dbUser.createdAt > dbUser.lastMessageDate) {
-    const date = new Date()
+  const inThreshold = (dbUser.lastMessageDate == null) ? true :
+    dayjs(dbUser.lastMessageDate).diff(now, 'm') < 35
+
+  if (inThreshold) {
     const messageMembers = message.mentions.members || new Collection()
 
     if (!member.moderatable) {
@@ -49,7 +53,7 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
         await message.delete()
       }
       member.disableCommunicationUntil(
-        dayjs(date).add(15, 'm').toDate(),
+        dayjs(now).add(1, 'h').toDate(),
         'Mention spam in initial message.'
       )
       await updateUser(now, dbInstance, message)
@@ -64,7 +68,7 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
         if (!allowedURLS.includes(url) && message.deletable) {
           await message.delete()
           member.disableCommunicationUntil(
-            dayjs(date).add(5, 'm').toDate(),
+            dayjs(now).add(15, 'm').toDate(),
             'Unrecognized link in initial message.'
           )
           break
@@ -74,7 +78,7 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
 
     await updateUser(now, dbInstance, message)
   }
-  else {
+  else if (dbUser.lastMessageDate instanceof Date) {
     let days = dayjs(now).diff(dbUser.lastMessageDate, 'day')
     days = days > 5 ? 5 : days
 

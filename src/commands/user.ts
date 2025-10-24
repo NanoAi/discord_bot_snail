@@ -168,6 +168,11 @@ export class VouchCommand {
         return
       }
 
+      if (!target || !target.roles) {
+        reply.style(Styles.Error).send('Role Manager Error.')
+        return
+      }
+
       if (!settings.vouch.from) {
         reply.style(Styles.Error).send($t('vouch.noRole'))
         return
@@ -197,7 +202,7 @@ export class VouchCommand {
         }
       }
 
-      logger.discordLog(
+      logger.chatLog(
         guild,
         `[VOUCH] <@${caller.id}> vouched for <@${target.id}>.`,
         `@ ${caller.id} vouches for ${target.id}!`

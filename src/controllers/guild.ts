@@ -21,6 +21,7 @@ export class GuildDBController {
       enableXP: assign.enableXP || true,
       trustedURLs: assign.trustedURLs || {},
       pruneWhen: assign.pruneWhen || 15,
+      createdAt: new Date(),
     }
   }
 
