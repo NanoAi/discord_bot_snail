@@ -3,6 +3,7 @@ import { Collection, Events, Message, OmitPartialGroupDMChannel } from 'discord.
 import * as Discord from '~/core/discord'
 import dayjs from '~/core/utils/dayjs'
 import { xpToLevel } from '~/core/utils/levels'
+import { logger } from '~/core/utils/logger'
 
 const allowedURLS = [
   'tenor.com',
@@ -36,8 +37,10 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
     return
   }
 
-  const inThreshold = (dbUser.lastMessageDate == null) ? true :
-    dayjs(dbUser.lastMessageDate).diff(now, 's') < 15
+  const inThreshold = (dbUser.initMessageDate == null) ? true :
+    dayjs(dbUser.initMessageDate).diff(now, 's') < 15
+
+  logger.info(`in: ${inThreshold} | ${dayjs(dbUser.initMessageDate).diff(now, 's')}`)
 
   if (inThreshold) {
     const messageMembers = message.mentions.members || new Collection()
@@ -74,6 +77,10 @@ Discord.Client.on(Events.MessageCreate, async (message) => {
           break
         }
       }
+    }
+
+    if (dbUser.initMessageDate == null) {
+      await dbInstance.updateUser({ initMessageDate: now })
     }
 
     await updateUser(now, dbInstance, message)

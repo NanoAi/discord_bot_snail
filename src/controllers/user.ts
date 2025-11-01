@@ -16,6 +16,7 @@ export class UserDBController {
       guildId: assign.guildId || member.guild.id,
       id: assign.id || member.id,
       lastMessageDate: assign.lastMessageDate || null,
+      initMessageDate: assign.initMessageDate || null,
       roles: assign.roles || member.roles.cache || {},
       username: assign.username || member.user.username,
       nickname: assign.nickname || member.nickname || member.displayName || '',

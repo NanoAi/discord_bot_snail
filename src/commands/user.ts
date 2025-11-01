@@ -47,7 +47,8 @@ async function giveKudos(
   }
 
   if (!admin) {
-    if (dayjs().diff(callerData.lastKudosDate, 'h') > 12) {
+    logger.info(dayjs().diff(callerData.lastKudosDate, 'h'))
+    if (dayjs().diff(callerData.lastKudosDate, 'h') < 12) {
       await reply
         .label(LK.ID, caller.user.id)
         .style(Styles.Error)

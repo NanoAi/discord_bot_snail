@@ -34,6 +34,7 @@ export const User = pgTable("User", {
   heat: integer("heat").notNull(),
   level: integer("level").notNull(),
   lastMessageDate: timestamp("lastMessageDate", { precision: 3 }),
+  initMessageDate: timestamp("initMessageDate", { precision: 3 }),
   lastKudosDate: timestamp("lastKudosDate", { precision: 3 })
     .notNull()
     .defaultNow(),
